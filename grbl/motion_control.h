@@ -2,9 +2,9 @@
   motion_control.h - high level interface for issuing motion commands
   Part of Grbl
 
-  Copyright (c) 2011-2015 Sungeun K. Jeon
+  Copyright (c) 2011-2016 Sungeun K. Jeon for Gnea Research LLC
   Copyright (c) 2009-2011 Simen Svale Skogsrud
-  
+
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -23,30 +23,22 @@
 #define motion_control_h
 
 
-#define HOMING_CYCLE_LINE_NUMBER -1
-#define PARKING_MOTION_LINE_NUMBER -2
+// System motion commands must have a line number of zero.
+#define HOMING_CYCLE_LINE_NUMBER 0
+#define PARKING_MOTION_LINE_NUMBER 0
 
 // Execute linear motion in absolute millimeter coordinates. Feed rate given in millimeters/second
 // unless invert_feed_rate is true. Then the feed_rate means that the motion should be completed in
 // (1 minute)/feed_rate time.
-#ifdef USE_LINE_NUMBERS
-void mc_line(float *target, float feed_rate, uint8_t invert_feed_rate, int32_t line_number);
-#else
-void mc_line(float *target, float feed_rate, uint8_t invert_feed_rate);
-#endif
+void mc_line(float *target, plan_line_data_t *pl_data);
 
-// Execute an arc in offset mode format. position == current xyz, target == target xyz, 
+// Execute an arc in offset mode format. position == current xyz, target == target xyz,
 // offset == offset from current xyz, axis_XXX defines circle plane in tool space, axis_linear is
 // the direction of helical travel, radius == circle radius, is_clockwise_arc boolean. Used
 // for vector transformation direction.
-#ifdef USE_LINE_NUMBERS
-void mc_arc(float *position, float *target, float *offset, float radius, float feed_rate, 
-  uint8_t invert_feed_rate, uint8_t axis_0, uint8_t axis_1, uint8_t axis_linear, uint8_t is_clockwise_arc, int32_t line_number);
-#else
-void mc_arc(float *position, float *target, float *offset, float radius, float feed_rate,
-  uint8_t invert_feed_rate, uint8_t axis_0, uint8_t axis_1, uint8_t axis_linear, uint8_t is_clockwise_arc);
-#endif
-  
+void mc_arc(float *target, plan_line_data_t *pl_data, float *position, float *offset, float radius,
+  uint8_t axis_0, uint8_t axis_1, uint8_t axis_linear, uint8_t is_clockwise_arc);
+
 // Dwell for a specific number of seconds
 void mc_dwell(float seconds);
 
@@ -54,16 +46,10 @@ void mc_dwell(float seconds);
 void mc_homing_cycle();
 
 // Perform tool length probe cycle. Requires probe switch.
-#ifdef USE_LINE_NUMBERS
-void mc_probe_cycle(float *target, float feed_rate, uint8_t invert_feed_rate, uint8_t is_probe_away,
-  uint8_t is_no_error, int32_t line_number);
-#else
-void mc_probe_cycle(float *target, float feed_rate, uint8_t invert_feed_rate, uint8_t is_probe_away,
-  uint8_t is_no_error);
-#endif
+void mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_away, uint8_t is_no_error);
 
 // Plans and executes the single special motion case for parking. Independent of main planner buffer.
-void mc_parking_motion(float *parking_target, float feed_rate);
+void mc_parking_motion(float *parking_target, plan_line_data_t *pl_data);
 
 // Performs system reset. If in motion state, kills all motion and sets system alarm.
 void mc_reset();

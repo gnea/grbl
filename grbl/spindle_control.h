@@ -2,7 +2,7 @@
   spindle_control.h - spindle control methods
   Part of Grbl
 
-  Copyright (c) 2012-2015 Sungeun K. Jeon
+  Copyright (c) 2012-2016 Sungeun K. Jeon for Gnea Research LLC
   Copyright (c) 2009-2011 Simen Svale Skogsrud
 
   Grbl is free software: you can redistribute it and/or modify
@@ -17,21 +17,27 @@
 
   You should have received a copy of the GNU General Public License
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
-*/ 
+*/
 
 #ifndef spindle_control_h
-#define spindle_control_h 
+#define spindle_control_h
 
 
 // Initializes spindle pins and hardware PWM, if enabled.
 void spindle_init();
 
-// Sets spindle direction and spindle rpm via PWM, if enabled.
+// Called by g-code parser when setting spindle state and requires a buffer sync.
 void spindle_run(uint8_t direction, float rpm);
 
-void spindle_set_state(uint8_t state, float rpm);
+// Immediately sets spindle running state with direction and spindle rpm via PWM, if enabled.
+// Called by spindle_run() after sync and parking motion/spindle stop override during restore.
+void spindle_set_state(uint8_t state, uint8_t pwm_value);
 
-// Kills spindle.
-void spindle_stop();
+// Stop and start spindle routines. Called by all spindle routines and stepper ISR.
+inline void spindle_stop();
+inline void spindle_set_speed(uint8_t pwm_value); // Variable spindle only.
+
+uint8_t spindle_compute_pwm_value(float rpm); // 328p PWM register is 8-bit. Variable spindle only.
+
 
 #endif

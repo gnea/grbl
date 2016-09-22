@@ -2,7 +2,7 @@
   serial.c - Low level functions for sending and recieving bytes via the serial port
   Part of Grbl
 
-  Copyright (c) 2011-2015 Sungeun K. Jeon
+  Copyright (c) 2011-2016 Sungeun K. Jeon for Gnea Research LLC
   Copyright (c) 2009-2011 Simen Svale Skogsrud
 
   Grbl is free software: you can redistribute it and/or modify
@@ -27,7 +27,11 @@
   #define RX_BUFFER_SIZE 128
 #endif
 #ifndef TX_BUFFER_SIZE
-  #define TX_BUFFER_SIZE 64
+  #ifdef USE_LINE_NUMBERS
+    #define TX_BUFFER_SIZE 100
+  #else
+    #define TX_BUFFER_SIZE 90
+  #endif
 #endif
 
 #define SERIAL_NO_DATA 0xff

@@ -2,7 +2,7 @@
   grbl.h - main Grbl include file
   Part of Grbl
 
-  Copyright (c) 2015 Sungeun K. Jeon
+  Copyright (c) 2015-2016 Sungeun K. Jeon for Gnea Research LLC
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 #define grbl_h
 
 // Grbl versioning system
-#define GRBL_VERSION "1.0c"
-#define GRBL_VERSION_BUILD "20160330"
+#define GRBL_VERSION "1.0e"
+#define GRBL_VERSION_BUILD "20160921"
 
 // Define standard libraries used by Grbl.
 #include <avr/io.h>
@@ -32,7 +32,7 @@
 #include <avr/wdt.h>
 #include <util/delay.h>
 #include <math.h>
-#include <inttypes.h>    
+#include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -45,6 +45,7 @@
 #include "system.h"
 #include "defaults.h"
 #include "cpu_map.h"
+#include "planner.h"
 #include "coolant_control.h"
 #include "eeprom.h"
 #include "gcode.h"
@@ -58,5 +59,6 @@
 #include "serial.h"
 #include "spindle_control.h"
 #include "stepper.h"
+#include "jog.h"
 
 #endif
