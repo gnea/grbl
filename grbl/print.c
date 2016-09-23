@@ -190,7 +190,7 @@ void printFloat_RateValue(float n) {
   }
 }
 
-void printFloat_SettingValue(float n) { printFloat(n,N_DECIMAL_SETTINGVALUE); }
+// void printFloat_SettingValue(float n) { printFloat(n,N_DECIMAL_SETTINGVALUE); }
 
 void printFloat_RPMValue(float n) { printFloat(n,N_DECIMAL_RPMVALUE); }
 

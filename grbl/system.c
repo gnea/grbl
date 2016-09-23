@@ -97,11 +97,12 @@ void system_execute_startup(char *line)
   uint8_t n;
   for (n=0; n < N_STARTUP_LINE; n++) {
     if (!(settings_read_startup_line(n, line))) {
-      report_status_message(STATUS_SETTING_READ_FAIL);
+      line[0] = 0;
+      report_execute_startup_message(line,STATUS_SETTING_READ_FAIL);
     } else {
       if (line[0] != 0) {
-        printString(line); // Echo startup line to indicate execution.
-        report_status_message(gc_execute_line(line));
+        uint8_t status_code = gc_execute_line(line);
+        report_execute_startup_message(line,status_code);
       }
     }
   }

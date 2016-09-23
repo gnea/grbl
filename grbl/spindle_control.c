@@ -64,7 +64,7 @@ void spindle_init()
 
 
 // Stop and start spindle routines. Called by all spindle routines and stepper ISR.
-inline void spindle_stop()
+void spindle_stop()
 {
   // On the Uno, spindle enable and PWM are shared. Other CPUs have seperate enable pin.
   #ifdef VARIABLE_SPINDLE
@@ -87,7 +87,7 @@ inline void spindle_stop()
 
 
 #ifdef VARIABLE_SPINDLE
-  inline void spindle_set_speed(uint8_t pwm_value)
+  void spindle_set_speed(uint8_t pwm_value)
   {
     if (pwm_value == SPINDLE_PWM_OFF_VALUE) {
       spindle_stop();

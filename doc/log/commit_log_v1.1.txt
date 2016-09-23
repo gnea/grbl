@@ -1,0 +1,205 @@
+----------------
+Date: 2016-09-22
+Author: Sonny Jeon
+Subject: Merge pull request #1 from winder/dev
+
+Add locale to code CSVs.
+
+----------------
+Date: 2016-09-22
+Author: winder
+Subject: Add locale to code CSVs.
+
+
+----------------
+Date: 2016-09-21
+Author: chamnit
+Subject: Grbl v1.0e huge beta release. Overrides and new reporting.
+
+- Feature: Realtime feed, rapid, and spindle speed overrides. These
+alter the running machine state within tens of milliseconds!
+    - Feed override: 100%, +/-10%, +/-1% commands with values 1-200% of
+programmed feed
+    - Rapid override: 100%, 50%, 25% rapid rate commands
+    - Spindle speed override: 100%, +/-10%, +/-1% commands with values
+50-200% of programmed speed
+    - Override values have configurable limits and increments in
+config.h.
+- Feature: Realtime toggle overrides for spindle stop, flood coolant,
+and optionally mist coolant
+    - Spindle stop: Enables and disables spindle during a feed hold.
+Automatically restores last spindles state.
+    - Flood and mist coolant: Immediately toggles coolant state until
+next toggle or g-code coolant command.
+- Feature: Jogging mode! Incremental and absolute modes supported.
+    - Grbl accepts jogging-specific commands like $J=X100F50. An axis
+word and feed rate are required. G20/21 and G90/G91 commands are
+accepted.
+    - Jog motions can be canceled at any time by a feed hold `!`
+command. The buffer is automatically flushed. (No resetting required).
+    - Jog motions do not alter the g-code parser state so GUIs don’t
+have to track what they changed and correct it.
+- Feature: Laser mode setting. Allows Grbl to execute continuous
+motions with spindle speed and state changes.
+- Feature: Significantly improved status reports. Overhauled to cram in
+more meaningful data and still make it smaller on average.
+    - All available data is now sent by default, but does not appear if
+it doesn’t change or is not active.
+    - Machine position(MPos) or work position(WPos) is reported but not
+both at the same time. Instead, the work coordinate offsets (WCO)are
+sent intermittently whenever it changes or refreshes after 10-30 status
+reports. Position vectors are easily computed by WPos  = MPos - WCO.
+    - All data has changed in some way. Details of changes are in the
+markdown documents and wiki.
+- Feature: 16 new realtime commands to control overrides. All in
+extended-ASCII character space.
+    - While they are not easily typeable and requires a GUI, they can’t
+be accidentally triggered by some latent character in the g-code
+program and have tons of room for expansion.
+- Feature: New substates for HOLD and SAFETY DOOR. A `:x` is appended
+to the state, where `x` is an integer and indicates a substate.
+    - For example, each integer of a door state describes in what phase
+the machine is in during parking. Substates are detailed in the
+documentation.
+- Feature: With the alarm codes, homing and probe alarms have been
+expanded with more codes to provide more exact feedback on what caused
+the alarm.
+- Feature: New hard limit check upon power-up or reset. If detected, a
+feedback message to check the limit switches sent immediately after the
+welcome message.
+    - May be disabled in config.h.
+
+- OEM feature: Enable/disable `$RST=` individual commands based on
+desired behavior in config.h.
+- OEM feature: Configurable EEPROM wipe to prevent certain data from
+being deleted during firmware upgrade to a new settings version or
+`RST=*` command.
+- OEM feature: Enable/disable the `$I=` build info write string with
+external EEPROM write example sketch.
+    - This prevents a user from altering the build info string in
+EEPROM. This requires the vendor to write the string to EEPROM via
+external means. An Arduino example sketch is provided to accomplish
+this. This would be useful for contain product data that is
+retrievable.
+
+- Tweak: All feedback has been drastically trimmed to free up flash
+space for the v1.0 release.
+    - The `$` help message is just one string, listing available
+commands.
+    - The `$$` settings printout no longer includes descriptions. Only
+the setting values. (Sorry it’s this or remove overrides!)
+    - Grbl `error:` and `ALARM:` responses now only contain codes. No
+descriptions. All codes are explained in documentation.
+    - Grbl’s old feedback style may be restored via a config.h, but
+keep in mind that it will likely not fit into the Arduino’s flash space.
+- Tweak: Grbl now forces a buffer sync or stop motion whenever a g-code
+command needs to update and write a value to EEPROM or changes the work
+coordinate offset.
+    - This addresses two old issues in all prior Grbl versions. First,
+an EEPROM write requires interrupts to be disabled, including stepper
+and serial comm. Steps can be lost and data can be corrupted. Second,
+the work position may not be correlated to the actual machine position,
+since machine position is derived from the actual current execution
+state, while work position is based on the g-code parser offset state.
+They are usually not in sync and the parser state is several motions
+behind. This forced sync ensures work and machine positions are always
+correct.
+    - This behavior can be disabled through a config.h option, but it’s
+not recommended to do so.
+- Tweak: To make status reports standardized, users can no longer
+change what is reported via status report mask, except for only
+toggling machine or work positions.
+    - All other data fields are included in the report and can only be
+disabled through the config.h file. It’s not recommended to alter this,
+because GUIs will be expecting this data to be present and may not be
+compatible.
+- Tweak: Homing cycle and parking motion no longer report a negative
+line number in a status report. These will now not report a line number
+at all.
+- Tweak: New `[Restoring spindle]` message when restoring from a
+spindle stop override. Provides feedback what Grbl is doing while the
+spindle is powering up and a 4.0 second delay is enforced.
+- Tweak: Override values are reset to 100% upon M2/30. This behavior
+can be disabled in config.h
+- Tweak: The planner buffer size has been reduced from 18 to 16 to free
+up RAM for tracking and controlling overrides.
+- Tweak: TX buffer size has been increased from 64 to 90 bytes to
+improve status reporting and overall performance.
+- Tweak: Removed the MOTION CANCEL state. It was redundant and didn’t
+affect Grbl’s overall operation by doing so.
+- Tweak: Grbl’s serial buffer increased by +1 internally, such that 128
+bytes means 128, not 127 due to the ring buffer implementation. Long
+overdue.
+- Tweak: Altered sys.alarm variable to be set by alarm codes, rather
+than bit flags. Simplified how it worked overall.
+- Tweak: Planner buffer and serial RX buffer usage has been combined in
+the status reports.
+- Tweak: Pin state reporting has been refactored to report only the
+pins “triggered” and nothing when not “triggered”.
+- Tweak: Current machine rate or speed is now included in every report.
+- Tweak: The work coordinate offset (WCO) and override states only need
+to be refreshed intermittently or reported when they change. The
+refresh rates may be altered for each in the config.h file with
+different idle and busy rates to lessen Grbl’s load during a job.
+- Tweak: For temporary compatibility to existing GUIs until they are
+updated, an option to revert back to the old style status reports is
+available in config.h, but not recommended for long term use.
+- Tweak: Removed old limit pin state reporting option from config.h in
+lieu of new status report that includes them.
+- Tweak: Updated the defaults.h file to include laser mode, altered
+status report mask, and fix an issue with a missing invert probe pin
+default.
+
+- Refactor: Changed how planner line data is generated and passed to
+the planner and onto the step generator. By making it a struct
+variable, this saved significant flash space.
+- Refactor: Major re-factoring of the planner to incorporate override
+values and allow for re-calculations fast enough to immediately take
+effect during operation. No small feat.
+- Refactor: Re-factored the step segment generator for re-computing new
+override states.
+- Refactor: Re-factored spindle_control.c to accommodate the spindle
+speed overrides and laser mode.
+- Refactor: Re-factored parts of the codebase for a new jogging mode.
+Still under development though and slated to be part of the official
+v1.0 release. Hang tight.
+- Refactor: Created functions for computing a unit vector and value
+limiting based on axis maximums to free up more flash.
+- Refactor: The spindle PWM is now set directly inside of the stepper
+ISR as it loads new step segments.
+- Refactor: Moved machine travel checks out of soft limits function
+into its own since jogging uses this too.
+- Refactor: Removed coolant_stop() and combined with
+coolant_set_state().
+- Refactor: The serial RX ISR forks off extended ASCII values to
+quickly assess the new override realtime commands.
+- Refactor: Altered some names of the step control flags.
+- Refactor: Improved efficiency of the serial RX get buffer count
+function.
+- Refactor: Saved significant flash by removing and combining print
+functions. Namely the uint8 base10 and base2 functions.
+- Refactor: Moved the probe state check in the main stepper ISR to
+improve its efficiency.
+- Refactor: Single character printPgmStrings() went converted to direct
+serial_write() commands to save significant flash space.
+
+- Documentation: Detailed Markdown documents on error codes, alarm
+codes, messages, new real-time commands, new status reports, and how
+jogging works. More to come later and will be posted on the Wiki as
+well.
+- Documentation: CSV files for quick importing of Grbl error and alarm
+codes.
+
+- Bug Fix: Applied v0.9 master fixes to CoreXY homing.
+- Bug Fix: The print float function would cause Grbl to crash if a
+value was 1e6 or greater. Increased the buffer by 3 bytes to help
+prevent this in the future.
+- Bug Fix: Build info and startup string EEPROM restoring was not
+writing the checksum value.
+- Bug Fix: Corrected an issue with safety door restoring the proper
+spindle and coolant state. It worked before, but breaks with laser mode
+that can continually change spindle state per planner block.
+- Bug Fix: Move system position and probe position arrays out of the
+system_t struct. Ran into some compiling errors that were hard to track
+down as to why. Moving them out fixed it.
+

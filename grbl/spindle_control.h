@@ -34,8 +34,8 @@ void spindle_run(uint8_t direction, float rpm);
 void spindle_set_state(uint8_t state, uint8_t pwm_value);
 
 // Stop and start spindle routines. Called by all spindle routines and stepper ISR.
-inline void spindle_stop();
-inline void spindle_set_speed(uint8_t pwm_value); // Variable spindle only.
+void spindle_stop();
+void spindle_set_speed(uint8_t pwm_value); // Variable spindle only.
 
 uint8_t spindle_compute_pwm_value(float rpm); // 328p PWM register is 8-bit. Variable spindle only.
 

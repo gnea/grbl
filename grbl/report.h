@@ -114,8 +114,9 @@ void report_ngc_parameters();
 // Prints current g-code parser mode state
 void report_gcode_modes();
 
-// Prints startup line
+// Prints startup line when requested and executed.
 void report_startup_line(uint8_t n, char *line);
+void report_execute_startup_message(char *line, uint8_t status_code);
 
 // Prints build info and user info
 void report_build_info(char *line);

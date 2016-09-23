@@ -105,20 +105,20 @@ Format - `(v1.0)` `:` `(v0.9)` - `Description`
 
 Format - `Message` - `Description`
 
-- `[Reset to continue]` - Critical event message. Reset is required before Grbl accepts any other commands. This prevents ongoing command streaming and risking a motion before the alarm is acknowledged. Hard or soft limit errors will trigger this event.
+- `[MSG:Reset to continue]` - Critical event message. Reset is required before Grbl accepts any other commands. This prevents ongoing command streaming and risking a motion before the alarm is acknowledged. Hard or soft limit errors will trigger this event.
 
-- `[‘$H’|’$X’ to unlock]`- Alarm message at initialization. All g-code commands and some ‘$’ are blocked until unlocked via homing or $X.
+- `[MSG:‘$H’|’$X’ to unlock]`- Alarm message at initialization. All g-code commands and some ‘$’ are blocked until unlocked via homing or $X.
 
-- `[Caution: Unlocked]` - Alarm unlock $X acknowledgement.
+- `[MSG:Caution: Unlocked]` - Alarm unlock $X acknowledgement.
 
-- `[Enabled]` - Indicates Grbl’s check-mode is enabled.
+- `[MSG:Enabled]` - Indicates Grbl’s check-mode is enabled.
 
-- `[Disabled]` - Indicates Grbl’s check-mode is disabled. Grbl is automatically reset afterwards.
+- `[MSG:Disabled]` - Indicates Grbl’s check-mode is disabled. Grbl is automatically reset afterwards.
 
-- `[Check Door]` - Safety door detected as open. This message appears either immediately upon a safety door ajar or if the safety is open when Grbl initializes after a power-up/reset.
+- `[MSG:Check Door]` - Safety door detected as open. This message appears either immediately upon a safety door ajar or if the safety is open when Grbl initializes after a power-up/reset.
 
-- `[Check Limits]` - If Grbl detects a limit switch is triggered after power-up/reset and hard limits are enabled, this will appear as a courtesy message.
+- `[MSG:Check Limits]` - If Grbl detects a limit switch is triggered after power-up/reset and hard limits are enabled, this will appear as a courtesy message.
 
-- `[Pgm End]` - M2/30 program end message to denote g-code modes have been restored to defaults according to the M2/30 g-code description.
+- `[MSG:Pgm End]` - M2/30 program end message to denote g-code modes have been restored to defaults according to the M2/30 g-code description.
 
-- `[Restoring defaults]` - Acknowledgement message when restoring EEPROM defaults via a `$RST=` command.
+- `[MSG:Restoring defaults]` - Acknowledgement message when restoring EEPROM defaults via a `$RST=` command.

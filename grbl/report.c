@@ -137,27 +137,28 @@ void report_alarm_message(int8_t alarm_code)
 // TODO: Install silence feedback messages option in settings
 void report_feedback_message(uint8_t message_code)
 {
+  printPgmString(PSTR("[MSG:"));
   switch(message_code) {
     case MESSAGE_CRITICAL_EVENT:
-      printPgmString(PSTR("[Reset to continue")); break;
+      printPgmString(PSTR("Reset to continue")); break;
     case MESSAGE_ALARM_LOCK:
-      printPgmString(PSTR("['$H'|'$X' to unlock")); break;
+      printPgmString(PSTR("'$H'|'$X' to unlock")); break;
     case MESSAGE_ALARM_UNLOCK:
-      printPgmString(PSTR("[Caution: Unlocked")); break;
+      printPgmString(PSTR("Caution: Unlocked")); break;
     case MESSAGE_ENABLED:
-      printPgmString(PSTR("[Enabled")); break;
+      printPgmString(PSTR("Enabled")); break;
     case MESSAGE_DISABLED:
-      printPgmString(PSTR("[Disabled")); break;
+      printPgmString(PSTR("Disabled")); break;
     case MESSAGE_SAFETY_DOOR_AJAR:
-      printPgmString(PSTR("[Check Door")); break;
+      printPgmString(PSTR("Check Door")); break;
     case MESSAGE_CHECK_LIMITS:
-      printPgmString(PSTR("[Check Limits")); break;
+      printPgmString(PSTR("Check Limits")); break;
     case MESSAGE_PROGRAM_END:
-      printPgmString(PSTR("[Pgm End")); break;
+      printPgmString(PSTR("Pgm End")); break;
     case MESSAGE_RESTORE_DEFAULTS:
-      printPgmString(PSTR("[Restoring defaults")); break;
+      printPgmString(PSTR("Restoring defaults")); break;
     case MESSAGE_SPINDLE_RESTORE:
-      printPgmString(PSTR("[Restoring spindle")); break;
+      printPgmString(PSTR("Restoring spindle")); break;
   }
   printPgmString(PSTR("]\r\n"));
 }
@@ -172,7 +173,7 @@ void report_init_message()
 // Grbl help message
 void report_grbl_help() {
   #ifdef REPORT_GUI_MODE
-    printPgmString(PSTR("[$$ $# $G $I $N $x=val $Nx=line $J=line $C $X $H ~ ! ? ctrl-x]\r\n"));
+    printPgmString(PSTR("[HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $C $X $H ~ ! ? ctrl-x]\r\n"));
   #else
     printPgmString(PSTR("$$ (view Grbl settings)\r\n"
                         "$# (view # parameters)\r\n"
@@ -193,38 +194,102 @@ void report_grbl_help() {
 }
 
 
+static void report_int_setting(uint8_t n, int val)
+{
+    serial_write('$');
+    print_uint8_base10(n);
+    serial_write('=');
+    print_uint8_base10(val);
+    printPgmString(PSTR("\r\n"));
+}
+
+static void report_float_setting(uint8_t n, float val, uint8_t decimal_places)
+{
+    serial_write('$');
+    print_uint8_base10(n);
+    serial_write('=');
+    printFloat(val, decimal_places);
+    printPgmString(PSTR("\r\n"));
+}
+
+
 // Grbl global settings print out.
 // NOTE: The numbering scheme here must correlate to storing in settings.c
 void report_grbl_settings() {
   // Print Grbl settings.
   #ifdef REPORT_GUI_MODE
-    printPgmString(PSTR("$0=")); print_uint8_base10(settings.pulse_microseconds);
-    printPgmString(PSTR("\r\n$1=")); print_uint8_base10(settings.stepper_idle_lock_time);
-    printPgmString(PSTR("\r\n$2=")); print_uint8_base10(settings.step_invert_mask);
-    printPgmString(PSTR("\r\n$3=")); print_uint8_base10(settings.dir_invert_mask);
-    printPgmString(PSTR("\r\n$4=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE));
-    printPgmString(PSTR("\r\n$5=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_LIMIT_PINS));
-    printPgmString(PSTR("\r\n$6=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_PROBE_PIN));
-    printPgmString(PSTR("\r\n$10=")); print_uint8_base10(settings.status_report_mask);
-    printPgmString(PSTR("\r\n$11=")); printFloat_SettingValue(settings.junction_deviation);
-    printPgmString(PSTR("\r\n$12=")); printFloat_SettingValue(settings.arc_tolerance);
-    printPgmString(PSTR("\r\n$13=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_REPORT_INCHES));
-    printPgmString(PSTR("\r\n$20=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_SOFT_LIMIT_ENABLE));
-    printPgmString(PSTR("\r\n$21=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE));
-    printPgmString(PSTR("\r\n$22=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE));
-    printPgmString(PSTR("\r\n$23=")); print_uint8_base10(settings.homing_dir_mask);
-    printPgmString(PSTR("\r\n$24=")); printFloat_SettingValue(settings.homing_feed_rate);
-    printPgmString(PSTR("\r\n$25=")); printFloat_SettingValue(settings.homing_seek_rate);
-    printPgmString(PSTR("\r\n$26=")); print_uint8_base10(settings.homing_debounce_delay);
-    printPgmString(PSTR("\r\n$27=")); printFloat_SettingValue(settings.homing_pulloff);
-    printPgmString(PSTR("\r\n$30=")); printFloat_RPMValue(settings.rpm_max);
-    printPgmString(PSTR("\r\n$31=")); printFloat_RPMValue(settings.rpm_min);
+
+    report_int_setting(0,settings.pulse_microseconds);
+    report_int_setting(1,settings.stepper_idle_lock_time);
+    report_int_setting(2,settings.step_invert_mask);
+    report_int_setting(3,settings.dir_invert_mask);
+    report_int_setting(4,bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE));
+    report_int_setting(5,bit_istrue(settings.flags,BITFLAG_INVERT_LIMIT_PINS));
+    report_int_setting(6,bit_istrue(settings.flags,BITFLAG_INVERT_PROBE_PIN));
+    report_int_setting(10,settings.status_report_mask);
+    report_float_setting(11,settings.junction_deviation,N_DECIMAL_SETTINGVALUE);
+    report_float_setting(12,settings.arc_tolerance,N_DECIMAL_SETTINGVALUE);
+    report_int_setting(13,bit_istrue(settings.flags,BITFLAG_REPORT_INCHES));
+    report_int_setting(20,bit_istrue(settings.flags,BITFLAG_SOFT_LIMIT_ENABLE));
+    report_int_setting(21,bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE));
+    report_int_setting(22,bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE));
+    report_int_setting(23,settings.homing_dir_mask);
+    report_float_setting(24,settings.homing_feed_rate,N_DECIMAL_SETTINGVALUE);
+    report_float_setting(25,settings.homing_seek_rate,N_DECIMAL_SETTINGVALUE);
+    report_int_setting(26,settings.homing_debounce_delay);
+    report_float_setting(27,settings.homing_pulloff,N_DECIMAL_SETTINGVALUE);
+    report_float_setting(30,settings.rpm_max,N_DECIMAL_RPMVALUE);
+    report_float_setting(31,settings.rpm_min,N_DECIMAL_RPMVALUE);
     #ifdef VARIABLE_SPINDLE
-      printPgmString(PSTR("\r\n$32=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_LASER_MODE));
+      report_int_setting(32,bit_istrue(settings.flags,BITFLAG_LASER_MODE));
     #else
-      printPgmString(PSTR("\r\n$32=0\r\n"));
+      report_int_setting(32,0);
     #endif
+    // Print axis settings
+    uint8_t idx, set_idx;
+    uint8_t val = AXIS_SETTINGS_START_VAL;
+    for (set_idx=0; set_idx<AXIS_N_SETTINGS; set_idx++) {
+      for (idx=0; idx<N_AXIS; idx++) {
+        switch (set_idx) {
+          case 0: report_float_setting(val+idx,settings.steps_per_mm[idx],N_DECIMAL_SETTINGVALUE); break;
+          case 1: report_float_setting(val+idx,settings.max_rate[idx],N_DECIMAL_SETTINGVALUE); break;
+          case 2: report_float_setting(val+idx,settings.acceleration[idx]/(60*60),N_DECIMAL_SETTINGVALUE); break;
+          case 3: report_float_setting(val+idx,-settings.max_travel[idx],N_DECIMAL_SETTINGVALUE); break;
+        }
+      }
+      val += AXIS_SETTINGS_INCREMENT;
+    }
+
+
+    // printPgmString(PSTR("$0=")); print_uint8_base10(settings.pulse_microseconds);
+    // printPgmString(PSTR("\r\n$1=")); print_uint8_base10(settings.stepper_idle_lock_time);
+    // printPgmString(PSTR("\r\n$2=")); print_uint8_base10(settings.step_invert_mask);
+    // printPgmString(PSTR("\r\n$3=")); print_uint8_base10(settings.dir_invert_mask);
+    // printPgmString(PSTR("\r\n$4=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE));
+    // printPgmString(PSTR("\r\n$5=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_LIMIT_PINS));
+    // printPgmString(PSTR("\r\n$6=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_PROBE_PIN));
+    // printPgmString(PSTR("\r\n$10=")); print_uint8_base10(settings.status_report_mask);
+    // printPgmString(PSTR("\r\n$11=")); printFloat_SettingValue(settings.junction_deviation);
+    // printPgmString(PSTR("\r\n$12=")); printFloat_SettingValue(settings.arc_tolerance);
+    // printPgmString(PSTR("\r\n$13=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_REPORT_INCHES));
+    // printPgmString(PSTR("\r\n$20=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_SOFT_LIMIT_ENABLE));
+    // printPgmString(PSTR("\r\n$21=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE));
+    // printPgmString(PSTR("\r\n$22=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE));
+    // printPgmString(PSTR("\r\n$23=")); print_uint8_base10(settings.homing_dir_mask);
+    // printPgmString(PSTR("\r\n$24=")); printFloat_SettingValue(settings.homing_feed_rate);
+    // printPgmString(PSTR("\r\n$25=")); printFloat_SettingValue(settings.homing_seek_rate);
+    // printPgmString(PSTR("\r\n$26=")); print_uint8_base10(settings.homing_debounce_delay);
+    // printPgmString(PSTR("\r\n$27=")); printFloat_SettingValue(settings.homing_pulloff);
+    // printPgmString(PSTR("\r\n$30=")); printFloat_RPMValue(settings.rpm_max);
+    // printPgmString(PSTR("\r\n$31=")); printFloat_RPMValue(settings.rpm_min);
+    // #ifdef VARIABLE_SPINDLE
+    //   printPgmString(PSTR("\r\n$32=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_LASER_MODE));
+    //   printPgmString(PSTR("\r\n"));
+    // #else
+    //   printPgmString(PSTR("\r\n$32=0\r\n"));
+    // #endif
   #else
+
     printPgmString(PSTR("$0=")); print_uint8_base10(settings.pulse_microseconds);
     printPgmString(PSTR(" (step pulse, usec)\r\n$1=")); print_uint8_base10(settings.stepper_idle_lock_time);
     printPgmString(PSTR(" (step idle delay, msec)\r\n$2=")); print_uint8_base10(settings.step_invert_mask);
@@ -252,25 +317,20 @@ void report_grbl_settings() {
     #else
       printPgmString(PSTR(" (rpm min)\r\n$32=0 (laser mode, bool)\r\n"));
     #endif
-  #endif
-
-  // Print axis settings
-  uint8_t idx, set_idx;
-  uint8_t val = AXIS_SETTINGS_START_VAL;
-  for (set_idx=0; set_idx<AXIS_N_SETTINGS; set_idx++) {
-    for (idx=0; idx<N_AXIS; idx++) {
-      serial_write('$');
-      print_uint8_base10(val+idx);
-      serial_write('=');
-      switch (set_idx) {
-        case 0: printFloat_SettingValue(settings.steps_per_mm[idx]); break;
-        case 1: printFloat_SettingValue(settings.max_rate[idx]); break;
-        case 2: printFloat_SettingValue(settings.acceleration[idx]/(60*60)); break;
-        case 3: printFloat_SettingValue(-settings.max_travel[idx]); break;
-      }
-      #ifdef REPORT_GUI_MODE
-        printPgmString(PSTR("\r\n"));
-      #else
+    // Print axis settings
+    uint8_t idx, set_idx;
+    uint8_t val = AXIS_SETTINGS_START_VAL;
+    for (set_idx=0; set_idx<AXIS_N_SETTINGS; set_idx++) {
+      for (idx=0; idx<N_AXIS; idx++) {
+        serial_write('$');
+        print_uint8_base10(val+idx);
+        serial_write('=');
+        switch (set_idx) {
+          case 0: printFloat_SettingValue(settings.steps_per_mm[idx]); break;
+          case 1: printFloat_SettingValue(settings.max_rate[idx]); break;
+          case 2: printFloat_SettingValue(settings.acceleration[idx]/(60*60)); break;
+          case 3: printFloat_SettingValue(-settings.max_travel[idx]); break;
+        }
         serial_write(' ');
         serial_write('(');
         switch (idx) {
@@ -285,10 +345,11 @@ void report_grbl_settings() {
           case 3: printPgmString(PSTR(" max travel, mm")); break;
         }
         printPgmString(PSTR(")\r\n"));
-      #endif
+      }
+      val += AXIS_SETTINGS_INCREMENT;
     }
-    val += AXIS_SETTINGS_INCREMENT;
-  }
+
+  #endif
 }
 
 
@@ -352,24 +413,26 @@ void report_ngc_parameters()
 // Print current gcode parser mode state
 void report_gcode_modes()
 {
+  printPgmString(PSTR("[GC:G"));
   switch (gc_state.modal.motion) {
-    case MOTION_MODE_SEEK : printPgmString(PSTR("[G0")); break;
-    case MOTION_MODE_LINEAR : printPgmString(PSTR("[G1")); break;
-    case MOTION_MODE_CW_ARC : printPgmString(PSTR("[G2")); break;
-    case MOTION_MODE_CCW_ARC : printPgmString(PSTR("[G3")); break;
-    case MOTION_MODE_NONE : printPgmString(PSTR("[G80")); break;
+    case MOTION_MODE_SEEK : serial_write('0'); break;
+    case MOTION_MODE_LINEAR : serial_write('1'); break;
+    case MOTION_MODE_CW_ARC : serial_write('2'); break;
+    case MOTION_MODE_CCW_ARC : serial_write('3'); break;
+    case MOTION_MODE_NONE : printPgmString(PSTR("80")); break;
     default:
-      printPgmString(PSTR("[G38."));
+      printPgmString(PSTR("38."));
       print_uint8_base10(gc_state.modal.motion - (MOTION_MODE_PROBE_TOWARD-2));
   }
 
   printPgmString(PSTR(" G"));
   print_uint8_base10(gc_state.modal.coord_select+54);
 
+  printPgmString(PSTR(" G1"));
   switch (gc_state.modal.plane_select) {
-    case PLANE_SELECT_XY : printPgmString(PSTR(" G17")); break;
-    case PLANE_SELECT_ZX : printPgmString(PSTR(" G18")); break;
-    case PLANE_SELECT_YZ : printPgmString(PSTR(" G19")); break;
+    case PLANE_SELECT_XY : serial_write('7'); break;
+    case PLANE_SELECT_ZX : serial_write('8'); break;
+    case PLANE_SELECT_YZ : serial_write('9'); break;
   }
 
   if (gc_state.modal.units == UNITS_MODE_MM) { printPgmString(PSTR(" G21")); }
@@ -381,26 +444,29 @@ void report_gcode_modes()
   if (gc_state.modal.feed_rate == FEED_RATE_MODE_INVERSE_TIME) { printPgmString(PSTR(" G93")); }
   else { printPgmString(PSTR(" G94")); }
 
+  printPgmString(PSTR(" M"));
   switch (gc_state.modal.program_flow) {
-    case PROGRAM_FLOW_RUNNING : printPgmString(PSTR(" M0")); break;
-    case PROGRAM_FLOW_PAUSED : printPgmString(PSTR(" M1")); break;
-    case PROGRAM_FLOW_COMPLETED : printPgmString(PSTR(" M2")); break;
+    case PROGRAM_FLOW_RUNNING : serial_write('0'); break;
+    case PROGRAM_FLOW_PAUSED : serial_write('1'); break;
+    case PROGRAM_FLOW_COMPLETED : serial_write('2'); break;
   }
 
+  printPgmString(PSTR(" M"));
   switch (gc_state.modal.spindle) {
-    case SPINDLE_ENABLE_CW : printPgmString(PSTR(" M3")); break;
-    case SPINDLE_ENABLE_CCW : printPgmString(PSTR(" M4")); break;
-    case SPINDLE_DISABLE : printPgmString(PSTR(" M5")); break;
+    case SPINDLE_ENABLE_CW : serial_write('3'); break;
+    case SPINDLE_ENABLE_CCW : serial_write('4'); break;
+    case SPINDLE_DISABLE : serial_write('5'); break;
   }
 
+  printPgmString(PSTR(" M"));
   #ifdef ENABLE_M7
     if (gc_state.modal.coolant) { // Note: Multiple coolant states may be active at the same time.
-      if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_MIST) { printPgmString(PSTR(" M7")); }
-      if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_FLOOD) { printPgmString(PSTR(" M8")); }
-    } else { printPgmString(PSTR(" M9")); }
+      if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_MIST) { serial_write('7'); }
+      if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_FLOOD) { serial_write('8'); }
+    } else { serial_write('9'); }
   #else
-    if (gc_state.modal.coolant) { printPgmString(PSTR(" M8")); }
-    else { printPgmString(PSTR(" M9")); }
+    if (gc_state.modal.coolant) { serial_write('8'); }
+    else { serial_write('9'); }
   #endif
 
   printPgmString(PSTR(" T"));
@@ -427,11 +493,18 @@ void report_startup_line(uint8_t n, char *line)
   printPgmString(PSTR("\r\n"));
 }
 
+void report_execute_startup_message(char *line, uint8_t status_code)
+{
+  serial_write('>');
+  printString(line); // Echo startup line to indicate execution.
+  serial_write(':');
+  report_status_message(status_code);
+}
 
 // Prints build info line
 void report_build_info(char *line)
 {
-  printPgmString(PSTR("[" GRBL_VERSION "." GRBL_VERSION_BUILD ":"));
+  printPgmString(PSTR("[VER:" GRBL_VERSION "." GRBL_VERSION_BUILD ":"));
   printString(line);
   printPgmString(PSTR("]\r\n"));
 }

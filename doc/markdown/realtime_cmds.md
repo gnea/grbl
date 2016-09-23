@@ -112,24 +112,27 @@ Grbl v1.0 installed more than a dozen new realtime commands to control feed, rap
     - `0x9D` : Decrease 1%
 
 
-  - `0x9E` : Toggle Spindle Stop
-    - Toggles spindle enable or disable state immediately, but only while in the HOLD.
-    - The command is otherwise ignored, especially while in motion. This prevents accidental disabling during a job that can either destroy the part/machine or personal injury. Industrial machines handle the spindle stop override similarly.
-    - When motion restarts via cycle start, the last spindle state will be restored and wait 4.0 seconds (configurable) before resuming the tool path. This ensures the user doesn't forget to turn it back on.
-    - While disabled, spindle speed override values may still be altered and will be in effect once the spindle is re-enabled.
-    - If a safety door is opened, the DOOR state will supercede the spindle stop override, where it will manage the spindle re-energizing itself upon closing the door and resuming. The prior spindle stop override state is cleared and reset.
+- `0x9E` : Toggle Spindle Stop
+
+  - Toggles spindle enable or disable state immediately, but only while in the HOLD.
+  - The command is otherwise ignored, especially while in motion. This prevents accidental disabling during a job that can either destroy the part/machine or personal injury. Industrial machines handle the spindle stop override similarly.
+  - When motion restarts via cycle start, the last spindle state will be restored and wait 4.0 seconds (configurable) before resuming the tool path. This ensures the user doesn't forget to turn it back on.
+  - While disabled, spindle speed override values may still be altered and will be in effect once the spindle is re-enabled.
+  - If a safety door is opened, the DOOR state will supercede the spindle stop override, where it will manage the spindle re-energizing itself upon closing the door and resuming. The prior spindle stop override state is cleared and reset.
 
 
-  - `0xA0` : Toggle Flood Coolant
-    - Toggles flood coolant state and output pin until the next toggle or g-code command alters it.
-    - May be commanded at any time while in IDLE, RUN, or HOLD states. It is otherwise ignored.
-    - This override directly changes the coolant modal state in the g-code parser. Grbl will continue to operate normally like it received and executed an `M8` or `M9` g-code command.
-    - When `$G` g-code parser state is queried, the toggle override change will be reflected by an `M8` enabled or disabled with an `M9` or not appearing when `M7` is present.
+- `0xA0` : Toggle Flood Coolant
+
+  - Toggles flood coolant state and output pin until the next toggle or g-code command alters it.
+  - May be commanded at any time while in IDLE, RUN, or HOLD states. It is otherwise ignored.
+  - This override directly changes the coolant modal state in the g-code parser. Grbl will continue to operate normally like it received and executed an `M8` or `M9` g-code command.
+  - When `$G` g-code parser state is queried, the toggle override change will be reflected by an `M8` enabled or disabled with an `M9` or not appearing when `M7` is present.
 
 
-  - `0xA1` : Toggle Mist Coolant
-    - Enabled by `ENABLE_M7` compile-time option. Default is disabled.
-    - Toggles mist coolant state and output pin until the next toggle or g-code command alters it.
-    - May be commanded at any time while in IDLE, RUN, or HOLD states. It is otherwise ignored.
-    - This override directly changes the coolant modal state in the g-code parser. Grbl will continue to operate normally like it received and executed an `M7` or `M9` g-code command.
-    - When `$G` g-code parser state is queried, the toggle override change will be reflected by an `M7` enabled or disabled with an `M9` or not appearing when `M8` is present.
+- `0xA1` : Toggle Mist Coolant
+
+  - Enabled by `ENABLE_M7` compile-time option. Default is disabled.
+  - Toggles mist coolant state and output pin until the next toggle or g-code command alters it.
+  - May be commanded at any time while in IDLE, RUN, or HOLD states. It is otherwise ignored.
+  - This override directly changes the coolant modal state in the g-code parser. Grbl will continue to operate normally like it received and executed an `M7` or `M9` g-code command.
+  - When `$G` g-code parser state is queried, the toggle override change will be reflected by an `M7` enabled or disabled with an `M9` or not appearing when `M8` is present.

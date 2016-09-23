@@ -1,0 +1,544 @@
+# Grbl Interface Basics
+
+The interface for Grbl is fairly simple and straightforward. With Grbl v1.0, steps have been taken to try to make it even easier for new users to get started, and for GUI developers to write their own custom interfaces to Grbl.
+
+In short, Grbl communicates through the serial interface on the Arduino. You just need to connect your Arduino to your computer with a USB cable. Use any standard serial terminal program to connect to Grbl, such as: the Arduino IDE serial monitor, Coolterm, puTTY, etc. Or use one of the many great Grbl GUIs out there in the Internet wild.
+
+Just about every user interaction with Grbl is performed by sending it a string of characters, followed by a carriage return. Grbl will then process the string, execute it accordingly, and then reply back with a response message to tell you how it went. These strings include sending Grbl: a G-code block to execute, commands to configure Grbl's system settings, to view how Grbl is doing, etc. At times, Grbl may not respond immediately. This happens only when Grbl is busy doing something else, or waiting for some room to clear in its look-ahead planner buffer so it can finish processing the previous line sent.
+
+In other words, both commands sent to Grbl and messages received from Grbl have a format of a single line of characters, terminated by a return. To provide more feedback on what Grbl is doing, additional messages may be "pushed" from Grbl to the user in response to a query or to let the user know something important just happened. Finally, an exception to the command and response interface are Grbl's real-time commands. These commands are single, special characters that may be sent to Grbl at any time to immediately alter or report what its doing and do not have a response message. See the [realtime commands] document to see what they are and how they work.
+
+
+#### Start Up Message
+
+**`Grbl vX.Xx ['$' for help]`**
+
+The start up message always prints upon startup and after a reset. Whenever you see this message, this also means that Grbl has completed re-initializing all its systems, so everything starts out the same every time you use Grbl.
+
+* `vX.Xx` indicates the major version number, followed by a minor version letter. The major version number indicates the general release, while the letter simply indicates a feature update or addition from the preceding minor version letter.
+* Bug fix revisions are tracked by the build info version number, printed when an `$I` command is sent. These revisions don't update the version number and are given by date revised in year, month, and day, like so `20160820`.
+
+#### Grbl `$` Help Message
+
+Every string Grbl receives is assumed to be a G-code block/line for it to execute, except for some special system commands Grbl uses for configuration, provide feedback to the user on what and how it's doing, or perform some task such as a homing cycle. To see a list of these system commands, type `$` followed by an enter, and Grbl will respond with:
+
+```
+[HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $C $X $H ~ ! ? ctrl-x]
+```
+
+- _**NOTE:** Grbl v1.0's new override real-time commands are not included in the help message. They use the extended-ASCII character set, which are not easily type-able, and require a GUI that supports them. This is for two reasons: Establish enough characters for all of the overrides with extra for later growth, and prevent accidental keystrokes or characters in a g-code file from enacting an override inadvertently. _
+
+* Check out our [Configuring Grbl](https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.9) wiki page to find out what all of these commands mean and how to use them.
+
+
+---------
+
+# Grbl Response Messages
+
+Every G-code block sent to Grbl and Grbl `$` system command that is terminated with a return will be parsed and processed by Grbl. Grbl will then respond either if it recognized the command with an `ok` line or if there was a problem with an `error` line.
+
+* **`ok`**: All is good! Everything in the last line was understood by Grbl and was successfully processed and executed.
+
+  - If an empty line with only a return is sent to Grbl, it considers it a valid line and will return an `ok` too, except it didn't do anything.
+
+
+* **`error:X`**: Something went wrong! Grbl did not recognize the command and did not execute anything inside that message. The `X` is given as a numeric error code to tell you exactly what happened. The table below decribes every one of them.
+
+| ID | Error Code Description |
+|:-------------:|----|
+| **`1`** | G-code words consist of a letter and a value. Letter was not found. |
+| **`2`** | Numeric value format is not valid or missing an expected value. |
+| **`3`** | Grbl '$' system command was not recognized or supported. |
+| **`4`** | Negative value received for an expected positive value. |
+| **`5`** | Homing cycle is not enabled via settings. |
+| **`6`** | Minimum step pulse time must be greater than 3usec |
+| **`7`** | EEPROM read failed. Reset and restored to default values. |
+| **`8`** | Grbl '$' command cannot be used unless Grbl is IDLE. Ensures smooth operation during a job. |
+| **`9`** | G-code locked out during alarm or jog state |
+| **`10`** | Soft limits cannot be enabled without homing also enabled. |
+| **`11`** | Max characters per line exceeded. Line was not processed and executed. |
+| **`12`** | (Compile Option) Grbl '$' setting value exceeds the maximum step rate supported. |
+| **`13`** | Safety door detected as opened and door state initiated. |
+| **`14`** | (Grbl-Mega Only) Build info or startup line exceeded EEPROM line length limit. |
+| **`15`** | Jog target exceeds machine travel. Command ignored. |
+| **`16`** | Jog command with no '=' or contains prohibited g-code. |
+| **`20`** | Unsupported or invalid g-code command found in block. |
+| **`21`** | More than one g-code command from same modal group found in block.|
+| **`22`** | Feed rate has not yet been set or is undefined. |
+| **`23`** | G-code command in block requires an integer value. |
+| **`24`** | Two G-code commands that both require the use of the `XYZ` axis words were detected in the block.|
+| **`25`** | A G-code word was repeated in the block.|
+| **`26`** | A G-code command implicitly or explicitly requires `XYZ` axis words in the block, but none were detected.|
+| **`27`**| `N` line number value is not within the valid range of `1` - `9,999,999`. |
+| **`28`** | A G-code command was sent, but is missing some required `P` or `L` value words in the line. |
+| **`29`** | Grbl supports six work coordinate systems `G54-G59`. `G59.1`, `G59.2`, and `G59.3` are not supported.|
+| **`30`**| The `G53` G-code command requires either a `G0` seek or `G1` feed motion mode to be active. A different motion was active.|
+| **`31`** | There are unused axis words in the block and `G80` motion mode cancel is active.|
+| **`32`** | A `G2` or `G3` arc was commanded but there are no `XYZ` axis words in the selected plane to trace the arc.|
+| **`33`** | The motion command has an invalid target. `G2`, `G3`, and `G38.2` generates this error, if the arc is impossible to generate or if the probe target is the current position.|
+| **`34`** | A `G2` or `G3` arc, traced with the radius definition, had a mathematical error when computing the arc geometry. Try either breaking up the arc into semi-circles or quadrants, or redefine them with the arc offset definition.|
+| **`35`** | A `G2` or `G3` arc, traced with the offset definition, is missing the `IJK` offset word in the selected plane to trace the arc.|
+| **`36`** | There are unused, leftover G-code words that aren't used by any command in the block.|
+| **`37`** | The `G43.1` dynamic tool length offset command cannot apply an offset to an axis other than its configured axis. The Grbl default axis is the Z-axis.|
+
+
+----------------------
+
+# Grbl Push Messages
+
+Along with the response message to indicate successfully executing a line command sent to Grbl, Grbl provides additional push messages for important feedback of its current state or if something went horribly wrong. These messages are "pushed" from Grbl and may appear at anytime. They are usually in response to a user query or some system event that Grbl needs to tell you about immediately. These push messages are organized into four general classes:
+
+- **_ALARM messages_** - Means an emergency mode has been enacted and shut down normal use.
+
+- **_'$' settings messages_** - Contains the type and data value for a Grbl setting.
+
+- **_Feedback messages_** - Contains general feedback and can provide useful data.
+
+- **_Real-time status reports_** - Contains current run data like state, position, and speed.
+
+------
+
+#### Alarm Message
+
+Alarm is an emergency state. Something has gone terribly wrong when these occur. Typically, they are caused by limit error when the machine has moved or wants to move outside the machine travel and crash into the ends. They also report problems if Grbl is lost and can't guarantee positioning or a probe command has failed. Once in alarm-mode, Grbl will lock out all g-code functionality and accept only a small set of commands. It may even stop everything and force you to acknowledge the problem until you issue Grbl a reset. While in alarm-mode, the user can override the alarm manually with a specific command, which then re-enables g-code so you can move the machine again. This ensures the user knows about the problem and has taken steps to fix or account for it.
+
+Similar to error messages, all alarm messages are sent as  **`ALARM:X`**, where `X` is an alarm code to tell you exacly what caused the alarm. The table below describes the meaning of each alarm code.
+
+| ID | Alarm Code Description |
+|:-------------:|----|
+| **`1`** | Hard limit triggered. Machine position is likely lost due to sudden and immediate halt. Re-homing is highly recommended. |
+| **`2`** | G-code motion target exceeds machine travel. Machine position safely retained. Alarm may be unlocked. |
+| **`3`** | Reset while in motion. Grbl cannot guarantee position. Lost steps are likely. Re-homing is highly recommended. |
+| **`4`** | Probe fail. The probe is not in the expected initial state before starting probe cycle, where G38.2 and G38.3 is not triggered and G38.4 and G38.5 is triggered. |
+| **`5`** | Probe fail. Probe did not contact the workpiece within the programmed travel for G38.2 and G38.4. |
+| **`6`** | Homing fail. Reset during active homing cycle. |
+| **`7`** | Homing fail. Safety door was opened during active homing cycle. |
+| **`8`** | Homing fail. Cycle failed to clear limit switch when pulling off. Try increasing pull-off setting or check wiring. |
+| **`9`** | Homing fail. Could not find limit switch within search distance. Defined as `1.5 * max_travel` on search and `5 * pulloff` on locate phases. |
+
+-------
+
+#### Grbl `$` Settings Message
+
+When a push message starts with a `$`, this indicates Grbl is sending a setting and its configured value. There are only two types of settings messages: a single setting and value `$x=val` and a startup string setting `$Nx=line`. See [Configuring Grbl v1.x] document if you'd like to learn how to write these values for your machine.
+
+- `$x=val` will only appear when the user queries to print all of Grbl's settings via the `$$` print settings command. It does so sequentially and completes with an `ok`.
+
+  - In prior versions of Grbl, the `$` settings included a short description of the setting immediately after the value. However, due to flash restrictions, most human-readable strings were removed to free up flash for the new override features in Grbl v1.0. In short, it was these strings or overrides, and overrides won. Keep in mind that once these values are set, they usually don't change, and GUIs will likely provide the assistance of translating these codes for users.
+
+  - _**NOTE for GUI developers:** As with the error and alarm codes, settings codes are available in an easy to parse CSV file in the `/doc/csv` folder. These are continually updated._
+
+  - The `$$` settings print out is shown below and the following describes each setting.
+
+    ```
+$0=10
+$1=25
+$2=0
+$3=0
+$4=0
+$5=0
+$6=0
+$10=255
+$11=0.010
+$12=0.002
+$13=0
+$20=0
+$21=0
+$22=0
+$23=0
+$24=25.000
+$25=500.000
+$26=250
+$27=1.000
+$30=1000.
+$31=0.
+$32=0
+$100=250.000
+$101=250.000
+$102=250.000
+$110=500.000
+$111=500.000
+$112=500.000
+$120=10.000
+$121=10.000
+$122=10.000
+$130=200.000
+$131=200.000
+$132=200.000
+ok
+```
+
+| `$x` Code | Setting Description, Units |
+|:-------------:|----|
+| **`0`** | Step pulse time, microseconds |
+| **`1`** | Step idle delay, milliseconds |
+| **`2`** | Step pulse invert, mask |
+| **`3`** | Step direction invert, mask |
+| **`4`** | Invert step enable pin, boolean |
+| **`5`** | Invert limit pins, boolean |
+| **`6`** | Invert probe pin, boolean |
+| **`10`** | Status report options, mask |
+| **`11`** | Junction deviation, millimeters |
+| **`12`** | Arc tolerance, millimeters |
+| **`13`** | Report in inches, boolean |
+| **`20`** | Soft limits enable, boolean |
+| **`21`** | Hard limits enable, boolean |
+| **`22`** | Homing cycle enable, boolean |
+| **`23`** | Homing direction invert, mask |
+| **`24`** | Homing locate feed rate, mm/min |
+| **`25`** | Homing search seek rate, mm/min  |
+| **`26`** | Homing switch debounce delay, milliseconds |
+| **`27`** | Homing switch pull-off distance, millimeters |
+| **`30`** | Maximum spindle speed, RPM |
+| **`31`** | Minimum spindle speed, RPM |
+| **`32`** | Laser-mode enable, boolean |
+| **`100`** | X-axis steps per millimeter |
+| **`101`** | Y-axis steps per millimeter |
+| **`102`** | Z-axis steps per millimeter |
+| **`110`** | X-axis maximum rate, mm/min |
+| **`111`** | Y-axis maximum rate, mm/min |
+| **`112`** | Z-axis maximum rate, mm/min |
+| **`120`** | X-axis acceleration, mm/sec^2 |
+| **`121`** | Y-axis acceleration, mm/sec^2 |
+| **`122`** | Z-axis acceleration, mm/sec^2 |
+| **`130`** | X-axis maximum travel, millimeters |
+| **`131`** | Y-axis maximum travel, millimeters |
+| **`132`** | Z-axis maximum travel, millimeters |
+
+
+- The other `$Nx=line` message is the print-out of a user-defined startup line, where `x` denotes the startup line order and ranges from `0` to `1` by default. The `line` denotes the startup line to be executed by Grbl upon reset or power-up, except during an ALARM.
+
+  - When a user queries for the startup lines via a `$N` command, the following is sent by Grbl and completed by an `ok` response. The first line sets the initial startup work coordinate system to `G54`, while the second line is empty and does not execute.
+  ```
+  $N0=G54
+  $N1=
+  ok
+  ```
+
+
+------
+
+#### Feedback Messages
+
+Feedback messages provide non-critical information on what Grbl is doing, what it needs, and/or provide some non-real-time data for the user when queried. Not too complicated. Feedback message are always enclosed in `[]` brackets, except for the startup line execution message which begins with an open chevron character `>`.
+
+- **Non-Queried Feedback Messages:** These feedback messages that may appear at any time and is not part of a query are listed and described below. These always start with a `[MSG:` to denote their type.
+
+  - `[MSG:Reset to continue]` - Critical event message. Reset is required before Grbl accepts any other commands. This prevents ongoing command streaming and risking a motion before the alarm is acknowledged. Hard or soft limit errors will trigger this event.
+
+  - `[MSG:‘$H’|’$X’ to unlock]`- Alarm message at initialization. All g-code commands and some ‘$’ are blocked until unlocked via homing or $X.
+
+  - `[MSG:Caution: Unlocked]` - Alarm unlock $X acknowledgement.
+
+  - `[MSG:Enabled]` - Indicates Grbl’s check-mode is enabled.
+
+  - `[MSG:Disabled]` - Indicates Grbl’s check-mode is disabled. Grbl is automatically reset afterwards.
+
+  - `[MSG:Check Door]` - Safety door detected as open. This message appears either immediately upon a safety door ajar or if the safety is open when Grbl initializes after a power-up/reset.
+
+  - `[MSG:Check Limits]` - If Grbl detects a limit switch is triggered after power-up/reset and hard limits are enabled, this will appear as a courtesy message.
+
+  - `[MSG:Pgm End]` - M2/30 program end message to denote g-code modes have been restored to defaults according to the M2/30 g-code description.
+
+  - `[MSG:Restoring defaults]` - Acknowledgement message when restoring EEPROM defaults via a `$RST=` command.
+
+- **Queried Feedback Messages:**
+
+  - `[GC:]` G-code Parser State Message
+    - Initiated by the user via a `$G` command. Grbl replies as follows, where the `[GC:` denotes the message type and is followed by an `ok` to confirm the `$G` was executed.
+    - `[GC:G0 G54 G17 G21 G90 G94 M0 M5 M9 T0 F0. S0.]`
+    - The shown g-code are the current modal states of Grbl's g-code parser. This may not correlate to what is executing since there are usually several motions queued in the planner buffer.
+
+  - `[HLP:]` : Indicates the help message queried by a `$` command.
+
+  - The `$#` print parameter data query produces a large set of data which shown below and completed by an `ok` response message.
+
+    - Each line of the printout is starts with the data type, a `:`, and followed by the data values. If there is more than one, the order is XYZ axes, separated by commas.
+
+    ```
+    [G54:0.000,0.000,0.000]
+    [G55:0.000,0.000,0.000]
+    [G56:0.000,0.000,0.000]
+    [G57:0.000,0.000,0.000]
+    [G58:0.000,0.000,0.000]
+    [G59:0.000,0.000,0.000]
+    [G28:0.000,0.000,0.000]
+    [G30:0.000,0.000,0.000]
+    [G92:0.000,0.000,0.000]
+    [TLO:0.000]
+    [PRB:0.000,0.000,0.000:0]
+    ok
+    ```
+
+    - The `PRB:` probe parameter message includes an additional `:` and suffix value is a boolean. It denotes whether the last probe cycle was successful or not.
+
+  - `[VER:]` : Indicates build info and string from a `$I` user query.
+
+  - `[echo:]` : Indicates an automated line echo from a pre-parsed string prior to g-code parsing. Enabled by config.h option.
+
+- **Startup Line Execution:**
+  - `>G54G20:ok` : The open chevron indicates a startup line has just executed. The startup line `G54G20` immediately follows the `>` character and is followed by an 'ok' response to indicate it executed successfully.
+
+    - A startup line will execute upon initialization only if a line is present and if Grbl is not in an alarm state.
+
+    - The `:ok` on the same line is intentional. It prevents this `ok` response from being counted as part of a stream, because it is not tied to a sent command, but an internally-generated one.
+
+    - There should always be an appended `:ok` because the startup line is checked for validity before it is stored in EEPROM. In the event that it's not, Grbl will print `>G54G20:error:X`, where `X` is the error code explaining why the startup line failed to execute.
+
+    - In the rare chance that there is an EEPROM read error, the startup line execution will print `>:error:7` with no startup line and a error code `7` for a read fail.
+
+
+------
+
+#### Real-time Status reports
+
+- Contains real-time data of Grbl’s state, position, and other data required independently of the stream.
+
+- Categorized as a real-time message, where it is a separate message that should not be counted as part of the streaming protocol. It may appear at any given time.
+
+- A status report is initiated by sending Grbl a '?' character.
+
+  - Like all real-time commands, the '?' character is intercepted and never enters the serial buffer. It's never a part of the stream and can be sent at any time.
+
+  - Grbl will generate and transmit a report within ~5-20 milliseconds.
+
+  - Every ’?’ command sent by a GUI is not guaranteed with a response. The following are the current scenarios when Grbl may not immediately or ignore a status report request. _NOTE: These may change in the future and will be documented here._
+
+    - If two or more '?' queries are sent before the first report is generated, the additional queries are ignored.
+
+    - A soft-reset commanded clears the last status report query.
+
+    - When Grbl throws a critical alarm from a limit violation. A soft-reset is required to resume operation.
+
+    - During a homing cycle.
+
+- **Message Construction:**
+
+  - A message is a single line of ascii text, completed by a carriage return and line feed.
+
+  - `< >` Chevrons uniquely enclose reports to indicate message type.
+
+  - `|` Pipe delimiters separate data fields inside the report.
+
+  - The first data field is an exception to the following data field rules. See 'Machine State' description for details.
+
+  - All remaining data fields consist of a data type followed by a `:` colon delimiter and data values. `type:value(s)`
+
+  - Data values are given either as as one or more pre-defined character codes to indicate certain states/conditions or as numeric values, which are separated by a `,` comma delimiter when more than one is present. Numeric values are also in a pre-defined order and units of measure.
+
+  - The first (Machine State) and second (Current Position) data fields are always included in every report.
+
+  - Assume any following data field may or may not exist and can be in any order. The `$10` status report mask setting can alter what data is present and certain data fields can be reported intermittently (see descriptions for details.)
+
+  - The `$13` report inches settings alters the units of some data values. `$13=0` false indicates mm-mode, while `$13=1` true indicates inch-mode reporting. Keep note of this setting and which report values can be altered.
+
+- **Data Field Descriptions:**
+
+    - **Machine State:**
+
+      - Valid states types:  `Idle, Run, Hold, Jog, Alarm, Door, Check, Home`
+
+      - Sub-states may be included via `:` a colon delimiter and numeric code.
+
+      - Current sub-states are:
+
+        - `Hold:0` Hold complete. Ready to resume.
+
+        - `Hold:1` Hold in-progress. Reset will throw an alarm.
+
+        - `Door:0` Door closed. Ready to resume.
+
+        - `Door:1` Machine stopped. Door still ajar. Can't resume until closed.
+
+        - `Door:2` Door opened. Hold (or parking retract) in-progress. Reset will throw an alarm.
+
+        - `Door:3` Door closed and resuming. Restoring from park, if applicable. Reset will throw an alarm.
+
+      - This data field is always present as the first field.
+
+    - **Current Position:**
+
+        - Depending on `$10` status report mask settings, position may be sent as either:
+
+          - `MPos:0.000,-10.000,5.000` machine position or
+
+          - `WPos:-2.500,0.000,11.000` work position
+
+        - Three position values are given in the order of X, Y, and Z. A fourth position value may exist in later versions for the A-axis.
+
+        - `$13` report inches user setting effects these values and is given as either mm or inches.
+
+        - This data field is always present as the second field.
+
+    - **Work Coordinate Offset:**
+
+        - `WCO:0.000,1.551,5.664` is the current work coordinate offset of the g-code parser, which is the sum of the current work coordinate system, G92 offsets, and G43.1 tool length offset.
+
+        - Machine position and work position are related by this simple equation per axis: `WPos = MPos - WCO`
+
+        - Values are given in the order of the X,Y, and Z axes offsets. A fourth offset value may exist in later versions for the A-axis.
+        - `$13` report inches user setting effects these values and is given as either mm or inches.
+
+        - `WCO:` values don't change often during a job once set and only requires intermittent refreshing.
+
+        - This data field appears:
+
+          - In every 10 or 30 (configurable 1-255) status reports, depending on if Grbl is in a motion state or not.
+
+          - Immediately in the next report, if an offset value has changed.
+
+          - In the first report after a reset/power-cycle.
+
+        - This data field will not appear if:
+
+          - It is disabled in the config.h file. No `$` mask setting available.
+
+          - The refresh counter is in-between intermittent reports.       
+
+    - **Buffer State:**
+
+        - `Bf:0,0`. The first value is planner blocks in use and the second is RX bytes in use.
+
+        - This data field will not appear if:
+
+          - It is disabled by the `$` status report mask setting.
+
+    - **Line Number:**
+
+        - `Ln:99999` indicates line 99999 is currently being executed. This differs from the `$G` line `N` value since the parser is usually queued few blocks behind execution.
+
+        - Compile-time option only because of memory requirements. However, if a GUI passes indicator line numbers onto Grbl, it's very useful to determine when Grbl is executing them.
+
+        - This data field will not appear if:
+
+          - It is disabled in the config.h file. No `$` mask setting available.
+
+          - The line number reporting not enabled in config.h. Different option to reporting data field.
+
+          - No line number or `N0` is passed with the g-code block.
+
+          - Grbl is homing, jogging, parking, or performing a system task/motion.
+
+          - There is no motion in the g-code block like a `G4P1` dwell. (May be fixed in later versions.)
+
+    - **Current Rate:**
+
+        - `F:1000.` indicates current actual feed rate (speed) of the executing motion. Depending on machine max rate settings and acceleration, this value may not be the programmed rate.
+
+        - Value units, either in mm/min or inches/min, is dependent on the `$` report inches user setting.
+
+        - As a operational note, reported rate is typically 30-50 msec behind actual position reported.
+
+        - This data field will not appear if:
+
+          - It is disabled in the config.h file. No `$` mask setting available.
+
+    - **Input Pin State:**
+
+        - `Pn:XYZPDHRS` indicates which input pins Grbl has detected as 'triggered'.
+
+        - Pin state is evaluated every time a status report is generated. All input pin inversions are appropriately applied to determine 'triggered' states.
+
+        - Each letter of `XYZPDHRS` denotes a particular 'triggered' input pin.
+
+          - `X Y Z` XYZ limit pins, respectively
+
+          - `P` the probe pin.
+
+          - `D H R S` the door, hold, soft-reset, and cycle-start pins, respectively.
+
+          - Example: `Pn:PZ` indicates the probe and z-limit pins are 'triggered'.
+
+          - Note: `A` may be added in later versions for an A-axis limit pin.
+
+        - Assume input pin letters are presented in no particular order.
+
+        - One or more 'triggered' pin letter(s) will always be present with a `Pn:` data field.
+
+        - This data field will not appear if:
+
+          - It is disabled in the config.h file. No `$` mask setting available.
+
+          - No input pins are detected as triggered.
+
+    - **Override Values:**
+
+        - `Ov:100,100,100` indicates current override values in percent of programmed values for feed, rapids, and spindle speed, respectively.
+
+        - Override values don't change often during a job once set and only requires intermittent refreshing. This data field appears:
+
+          - After 10 or 20 (configurable 1-255) status reports, depending on is in a motion state or not.
+
+          - If an override value has changed, this data field will appear immediately in the next report. However, if `WCO:` is present, this data field will be delayed one report.
+
+          - In the second report after a reset/power-cycle.
+
+        - This data field will not appear if:
+
+          - It is disabled in the config.h file. No `$` mask setting available.
+
+          - The override refresh counter is in-between intermittent reports.
+
+          - `WCO:` exists in current report during refresh. Automatically set to try again on next report.
+
+    - **Toggle Overrides:**
+
+      - `T:SFM` indicates a toggle override is in effect or has been commanded.
+
+      - Like the pin state field, each letter denotes a particular toggle override.
+
+        - `S` indicates the spindle stop toggle override is in effect. It will appear as long as the spindle stop override is active.
+
+        - `F` indicates the flood coolant toggle override was activated. It will only appear once after it has executed the coolant state change.
+
+        - `M` indicates the mist coolant toggle override was activated, if mist coolant is enabled via config.h. It will only appear once after it has executed the coolant state change.
+
+      - Assume toggle override letters are presented in no particular order.
+
+      - One or more active toggle override letter(s) will always be present with a `T:` data field.
+
+      - This data field appears:
+
+        - If a toggle override is active or has recently executed and only when the override values field is also present (see override value field rules).
+
+      - This data field will not appear if:
+
+        - If no toggle override is active or has been executed.
+
+        - It is disabled in the config.h file. No `$` mask setting available.
+
+        - If override refresh counter is in-between intermittent reports.
+
+        - `WCO:` exists in current report during refresh. Automatically set to try again on next report.
+
+
+-------
+# Message Summary
+
+Grbl v1.0's interface protocol has been tweaked in the attempt to make GUI development cleaner, clearer, and hopefully easier. All messages are designed to be deterministic without needing to know the context of the message. Each can be inferred to a much greater degree than before just by the message type, which are all listed below.
+
+- `ok` / `error:x` : Normal send command and execution response acknowledgement. Used for streaming.
+
+- `< >` : Enclosed chevrons contains status report data.
+
+- `Grbl vX.Xx ['$' for help]` : Welcome message indicates initialization.
+
+- `ALARM:x` : Indicates an alarm has been thrown. Grbl is now in an alarm state.
+
+- `$x=val` and `$Nx=line` indicate a settings printout from a `$` and `$N` user query, respectively.
+
+- `[MSG:]` : Indicates a non-queried feedback message.
+
+- `[GC:]` : Indicates a queried `$G` g-code state message.
+
+- `[HLP:]` : Indicates the help message.
+
+- `[G54:]`, `[G55:]`, `[G56:]`, `[G57:]`, `[G58:]`, `[G59:]`, `[G28:]`, `[G30:]`, `[G92:]`, `[TLO:]`, and `[PRB:]` messages indicate the parameter data printout from a `$#` user query.
+
+- `[VER:]` : Indicates build info and string from a `$I` user query.
+
+- `[echo:]` : Indicates an automated line echo from a pre-parsed string prior to g-code parsing. Enabled by config.h option.
+
+- `>G54G20:ok` : The open chevron indicates startup line execution. The `:ok` suffix shows it executed correctly without adding an unmatched `ok` response on a new line.
+
+On a final note, this interface tweak came about out of necessity, as more data is being sent back from Grbl and it is capable of doing many more things. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before Grbl v1.0 goes to master, please do immediately so we can all vet the new alteration before its installed.
