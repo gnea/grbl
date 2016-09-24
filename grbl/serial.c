@@ -41,9 +41,9 @@ volatile uint8_t serial_tx_buffer_tail = 0;
 // Returns the number of bytes used in the RX serial buffer.
 uint8_t serial_get_rx_buffer_count()
 {
-  uint8_t diff = serial_rx_buffer_head-serial_rx_buffer_tail;
-  if (diff >= 0) { return(diff); }
-  return (RX_RING_BUFFER + diff);
+  uint8_t rtail = serial_rx_buffer_tail; // Copy to limit multiple calls to volatile
+  if (serial_rx_buffer_head >= rtail) { return(serial_rx_buffer_head-rtail); }
+  return (RX_BUFFER_SIZE - (rtail-serial_rx_buffer_head));
 }
 
 

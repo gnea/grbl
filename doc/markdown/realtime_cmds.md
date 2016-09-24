@@ -1,6 +1,6 @@
-## Grbl v1.0 Realtime commands
+## Grbl v1.1 Realtime commands
 
-Realtime commands are single control characters that may be sent to Grbl to command and perform an action in real-time, regardless of what Grbl is doing at the time. These commands include a reset, feed hold, resume, status report query, and overrides (in v1.0).
+Realtime commands are single control characters that may be sent to Grbl to command and perform an action in real-time, regardless of what Grbl is doing at the time. These commands include a reset, feed hold, resume, status report query, and overrides (in v1.1).
 
 A realtime command:
 
@@ -21,7 +21,7 @@ A realtime command:
 - Descriptions explain how they work and what to expect.
 
 #### ASCII Realtime Command Descriptions
-The normal ASCII realtime command characters used in Grbl v0.9 have been retained in Grbl v1.0 and are described below for completeness.
+The normal ASCII realtime command characters used in Grbl v0.9 have been retained in Grbl v1.1 and are described below for completeness.
 
 - `0x18` (ctrl-x) : Soft-Reset
 
@@ -56,7 +56,7 @@ The normal ASCII realtime command characters used in Grbl v0.9 have been retaine
 
 #### Extended-ASCII Realtime Command Descriptions
 
-Grbl v1.0 installed more than a dozen new realtime commands to control feed, rapid, and spindle overrides. To help prevent users from inadvertently altering overrides with a keystroke and allow for more commands later on, all of the new control characters have been moved to the extended ASCII character set. These are not readily type-able on a keyboard, but, depending on the OS, they may be entered using specific keystroke and code. GUI developers will need to be able to send extended ASCII characters, values `128 (0x80)` to `255 (0xFF)`, to Grbl to take advantage of these new features.
+Grbl v1.1 installed more than a dozen new realtime commands to control feed, rapid, and spindle overrides. To help prevent users from inadvertently altering overrides with a keystroke and allow for more commands later on, all of the new control characters have been moved to the extended ASCII character set. These are not readily type-able on a keyboard, but, depending on the OS, they may be entered using specific keystroke and code. GUI developers will need to be able to send extended ASCII characters, values `128 (0x80)` to `255 (0xFF)`, to Grbl to take advantage of these new features.
 
 - `0x84` : Safety Door
 

@@ -1,6 +1,6 @@
 # Grbl Interface Basics
 
-The interface for Grbl is fairly simple and straightforward. With Grbl v1.0, steps have been taken to try to make it even easier for new users to get started, and for GUI developers to write their own custom interfaces to Grbl.
+The interface for Grbl is fairly simple and straightforward. With Grbl v1.1, steps have been taken to try to make it even easier for new users to get started, and for GUI developers to write their own custom interfaces to Grbl.
 
 In short, Grbl communicates through the serial interface on the Arduino. You just need to connect your Arduino to your computer with a USB cable. Use any standard serial terminal program to connect to Grbl, such as: the Arduino IDE serial monitor, Coolterm, puTTY, etc. Or use one of the many great Grbl GUIs out there in the Internet wild.
 
@@ -26,7 +26,7 @@ Every string Grbl receives is assumed to be a G-code block/line for it to execut
 [HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $C $X $H ~ ! ? ctrl-x]
 ```
 
-- _**NOTE:** Grbl v1.0's new override real-time commands are not included in the help message. They use the extended-ASCII character set, which are not easily type-able, and require a GUI that supports them. This is for two reasons: Establish enough characters for all of the overrides with extra for later growth, and prevent accidental keystrokes or characters in a g-code file from enacting an override inadvertently. _
+- _**NOTE:** Grbl v1.1's new override real-time commands are not included in the help message. They use the extended-ASCII character set, which are not easily type-able, and require a GUI that supports them. This is for two reasons: Establish enough characters for all of the overrides with extra for later growth, and prevent accidental keystrokes or characters in a g-code file from enacting an override inadvertently. _
 
 * Check out our [Configuring Grbl](https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.9) wiki page to find out what all of these commands mean and how to use them.
 
@@ -86,7 +86,7 @@ Every G-code block sent to Grbl and Grbl `$` system command that is terminated w
 
 # Grbl Push Messages
 
-Along with the response message to indicate successfully executing a line command sent to Grbl, Grbl provides additional push messages for important feedback of its current state or if something went horribly wrong. These messages are "pushed" from Grbl and may appear at anytime. They are usually in response to a user query or some system event that Grbl needs to tell you about immediately. These push messages are organized into four general classes:
+Along with the response message to indicate successfully executing a line command sent to Grbl, Grbl provides additional push messages for important feedback of its current state or if something went horribly wrong. These messages are "pushed" from Grbl and may appear at anytime. They are usually in response to a user query or some system event that Grbl needs to tell you about immediately. These push messages are organized into five general classes:
 
 - **_ALARM messages_** - Means an emergency mode has been enacted and shut down normal use.
 
@@ -94,7 +94,10 @@ Along with the response message to indicate successfully executing a line comman
 
 - **_Feedback messages_** - Contains general feedback and can provide useful data.
 
+- **_Startup line execution_** - Indicates a startup line as executed with the line itself and how it went.
+
 - **_Real-time status reports_** - Contains current run data like state, position, and speed.
+
 
 ------
 
@@ -124,9 +127,9 @@ When a push message starts with a `$`, this indicates Grbl is sending a setting 
 
 - `$x=val` will only appear when the user queries to print all of Grbl's settings via the `$$` print settings command. It does so sequentially and completes with an `ok`.
 
-  - In prior versions of Grbl, the `$` settings included a short description of the setting immediately after the value. However, due to flash restrictions, most human-readable strings were removed to free up flash for the new override features in Grbl v1.0. In short, it was these strings or overrides, and overrides won. Keep in mind that once these values are set, they usually don't change, and GUIs will likely provide the assistance of translating these codes for users.
+  - In prior versions of Grbl, the `$` settings included a short description of the setting immediately after the value. However, due to flash restrictions, most human-readable strings were removed to free up flash for the new override features in Grbl v1.1. In short, it was these strings or overrides, and overrides won. Keep in mind that once these values are set, they usually don't change, and GUIs will likely provide the assistance of translating these codes for users.
 
-  - _**NOTE for GUI developers:** As with the error and alarm codes, settings codes are available in an easy to parse CSV file in the `/doc/csv` folder. These are continually updated._
+  - _**NOTE for GUI developers:**_ _As with the error and alarm codes, settings codes are available in an easy to parse CSV file in the `/doc/csv` folder. These are continually updated._
 
   - The `$$` settings print out is shown below and the following describes each setting.
 
@@ -222,62 +225,85 @@ ok
 
 Feedback messages provide non-critical information on what Grbl is doing, what it needs, and/or provide some non-real-time data for the user when queried. Not too complicated. Feedback message are always enclosed in `[]` brackets, except for the startup line execution message which begins with an open chevron character `>`.
 
-- **Non-Queried Feedback Messages:** These feedback messages that may appear at any time and is not part of a query are listed and described below. These always start with a `[MSG:` to denote their type.
+- **Non-Queried Feedback Messages:** These feedback messages that may appear at any time and is not part of a query are listed and described below. They are usually sent as an additional helpful acknowledgement of some event or command executed. These always start with a `[MSG:` to denote their type.
 
-  - `[MSG:Reset to continue]` - Critical event message. Reset is required before Grbl accepts any other commands. This prevents ongoing command streaming and risking a motion before the alarm is acknowledged. Hard or soft limit errors will trigger this event.
+  - `[MSG:Reset to continue]` - Critical event message. Reset is required before Grbl accepts any other commands. This prevents ongoing command streaming and risking a motion before the alarm is acknowledged. Only hard or soft limit errors send this message immediately after the ALARM:x code.
 
-  - `[MSG:‘$H’|’$X’ to unlock]`- Alarm message at initialization. All g-code commands and some ‘$’ are blocked until unlocked via homing or $X.
+  - `[MSG:‘$H’|’$X’ to unlock]`- Alarm state is active at initialization. This message serves as a reminder note on how to cancel the alarm state. All g-code commands and some ‘$’ are blocked until the alarm state is cancelled via homing `$H` or unlocking `$X`. Only appears immediately after the `Grbl` welcome message when initialized with an alarm. Startup lines are not executed at initialization if this message is present and the alarm is active.
 
-  - `[MSG:Caution: Unlocked]` - Alarm unlock $X acknowledgement.
+  - `[MSG:Caution: Unlocked]` - Appears as an alarm unlock `$X` acknowledgement. An 'ok' still appears immediately after to denote the `$X` was parsed and executed. This message reminds the user that Grbl is operating under an unlock state, where startup lines have still not be executed and should be cautious and mindful of what they do. Grbl may not have retained machine position due to an alarm suddenly halting the machine.  A reset or re-homing Grbl is highly recommended as soon as possible, where any startup lines will be properly executed.
 
-  - `[MSG:Enabled]` - Indicates Grbl’s check-mode is enabled.
+  - `[MSG:Enabled]` - Appears as a check-mode `$C` enabled acknowledgement. An 'ok' still appears immediately after to denote the `$C` was parsed and executed.
 
-  - `[MSG:Disabled]` - Indicates Grbl’s check-mode is disabled. Grbl is automatically reset afterwards.
+  - `[MSG:Disabled]` - Appears as a check-mode `$C` disabled acknowledgement. An 'ok' still appears immediately after to denote the `$C` was parsed and executed. Grbl is automatically reset afterwards to restore all default g-code parser states changed by the check-mode.
 
-  - `[MSG:Check Door]` - Safety door detected as open. This message appears either immediately upon a safety door ajar or if the safety is open when Grbl initializes after a power-up/reset.
+  - `[MSG:Check Door]` - This message appears whenever the safety door detected as open. This includes immediately upon a safety door switch detects a pin change or appearing after the welcome message, if the safety door is ajar when Grbl initializes after a power-up/reset.
 
-  - `[MSG:Check Limits]` - If Grbl detects a limit switch is triggered after power-up/reset and hard limits are enabled, this will appear as a courtesy message.
+    - If in motion and the safety door switch is triggered, Grbl will immediately send this message, start a feed hold, and place Grbl into a suspend with the DOOR state.
+    - If not in motion and not at startup, the same process occurs without the feed hold.
+    - If Grbl is in a DOOR state and already suspended, any detected door switch pin detected will generate this message, including a door close.
+    - If this message appears at startup, Grbl will suspended into immediately into the DOOR state. The startup lines are executed immediately after the DOOR state is exited by closing the door and sending Grbl a resume command.
+
+  - `[MSG:Check Limits]` - If Grbl detects a limit switch as triggered after a power-up/reset and hard limits are enabled, this will appear as a courtesy message immediately after the Grbl welcome message.
 
   - `[MSG:Pgm End]` - M2/30 program end message to denote g-code modes have been restored to defaults according to the M2/30 g-code description.
 
-  - `[MSG:Restoring defaults]` - Acknowledgement message when restoring EEPROM defaults via a `$RST=` command.
+  - `[MSG:Restoring defaults]` - Appears as an acknowledgement message when restoring EEPROM defaults via a `$RST=` command. An 'ok' still appears immediately after to denote the `$RST=` was parsed and executed.
 
 - **Queried Feedback Messages:**
 
   - `[GC:]` G-code Parser State Message
-    - Initiated by the user via a `$G` command. Grbl replies as follows, where the `[GC:` denotes the message type and is followed by an `ok` to confirm the `$G` was executed.
-    - `[GC:G0 G54 G17 G21 G90 G94 M0 M5 M9 T0 F0. S0.]`
+    - Initiated by the user via a `$G` command. Grbl replies as follows, where the `[GC:` denotes the message type and is followed by a separate `ok` to confirm the `$G` was executed.
+     ```
+     [GC:G0 G54 G17 G21 G90 G94 M0 M5 M9 T0 F0. S0.]
+     ok
+     ```
     - The shown g-code are the current modal states of Grbl's g-code parser. This may not correlate to what is executing since there are usually several motions queued in the planner buffer.
 
-  - `[HLP:]` : Indicates the help message queried by a `$` command.
-
+  - `[HLP:]` : Initiated by the user via a `$` print help command. The help message is shown below with a separate `ok` to confirm the `$` was executed.
+    ```
+    [HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $C $X $H ~ ! ? ctrl-x]
+    ok
+    ```
   - The `$#` print parameter data query produces a large set of data which shown below and completed by an `ok` response message.
 
     - Each line of the printout is starts with the data type, a `:`, and followed by the data values. If there is more than one, the order is XYZ axes, separated by commas.
 
-    ```
-    [G54:0.000,0.000,0.000]
-    [G55:0.000,0.000,0.000]
-    [G56:0.000,0.000,0.000]
-    [G57:0.000,0.000,0.000]
-    [G58:0.000,0.000,0.000]
-    [G59:0.000,0.000,0.000]
-    [G28:0.000,0.000,0.000]
-    [G30:0.000,0.000,0.000]
-    [G92:0.000,0.000,0.000]
-    [TLO:0.000]
-    [PRB:0.000,0.000,0.000:0]
-    ok
-    ```
+      ```
+      [G54:0.000,0.000,0.000]
+      [G55:0.000,0.000,0.000]
+      [G56:0.000,0.000,0.000]
+      [G57:0.000,0.000,0.000]
+      [G58:0.000,0.000,0.000]
+      [G59:0.000,0.000,0.000]
+      [G28:0.000,0.000,0.000]
+      [G30:0.000,0.000,0.000]
+      [G92:0.000,0.000,0.000]
+      [TLO:0.000]
+      [PRB:0.000,0.000,0.000:0]
+      ok
+      ```
 
     - The `PRB:` probe parameter message includes an additional `:` and suffix value is a boolean. It denotes whether the last probe cycle was successful or not.
 
-  - `[VER:]` : Indicates build info and string from a `$I` user query.
+  - `[VER:]` : Indicates build info and string from a `$I` user query. The build info message is shown below with a separate `ok` to confirm the `$I` was executed.
+      ```
+      [VER:v1.1a.20160923:]
+      ok
+      ```
+      - A string may appear after the `:` colon. It is a stored EEPROM string a user or OEM can place there for personal use or tracking purposes.
 
-  - `[echo:]` : Indicates an automated line echo from a pre-parsed string prior to g-code parsing. Enabled by config.h option.
+  - `[echo:]` : Indicates an automated line echo from a command just prior to being parsed and executed. May be enabled only by a config.h option. Often used for debugging communication issues. A typical line echo message is shown below. A separate `ok` will eventually appear to confirm the line has been parsed and executed, but may not be immediate as with any line command containing motions.
+      ```
+      [echo:G1X0.540Y10.4F100]
+      ```
+      - NOTE: The echoed line will have been pre-parsed a bit by Grbl. No spaces or comments will appear and all letters will be capitalized.
 
-- **Startup Line Execution:**
-  - `>G54G20:ok` : The open chevron indicates a startup line has just executed. The startup line `G54G20` immediately follows the `>` character and is followed by an 'ok' response to indicate it executed successfully.
+------
+
+#### Startup Line Execution
+
+  - `>G54G20:ok` : The open chevron indicates a startup line has just executed. The startup line `G54G20` immediately follows the `>` character and is followed by an `:ok` response to indicate it executed successfully.
 
     - A startup line will execute upon initialization only if a line is present and if Grbl is not in an alarm state.
 
@@ -285,7 +311,7 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 
     - There should always be an appended `:ok` because the startup line is checked for validity before it is stored in EEPROM. In the event that it's not, Grbl will print `>G54G20:error:X`, where `X` is the error code explaining why the startup line failed to execute.
 
-    - In the rare chance that there is an EEPROM read error, the startup line execution will print `>:error:7` with no startup line and a error code `7` for a read fail.
+    - In the rare chance that there is an EEPROM read error, the startup line execution will print `>:error:7` with no startup line and a error code `7` for a read fail. Grbl will also automatically wipe and try to restore the problematic EEPROM.
 
 
 ------
@@ -515,7 +541,7 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 -------
 # Message Summary
 
-Grbl v1.0's interface protocol has been tweaked in the attempt to make GUI development cleaner, clearer, and hopefully easier. All messages are designed to be deterministic without needing to know the context of the message. Each can be inferred to a much greater degree than before just by the message type, which are all listed below.
+Grbl v1.1's interface protocol has been tweaked in the attempt to make GUI development cleaner, clearer, and hopefully easier. All messages are designed to be deterministic without needing to know the context of the message. Each can be inferred to a much greater degree than before just by the message type, which are all listed below.
 
 - `ok` / `error:x` : Normal send command and execution response acknowledgement. Used for streaming.
 
@@ -541,4 +567,4 @@ Grbl v1.0's interface protocol has been tweaked in the attempt to make GUI devel
 
 - `>G54G20:ok` : The open chevron indicates startup line execution. The `:ok` suffix shows it executed correctly without adding an unmatched `ok` response on a new line.
 
-On a final note, this interface tweak came about out of necessity, as more data is being sent back from Grbl and it is capable of doing many more things. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before Grbl v1.0 goes to master, please do immediately so we can all vet the new alteration before its installed.
+On a final note, this interface tweak came about out of necessity, as more data is being sent back from Grbl and it is capable of doing many more things. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before Grbl v1.1 goes to master, please do immediately so we can all vet the new alteration before its installed.

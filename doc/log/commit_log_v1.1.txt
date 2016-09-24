@@ -1,6 +1,40 @@
 ----------------
 Date: 2016-09-22
 Author: Sonny Jeon
+Subject: Increment to v1.1a, minor compile bug fix, tweaked communication protocol, more docs.
+
+- Incremented to v1.1a, rather than keep 1.0e. This is because there
+are existing v1.0 installations. Don’t want to confuse people further.
+
+- Certain version of the Arduino IDE did not like the `inline` in the
+function header. Removed from spindle_control files to fix the problem.
+
+- Tweaked the communication protocol slightly. Added message type
+indicators for all `[]`bracketed feedback messages. It’s been
+problematic for GUI dev to try to determine the context of a message
+and how it should be handled. These indictors should help tremendously
+to remove context all together.
+
+- Also altered how `$N` startup lines are presented when executed. They
+now start with an open chevron ‘>’ followed by the line and an ‘:ok’ to
+indicate it executed. The ‘ok’ is on the same line intentionally so it
+doesn’t mess up a streaming protocol counter.
+
+- Managed to save a 100+KB from refactoring parts of report.c. (Thanks
+Vasilis!) Freed up room to alter the protocol a little.
+
+- Wrote a markdown document on interface messaging to make it clear how
+it’s intended to work. See interface.md in /doc/markdown
+
+- Started to pull in some Wiki pages from the old grbl site and
+beginning to update them for v1.1.
+
+- Created new commit log for v1.1.
+
+
+----------------
+Date: 2016-09-22
+Author: Sonny Jeon
 Subject: Merge pull request #1 from winder/dev
 
 Add locale to code CSVs.
