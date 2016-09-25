@@ -173,7 +173,6 @@ void printFloat(float n, uint8_t decimal_places)
 // in the config.h.
 //  - CoordValue: Handles all position or coordinate values in inches or mm reporting.
 //  - RateValue: Handles feed rate and current velocity in inches or mm reporting.
-//  - SettingValue: Handles all floating point settings values (always in mm.)
 void printFloat_CoordValue(float n) {
   if (bit_istrue(settings.flags,BITFLAG_REPORT_INCHES)) {
     printFloat(n*INCH_PER_MM,N_DECIMAL_COORDVALUE_INCH);
@@ -189,10 +188,6 @@ void printFloat_RateValue(float n) {
     printFloat(n,N_DECIMAL_RATEVALUE_MM);
   }
 }
-
-// void printFloat_SettingValue(float n) { printFloat(n,N_DECIMAL_SETTINGVALUE); }
-
-void printFloat_RPMValue(float n) { printFloat(n,N_DECIMAL_RPMVALUE); }
 
 // Debug tool to print free memory in bytes at the called point.
 // NOTE: Keep commented unless using. Part of this function always gets compiled in.

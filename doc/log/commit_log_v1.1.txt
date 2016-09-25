@@ -1,4 +1,22 @@
 ----------------
+Date: 2016-09-24
+Author: Sonny Jeon
+Subject: Serial RX count bug fix. Settings codes CSV. More documentation.
+
+- Reverted back the serial RX count function to how it was. The
+variable type was unsigned and cause an integer underflow whenever the
+calculation produced a negative number. The old way was the correct way.
+
+- Lots of minor edits to the code CSVs and markdown documents.
+
+- Expanded on explaining feedback messages and startup line execution
+feedback.
+
+- Created a new settings codes CSV to help GUIs import the values and
+meanings.
+
+
+----------------
 Date: 2016-09-22
 Author: Sonny Jeon
 Subject: Increment to v1.1a, minor compile bug fix, tweaked communication protocol, more docs.
