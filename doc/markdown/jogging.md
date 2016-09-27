@@ -9,8 +9,7 @@ Executing a jog requires a specific command structure, as described below:
  - Required words:
    - XYZ: One or more axis words with target value.
    - F - Feed rate value. NOTE: Each jog requires this value and is not treated as modal.
- - Optional words: Jog executes based on current G20/G21 and G90/G91 g-code parser state. If one
-   of the following optional words is passed, that state is overridden for one command only.
+ - Optional words: Jog executes based on current G20/G21 and G90/G91 g-code parser state. If one of the following optional words is passed, that state is overridden for one command only.
    - G20 or G21 - Inch and millimeter mode
    - G90 or G91 - Absolute and incremental distances
    - G53 - Move in machine coordinates
@@ -31,49 +30,44 @@ The main differences are:
 
 - During a jog, Grbl will report a 'Jog' state while executing the jog.
 - A jog command will only be accepted when Grbl is in either the 'Idle' or 'Jog' states.
-- Jogging motions may not be mixed with g-code commands while executing, which will return
-  a lockout error, if attempted.
-- All jogging motion(s) may be cancelled at anytime with a simple feed hold command. Grbl
-  will automatically flush Grbl's internal buffers of any queued jogging motions and return
-  to the 'Idle' state. No soft-reset required.
-- IMPORTANT: Jogging does not alter the g-code parser state. Hence, no g-code modes need to
-  be explicitly managed, unlike previous ways of implementing jogs with commands like
-  'G91G1X1F100'. Since G91, G1, and F feed rates are modal and if they are not changed
-  back prior to resuming/starting a job, a job may not run how its was intended and result
-  in a crash.
+- Jogging motions may not be mixed with g-code commands while executing, which will return a lockout error, if attempted.
+- All jogging motion(s) may be cancelled at anytime with a simple feed hold command. Grbl will automatically flush Grbl's internal buffers of any queued jogging motions and return to the 'Idle' state. No soft-reset required.
+- If soft-limits are enabled, jog commands that exceed the machine travel simply does not execute the command and return an error, rather than throwing an alarm in normal operation.
+- IMPORTANT: Jogging does not alter the g-code parser state. Hence, no g-code modes need to be explicitly managed, unlike previous ways of implementing jogs with commands like 'G91G1X1F100'. Since G91, G1, and F feed rates are modal and if they are not changed back prior to resuming/starting a job, a job may not run how its was intended and result in a crash.
 
 ------
 
 ## Joystick Implementation
 
-Jogging in Grbl v1.1 is generally intended to address some prior issues with old bootstrapped jogging methods. Unfortunately, the new Grbl jogging is not a complete solution. Flash and memory restrictions prevent the original envisioned implementation, but most of these can be mimicked by the following suggested methods. 
+Jogging in Grbl v1.1 is generally intended to address some prior issues with old bootstrapped jogging methods. Unfortunately, the new Grbl jogging is not a complete solution. Flash and memory restrictions prevent the original envisioned implementation, but most of these can be mimicked by the following suggested methodology. 
 
-With a combination of the new jog cancel and moving in `G91` incremental mode, the following implementation can create low latency feel for an analog joystick.
+With a combination of the new jog cancel and moving in `G91` incremental mode, the following implementation can create low latency feel for an analog joystick or similar control device.
 
 - Basic Implementation Overview: 
   - Create a loop to read the joystick signal and translate it to a desired jog motion vector.
   - Send Grbl a very short `G91` incremental distance jog command with a feed rate based on the joystick throw.
   - Wait for an 'ok' acknowledgement before restarting the loop.
   - Continually read the joystick input and send Grbl short jog motions to keep Grbl's planner buffer full.
-  - If the joystick is returned to its neutral position, stop the jog loop and simply send Grbl a `!` feed hold command. This will stop motion immediately somewhere along the programmed jog path with virtually zero-latency and automatically flush Grbl's planner queue.
+  - If the joystick is returned to its neutral position, stop the jog loop and simply send Grbl a jog cancel (or feed hold) real-time command. This will stop motion immediately somewhere along the programmed jog path with virtually zero-latency and automatically flush Grbl's planner queue.
 
 
-The overall idea is to minimize the total distance in the planner queue to provide a low-latency feel to joystick control. The main trick is ensuring there is just enough distance in the planner queue, such that the programmed feed rate is always met. How to compute this will be explain later. In practice, most machines will have a 0.5 second latency. When combined with the immediate joy cancel by a feed hold command, joystick interaction can be quite enjoyable and satisfying.
+The overall idea is to minimize the total distance in the planner queue to provide a low-latency feel to joystick control. The main trick is ensuring there is just enough distance in the planner queue, such that the programmed feed rate is always met. How to compute this will be explain later. In practice, most machines will have a 0.5-1.0 second latency. When combined with the immediate jog cancel command, joystick interaction can be quite enjoyable and satisfying.
 
-However, please note, if a machine has a low acceleration and is being asked to move at a high programmed feed rate, joystick latency can get up to a handful of seconds. It may sound bad, but this is how long it'll take for a low acceleration machine, traveling at a high feed rate, to slow down to a stop. The argument can be made for a low acceleration machine that you really shouldn't be traveling at a high feed rate. It is difficult for a user to gauge where the machine will come to a stop. You risk overshooting your target destination, which can result in an expensive or dangerous crash. 
+However, please note, if a machine has a low acceleration and is being asked to move at a high programmed feed rate, joystick latency can get up to a handful of seconds. It may sound bad, but this is how long it'll take for a low acceleration machine, traveling at a high feed rate, to slow down to a stop. The argument can be made for a low acceleration machine that you really shouldn't be jogging at a high feed rate. It is difficult for a user to gauge where the machine will come to a stop. You risk overshooting your target destination, which can result in an expensive or dangerous crash. 
 
 One of the advantages of this approach is that a GUI can deterministically track where Grbl will go by the jog commands it has already sent to Grbl. As long as a feed hold doesn't cancel the jog state, every jog command is guaranteed to execute. In the event a feed hold is sent, the GUI would just need to refresh their internal position from a status report after Grbl has cleared planner buffer and returned to the IDLE state from the JOG state. This stopped position will always be somewhere along the programmed jog path. If desired, jogging can then be quickly and easily restarted with a new tracked path.
 
-In combination with `G53` move in machine coordinates, a GUI can restrict jogging from moving into "keep-out" zones inside the machine space. This can be very useful for avoiding crashing into delicate probing hardware, workholding mechanisms, or other fixed features inside machine space that you don't want to damage.
+In combination with `G53` move in machine coordinates, a GUI can restrict jogging from moving into "keep-out" zones inside the machine space. This can be very useful for avoiding crashing into delicate probing hardware, workholding mechanisms, or other fixed features inside machine space that you want to avoid.
 
 #### How to compute incremental distances
 
 The quickest and easiest way to determine what the length of a jog motion needs to be to minimize latency are defined by the following equations.
 
-`d = v * dt` - Computes distance traveled for next jog command.
+`s = v * dt` - Computes distance traveled for next jog command.
 
 where:  
 
+- `s` - Incremental distance of jog command.
 - `dt` - Estimated execution time of a single jog command in seconds.  
 - `v` - Current jog feed rate in **mm/sec**, not mm/min. Less than or equal to max jog rate.
 - `N` - Number of Grbl planner blocks (`N=15`)
@@ -81,7 +75,7 @@ where:
  
 The time increment `dt` may be defined to whatever value you need. Obviously, you'd like the lowest value, since that translates to lower overall latency `T`. However, it is constrained by two factors.
 
-- `dt > 10ms` - The time it takes Grbl to parse and plan one jog command and receive the next one. Depending on a lot of factors, this can be around 1 to 5 ms. To be conservative, `10ms` is used. Keep in mind that on some systems, this value may be greater than `10ms`.
+- `dt > 10ms` - The time it takes Grbl to parse and plan one jog command and receive the next one. Depending on a lot of factors, this can be around 1 to 5 ms. To be conservative, `10ms` is used. Keep in mind that on some systems, this value may still be greater than `10ms` due to round-trip communication latency.
 
 - `dt > v^2 / (2 * a * (N-1))` - The time increment needs to be large enough to ensure the jog feed rate will be acheived. Grbl always plans to a stop over the total distance queued in the planner buffer. This is primarily to ensure the machine will safely stop if a disconnection occurs. This equation simply ensures that `dt` is big enough to satisfy this constraint. 
 
@@ -91,4 +85,6 @@ The time increment `dt` may be defined to whatever value you need. Obviously, yo
 
 In practice, most CNC machines will operate with a jogging time increment of `0.025 sec` < `dt` < `0.06 sec`, which translates to about a `0.4` to `0.9` second total latency when traveling at the max jog rate. Good enough for most people. 
 
-However, if jogging at a slower speed and a GUI adjusts the `dt` with it, you can get very close to the 0.1 second response time by human-interface guidelines for "feeling instantaneous". Not to shabby!
+However, if jogging at a slower speed and a GUI adjusts the `dt` with it, you can get very close to the 0.1 second response time by human-interface guidelines for "feeling instantaneous". Not too shabby!
+
+With some ingenuity, this jogging methodology may be applied to different devices such as a rotary dial or touchscreen. An "inertial-feel", like swipe-scrolling on a smartphone or tablet, can be simulated by managing the jog rate decay and sending Grbl the associated jog commands. While this jogging implementation requires more initial work by a GUI, it is also inherently more flexible because you have complete deterministic control of how jogging behaves.

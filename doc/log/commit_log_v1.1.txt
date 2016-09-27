@@ -1,4 +1,43 @@
 ----------------
+Date: 2016-09-26
+Author: Sonny Jeon
+Subject: v1.1b: Tweaked Bf reports, jogging doc, saved another 160 bytes, minor bug fixes
+
+- Increment to v1.1b due to status report tweak.
+
+- Tweaked the buffer state status reports to show bytes and blocks
+available, rather than in use. This does not require knowing the buffer
+sizes beforehand. It’s implicit.
+
+- Also, since buffer states are not used by most devs (after
+inquiries), it is no longer enabled by default and a status mask option
+was added for this.
+
+- Fixed some typos and updated for the report tweak in the
+documentation.
+
+- Wrote a joystick implementation concept in the jogging markdown
+document. Outlines how to get a low-latency feel to a joystick (and
+other input devices).
+
+- Removed XON/XOFF support. It’s not used by anyone because of its
+inherent problems. Remains in older versions for reference.
+
+- Added a compile option on how to handle the probe position during a
+check mode.
+
+- Fixed a jogging bug. If G93 is the modal state before a jogging
+motion, the feed rate did not get calculated correctly. Fixed the issue.
+
+- Refactored some code to save another 160+ bytes. Included an improved
+float vector comparison macro and reducing a few large and repetitive
+function calls.
+
+- Fixed a probing bug (existing in v0.9 too) where the target positions
+were not set correct and error handling was improper.
+
+
+----------------
 Date: 2016-09-25
 Author: Sonny Jeon
 Subject: Addressed much larger flash size with avr-gcc v4.9.2. Refactored reports to save 160KB.
