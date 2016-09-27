@@ -46,7 +46,7 @@ void mc_dwell(float seconds);
 void mc_homing_cycle();
 
 // Perform tool length probe cycle. Requires probe switch.
-void mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_away, uint8_t is_no_error);
+uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_away, uint8_t is_no_error);
 
 // Plans and executes the single special motion case for parking. Independent of main planner buffer.
 void mc_parking_motion(float *parking_target, plan_line_data_t *pl_data);

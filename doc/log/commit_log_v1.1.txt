@@ -1,4 +1,27 @@
 ----------------
+Date: 2016-09-25
+Author: Sonny Jeon
+Subject: Addressed much larger flash size with avr-gcc v4.9.2. Refactored reports to save 160KB.
+
+- The newest Arduino IDE 1.6.12 has recently updated to avr-gcc v4.9.2.
+Unfortunately, it produces a compiled size almost 0.7KB to 1KB larger
+than prior versions! This can easily cause the base build to exceed the
+Arduino Duemilanove/Nano flash limit of 30.5KB. The Arduino Uno seems
+to be ok still with its 31.5KB flash limit.
+
+- Makefile `-flto` compile flag added to cut down on the horrible flash
+size when using the new avr-gcc. (Edit Makefile and remove comment on
+COMPILE definition). This brings it in-line with what the IDE produces.
+
+- Functionalized repetitive tasks in report.c to try to reduce overall
+flash size. Successfully cut down about 160bytes.
+
+- Removed printFloat_SettingValue() and printFloat_RPMValue()
+functions. These aren’t required and can be replaced with a direct call
+to printFloat() because they don’t require a unit conversion check.
+
+
+----------------
 Date: 2016-09-24
 Author: Sonny Jeon
 Subject: Serial RX count bug fix. Settings codes CSV. More documentation.

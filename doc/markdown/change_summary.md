@@ -13,7 +13,7 @@ Grbl v1.1's interface protocol has been tweaked in the attempt to make GUI devel
 
 - `< >` : Enclosed chevrons contains status report data.
 
-- `Grbl vX.Xx ['$' for help]` : Welcome message indicates initialization.
+- `Grbl X.Xx ['$' for help]` : Welcome message indicates initialization.
 
 - `ALARM:x` : Indicates an alarm has been thrown. Grbl is now in an alarm state.
 
@@ -72,7 +72,8 @@ On a final note, this interface tweak came about out of necessity, as more data 
 
 - Buffer data (planner and serial RX) reports have been tweaked and combined.
 
-  - `Bf:0,0`. The first value is planner blocks in use and the second is RX bytes in use.
+  - `Bf:15,128`. The first value is the available blocks in the planner buffer and the second is available bytes in the serial RX buffer.
+  - Note that this is different than before, where it reported blocks/bytes "in-use", rather than "available". This change does not require a GUI to know how many blocks/bytes Grbl has been compiled with, which can be substantially different on a Grbl-Mega build.
 
 
 - Override reports are intermittent since they don't change often once set.

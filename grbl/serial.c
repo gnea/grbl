@@ -33,12 +33,17 @@ uint8_t serial_tx_buffer_head = 0;
 volatile uint8_t serial_tx_buffer_tail = 0;
 
 
-#ifdef ENABLE_XONXOFF
-  volatile uint8_t flow_ctrl = XON_SENT; // Flow control state variable
-#endif
+// Returns the number of bytes available in the RX serial buffer.
+uint8_t serial_get_rx_buffer_available()
+{
+  uint8_t rtail = serial_rx_buffer_tail; // Copy to limit multiple calls to volatile
+  if (serial_rx_buffer_head >= rtail) { return(RX_BUFFER_SIZE - (serial_rx_buffer_head-rtail)); }
+  return((rtail-serial_rx_buffer_head-1));
+}
 
 
 // Returns the number of bytes used in the RX serial buffer.
+// NOTE: Deprecated. Not used unless classic status reports are enabled in config.h.
 uint8_t serial_get_rx_buffer_count()
 {
   uint8_t rtail = serial_rx_buffer_tail; // Copy to limit multiple calls to volatile
@@ -104,25 +109,14 @@ ISR(SERIAL_UDRE)
 {
   uint8_t tail = serial_tx_buffer_tail; // Temporary serial_tx_buffer_tail (to optimize for volatile)
 
-  #ifdef ENABLE_XONXOFF
-    if (flow_ctrl == SEND_XOFF) {
-      UDR0 = XOFF_CHAR;
-      flow_ctrl = XOFF_SENT;
-    } else if (flow_ctrl == SEND_XON) {
-      UDR0 = XON_CHAR;
-      flow_ctrl = XON_SENT;
-    } else
-  #endif
-  {
-    // Send a byte from the buffer
-    UDR0 = serial_tx_buffer[tail];
+  // Send a byte from the buffer
+  UDR0 = serial_tx_buffer[tail];
 
-    // Update tail position
-    tail++;
-    if (tail == TX_RING_BUFFER) { tail = 0; }
+  // Update tail position
+  tail++;
+  if (tail == TX_RING_BUFFER) { tail = 0; }
 
-    serial_tx_buffer_tail = tail;
-  }
+  serial_tx_buffer_tail = tail;
 
   // Turn off Data Register Empty Interrupt to stop tx-streaming if this concludes the transfer
   if (tail == serial_tx_buffer_head) { UCSR0B &= ~(1 << UDRIE0); }
@@ -141,13 +135,6 @@ uint8_t serial_read()
     tail++;
     if (tail == RX_RING_BUFFER) { tail = 0; }
     serial_rx_buffer_tail = tail;
-
-    #ifdef ENABLE_XONXOFF
-      if ((serial_get_rx_buffer_count() < RX_BUFFER_LOW) && flow_ctrl == XOFF_SENT) {
-        flow_ctrl = SEND_XON;
-        UCSR0B |=  (1 << UDRIE0); // Force TX
-      }
-    #endif
 
     return data;
   }
@@ -201,14 +188,6 @@ ISR(SERIAL_RX)
         if (next_head != serial_rx_buffer_tail) {
           serial_rx_buffer[serial_rx_buffer_head] = data;
           serial_rx_buffer_head = next_head;
-
-          #ifdef ENABLE_XONXOFF
-            if ((serial_get_rx_buffer_count() >= RX_BUFFER_FULL) && flow_ctrl == XON_SENT) {
-              flow_ctrl = SEND_XOFF;
-              UCSR0B |=  (1 << UDRIE0); // Force TX
-            }
-          #endif
-
         }
       }
   }
@@ -218,8 +197,4 @@ ISR(SERIAL_RX)
 void serial_reset_read_buffer()
 {
   serial_rx_buffer_tail = serial_rx_buffer_head;
-
-  #ifdef ENABLE_XONXOFF
-    flow_ctrl = XON_SENT;
-  #endif
 }

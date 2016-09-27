@@ -725,10 +725,12 @@ void report_realtime_status()
 
     // Returns planner and serial read buffer states.
     #ifdef REPORT_FIELD_BUFFER_STATE
-      printPgmString(PSTR("|Bf:"));
-      print_uint8_base10(plan_get_block_buffer_count());
-      serial_write(',');
-      print_uint8_base10(serial_get_rx_buffer_count());
+      if (bit_istrue(settings.status_report_mask,BITFLAG_RT_STATUS_BUFFER_STATE)) {
+        printPgmString(PSTR("|Bf:"));
+        print_uint8_base10(plan_get_block_buffer_available());
+        serial_write(',');
+        print_uint8_base10(serial_get_rx_buffer_available());
+      }
     #endif
 
     #ifdef USE_LINE_NUMBERS

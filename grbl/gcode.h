@@ -123,7 +123,6 @@
 // Modal Group G12: Active work coordinate system
 // N/A: Stores coordinate system value (54-59) to change to.
 
-
 // Define parameter word mapping.
 #define WORD_F  0
 #define WORD_I  1
@@ -138,6 +137,23 @@
 #define WORD_X  10
 #define WORD_Y  11
 #define WORD_Z  12
+
+// Define g-code parser position updating flags
+#define GC_UPDATE_POS_TARGET   0
+#define GC_UPDATE_POS_SYSTEM   1
+#define GC_UPDATE_POS_NONE     2
+
+// Define probe cycle exit states and assign proper position updating.
+#define GC_PROBE_FOUND      GC_UPDATE_POS_SYSTEM
+#define GC_PROBE_ABORT      GC_UPDATE_POS_NONE
+#define GC_PROBE_FAIL_INIT  GC_UPDATE_POS_NONE
+#define GC_PROBE_FAIL_END   GC_UPDATE_POS_TARGET
+#ifdef SET_CHECK_MODE_PROBE_TO_START
+  #define GC_PROBE_CHECK_MODE   GC_UPDATE_POS_NONE  
+#else
+  #define GC_PROBE_CHECK_MODE   GC_UPDATE_POS_TARGET
+#endif
+
 
 
 // NOTE: When this struct is zeroed, the above defines set the defaults for the system.

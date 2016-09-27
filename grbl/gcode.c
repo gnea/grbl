@@ -57,15 +57,6 @@ void gc_sync_position()
 }
 
 
-static uint8_t gc_check_same_position(float *pos_a, float *pos_b)
-{
-  uint8_t idx;
-  for (idx=0; idx<N_AXIS; idx++) {
-    if (pos_a[idx] != pos_b[idx]) { return(false); }
-  }
-  return(true);
-}
-
 // Executes one line of 0-terminated G-Code. The line is assumed to contain only uppercase
 // characters and signed floating point values (no whitespace). Comments and block delete
 // characters have been removed. In this function, all units and positions are converted and
@@ -430,35 +421,40 @@ uint8_t gc_execute_line(char *line)
 
   // [2. Set feed rate mode ]: G93 F word missing with G1,G2/3 active, implicitly or explicitly. Feed rate
   //   is not defined after switching to G94 from G93.
-  if (gc_block.modal.feed_rate == FEED_RATE_MODE_INVERSE_TIME) { // = G93
-    // NOTE: G38 can also operate in inverse time, but is undefined as an error. Missing F word check added here.
-    if (axis_command == AXIS_COMMAND_MOTION_MODE) {
-      if ((gc_block.modal.motion != MOTION_MODE_NONE) || (gc_block.modal.motion != MOTION_MODE_SEEK)) {
-        if (bit_isfalse(value_words,bit(WORD_F))) { FAIL(STATUS_GCODE_UNDEFINED_FEED_RATE); } // [F word missing]
+  // NOTE: For jogging, ignore prior feed rate mode. Enforce G94 and check for required F word.
+  if (is_jog_motion) {
+    if (bit_isfalse(value_words,bit(WORD_F))) { FAIL(STATUS_GCODE_UNDEFINED_FEED_RATE); }
+    if (gc_block.modal.units == UNITS_MODE_INCHES) { gc_block.values.f *= MM_PER_INCH; }
+  } else {
+    if (gc_block.modal.feed_rate == FEED_RATE_MODE_INVERSE_TIME) { // = G93
+      // NOTE: G38 can also operate in inverse time, but is undefined as an error. Missing F word check added here.
+      if (axis_command == AXIS_COMMAND_MOTION_MODE) {
+        if ((gc_block.modal.motion != MOTION_MODE_NONE) || (gc_block.modal.motion != MOTION_MODE_SEEK)) {
+          if (bit_isfalse(value_words,bit(WORD_F))) { FAIL(STATUS_GCODE_UNDEFINED_FEED_RATE); } // [F word missing]
+        }
       }
-    }
-    // NOTE: It seems redundant to check for an F word to be passed after switching from G94 to G93. We would
-    // accomplish the exact same thing if the feed rate value is always reset to zero and undefined after each
-    // inverse time block, since the commands that use this value already perform undefined checks. This would
-    // also allow other commands, following this switch, to execute and not error out needlessly. This code is
-    // combined with the above feed rate mode and the below set feed rate error-checking.
+      // NOTE: It seems redundant to check for an F word to be passed after switching from G94 to G93. We would
+      // accomplish the exact same thing if the feed rate value is always reset to zero and undefined after each
+      // inverse time block, since the commands that use this value already perform undefined checks. This would
+      // also allow other commands, following this switch, to execute and not error out needlessly. This code is
+      // combined with the above feed rate mode and the below set feed rate error-checking.
 
-    // [3. Set feed rate ]: F is negative (done.)
-    // - In inverse time mode: Always implicitly zero the feed rate value before and after block completion.
-    // NOTE: If in G93 mode or switched into it from G94, just keep F value as initialized zero or passed F word
-    // value in the block. If no F word is passed with a motion command that requires a feed rate, this will error
-    // out in the motion modes error-checking. However, if no F word is passed with NO motion command that requires
-    // a feed rate, we simply move on and the state feed rate value gets updated to zero and remains undefined.
-  } else { // = G94
-    // - In units per mm mode: If F word passed, ensure value is in mm/min, otherwise push last state value.
-    if (gc_state.modal.feed_rate == FEED_RATE_MODE_UNITS_PER_MIN) { // Last state is also G94
-      if (bit_istrue(value_words,bit(WORD_F))) {
-        if (gc_block.modal.units == UNITS_MODE_INCHES) { gc_block.values.f *= MM_PER_INCH; }
-      } else {
-        // NOTE: Jogging mode does not pass modal feed rate and requires unique values for each command.
-        if (!is_jog_motion) { gc_block.values.f = gc_state.feed_rate; } // Push last state feed rate
-      }
-    } // Else, switching to G94 from G93, so don't push last state feed rate. Its undefined or the passed F word value.
+      // [3. Set feed rate ]: F is negative (done.)
+      // - In inverse time mode: Always implicitly zero the feed rate value before and after block completion.
+      // NOTE: If in G93 mode or switched into it from G94, just keep F value as initialized zero or passed F word
+      // value in the block. If no F word is passed with a motion command that requires a feed rate, this will error
+      // out in the motion modes error-checking. However, if no F word is passed with NO motion command that requires
+      // a feed rate, we simply move on and the state feed rate value gets updated to zero and remains undefined.
+    } else { // = G94
+      // - In units per mm mode: If F word passed, ensure value is in mm/min, otherwise push last state value.
+      if (gc_state.modal.feed_rate == FEED_RATE_MODE_UNITS_PER_MIN) { // Last state is also G94
+        if (bit_istrue(value_words,bit(WORD_F))) {
+          if (gc_block.modal.units == UNITS_MODE_INCHES) { gc_block.values.f *= MM_PER_INCH; }
+        } else {
+          gc_block.values.f = gc_state.feed_rate; // Push last state feed rate
+        }
+      } // Else, switching to G94 from G93, so don't push last state feed rate. Its undefined or the passed F word value.
+    }
   }
   // bit_false(value_words,bit(WORD_F)); // NOTE: Single-meaning value word. Set at end of error-checking.
 
@@ -712,7 +708,7 @@ uint8_t gc_execute_line(char *line)
 
           if (value_words & bit(WORD_R)) { // Arc Radius Mode
             bit_false(value_words,bit(WORD_R));
-            if (gc_check_same_position(gc_state.position, gc_block.values.xyz)) { FAIL(STATUS_GCODE_INVALID_TARGET); } // [Invalid target]
+            if (isequal_position_vector(gc_state.position, gc_block.values.xyz)) { FAIL(STATUS_GCODE_INVALID_TARGET); } // [Invalid target]
 
             // Convert radius value to proper units.
             if (gc_block.modal.units == UNITS_MODE_INCHES) { gc_block.values.r *= MM_PER_INCH; }
@@ -836,7 +832,7 @@ uint8_t gc_execute_line(char *line)
           //   an error, it issues an alarm to prevent further motion to the probe. It's also done there to
           //   allow the planner buffer to empty and move off the probe trigger before another probing cycle.
           if (!axis_words) { FAIL(STATUS_GCODE_NO_AXIS_WORDS); } // [No axis words]
-          if (gc_check_same_position(gc_state.position, gc_block.values.xyz)) { FAIL(STATUS_GCODE_INVALID_TARGET); } // [Invalid target]
+          if (isequal_position_vector(gc_state.position, gc_block.values.xyz)) { FAIL(STATUS_GCODE_INVALID_TARGET); } // [Invalid target]
           break;
       }
     }
@@ -1021,42 +1017,38 @@ uint8_t gc_execute_line(char *line)
   gc_state.modal.motion = gc_block.modal.motion;
   if (gc_state.modal.motion != MOTION_MODE_NONE) {
     if (axis_command == AXIS_COMMAND_MOTION_MODE) {
-      switch (gc_state.modal.motion) {
-        case MOTION_MODE_SEEK:
-          pl_data->condition |= PL_COND_FLAG_RAPID_MOTION; // Set rapid motion condition flag.
-          mc_line(gc_block.values.xyz, pl_data);
-          break;
-        case MOTION_MODE_LINEAR:
-          mc_line(gc_block.values.xyz, pl_data);
-          break;
-        case MOTION_MODE_CW_ARC:
-          mc_arc(gc_block.values.xyz, pl_data, gc_state.position, gc_block.values.ijk, gc_block.values.r,
-            axis_0, axis_1, axis_linear, true);
-          break;
-        case MOTION_MODE_CCW_ARC:
-          mc_arc(gc_block.values.xyz, pl_data, gc_state.position, gc_block.values.ijk, gc_block.values.r,
-            axis_0, axis_1, axis_linear, false);
-          break;
-        case MOTION_MODE_PROBE_TOWARD:
-          // NOTE: gc_block.values.xyz is returned from mc_probe_cycle with the updated position value. So
-          // upon a successful probing cycle, the machine position and the returned value should be the same.
-          mc_probe_cycle(gc_block.values.xyz, pl_data, false, false);
-          break;
-        case MOTION_MODE_PROBE_TOWARD_NO_ERROR:
-          mc_probe_cycle(gc_block.values.xyz, pl_data, false, true);
-          break;
-        case MOTION_MODE_PROBE_AWAY:
-          mc_probe_cycle(gc_block.values.xyz, pl_data, true, false);
-          break;
-        case MOTION_MODE_PROBE_AWAY_NO_ERROR:
-          mc_probe_cycle(gc_block.values.xyz, pl_data, true, true);
-      }
-
+      uint8_t gc_update_pos = GC_UPDATE_POS_TARGET;
+      if (gc_state.modal.motion == MOTION_MODE_LINEAR) {
+        mc_line(gc_block.values.xyz, pl_data);
+      } else if (gc_state.modal.motion == MOTION_MODE_SEEK) {
+        pl_data->condition |= PL_COND_FLAG_RAPID_MOTION; // Set rapid motion condition flag.
+        mc_line(gc_block.values.xyz, pl_data);
+      } else if ((gc_state.modal.motion == MOTION_MODE_CW_ARC) || (gc_state.modal.motion == MOTION_MODE_CCW_ARC)) {
+        uint8_t is_clockwise_arc;
+        if (gc_state.modal.motion == MOTION_MODE_CW_ARC) { is_clockwise_arc = true; }
+        else { is_clockwise_arc = false; }
+        mc_arc(gc_block.values.xyz, pl_data, gc_state.position, gc_block.values.ijk, gc_block.values.r,
+            axis_0, axis_1, axis_linear, is_clockwise_arc);
+      } else {
+        // NOTE: gc_block.values.xyz is returned from mc_probe_cycle with the updated position value. So
+        // upon a successful probing cycle, the machine position and the returned value should be the same.
+        uint8_t is_probe_away = false;
+        uint8_t is_no_error = false;
+        if ((gc_state.modal.motion == MOTION_MODE_PROBE_AWAY) || (gc_state.modal.motion == MOTION_MODE_PROBE_AWAY_NO_ERROR)) { is_probe_away = true; }
+        if ((gc_state.modal.motion == MOTION_MODE_PROBE_TOWARD_NO_ERROR) || (gc_state.modal.motion == MOTION_MODE_PROBE_AWAY_NO_ERROR)) { is_no_error = true; }
+        gc_update_pos = mc_probe_cycle(gc_block.values.xyz, pl_data, is_probe_away, is_no_error);
+    }  
+     
       // As far as the parser is concerned, the position is now == target. In reality the
       // motion control system might still be processing the action and the real tool position
       // in any intermediate location.
-      memcpy(gc_state.position, gc_block.values.xyz, sizeof(gc_block.values.xyz)); // gc_state.position[] = gc_block.values.xyz[]
-    }
+      if (gc_update_pos == GC_UPDATE_POS_TARGET) {
+        memcpy(gc_state.position, gc_block.values.xyz, sizeof(gc_block.values.xyz)); // gc_state.position[] = gc_block.values.xyz[]
+      } else if (gc_update_pos == GC_UPDATE_POS_SYSTEM) {
+        gc_sync_position(); // gc_state.position[] = sys_position
+      } // == GC_UPDATE_POS_NONE
+    }     
+
   }
 
   // [21. Program flow ]:

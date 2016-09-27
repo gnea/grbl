@@ -11,11 +11,11 @@ In other words, both commands sent to Grbl and messages received from Grbl have 
 
 #### Start Up Message
 
-**`Grbl vX.Xx ['$' for help]`**
+**`Grbl X.Xx ['$' for help]`**
 
 The start up message always prints upon startup and after a reset. Whenever you see this message, this also means that Grbl has completed re-initializing all its systems, so everything starts out the same every time you use Grbl.
 
-* `vX.Xx` indicates the major version number, followed by a minor version letter. The major version number indicates the general release, while the letter simply indicates a feature update or addition from the preceding minor version letter.
+* `X.Xx` indicates the major version number, followed by a minor version letter. The major version number indicates the general release, while the letter simply indicates a feature update or addition from the preceding minor version letter.
 * Bug fix revisions are tracked by the build info version number, printed when an `$I` command is sent. These revisions don't update the version number and are given by date revised in year, month, and day, like so `20160820`.
 
 #### Grbl `$` Help Message
@@ -423,11 +423,19 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 
     - **Buffer State:**
 
-        - `Bf:0,0`. The first value is planner blocks in use and the second is RX bytes in use.
+        - `Bf:15,128`. The first value is the number of available blocks in the planner buffer and the second is number of available bytes in the serial RX buffer.
+        
+        - The usage of this data is generally for debugging an interface, but is known to be used to control some GUI-specific tasks. While this is disabled by default, GUIs should expect this data field to appear, but they may ignore it, if desired.
+        
+        - NOTE: The buffer state values changed from showing "in-use" blocks or bytes to "available". This change does not require the GUI knowing how many block/bytes Grbl has been compiled with.
 
+        - This data field appears:
+        
+          - In every status report when enabled. It is disabled in the settings mask by default.
+        
         - This data field will not appear if:
 
-          - It is disabled by the `$` status report mask setting.
+          - It is disabled by the `$` status report mask setting or disabled in the config.h file.
 
     - **Line Number:**
 
@@ -547,7 +555,7 @@ Grbl v1.1's interface protocol has been tweaked in the attempt to make GUI devel
 
 - `< >` : Enclosed chevrons contains status report data.
 
-- `Grbl vX.Xx ['$' for help]` : Welcome message indicates initialization.
+- `Grbl X.Xx ['$' for help]` : Welcome message indicates initialization.
 
 - `ALARM:x` : Indicates an alarm has been thrown. Grbl is now in an alarm state.
 

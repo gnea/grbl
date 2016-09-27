@@ -237,13 +237,14 @@ void mc_homing_cycle()
 
 // Perform tool length probe cycle. Requires probe switch.
 // NOTE: Upon probe failure, the program will be stopped and placed into ALARM state.
-void mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_away, uint8_t is_no_error)
+uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_away, uint8_t is_no_error)
 {
   // TODO: Need to update this cycle so it obeys a non-auto cycle start.
-  if (sys.state == STATE_CHECK_MODE) { return; }
+  if (sys.state == STATE_CHECK_MODE) { return(GC_PROBE_CHECK_MODE); }
 
   // Finish all queued commands and empty planner buffer before starting probe cycle.
   protocol_buffer_synchronize();
+  if (sys.abort) { return(GC_PROBE_ABORT); } // Return if system reset has been issued.
 
   // Initialize probing control variables
   sys.probe_succeeded = false; // Re-initialize probe history before beginning cycle.
@@ -254,8 +255,9 @@ void mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_a
   if ( probe_get_state() ) { // Check probe pin state.
     system_set_exec_alarm(EXEC_ALARM_PROBE_FAIL_INITIAL);
     protocol_execute_realtime();
+    probe_configure_invert_mask(false); // Re-initialize invert mask before returning.
+    return(GC_PROBE_FAIL_INIT); // Nothing else to do but bail.
   }
-  if (sys.abort) { return; } // Return if system reset has been issued.
 
   // Setup and queue probing motion. Auto cycle-start should not start the cycle.
   mc_line(target, pl_data);
@@ -267,7 +269,7 @@ void mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_a
   system_set_exec_state_flag(EXEC_CYCLE_START);
   do {
     protocol_execute_realtime();
-    if (sys.abort) { return; } // Check for system abort
+    if (sys.abort) { return(GC_PROBE_ABORT); } // Check for system abort
   } while (sys.state != STATE_IDLE);
 
   // Probing cycle complete!
@@ -280,8 +282,8 @@ void mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_a
     sys.probe_succeeded = true; // Indicate to system the probing cycle completed successfully.
   }
   sys_probe_state = PROBE_OFF; // Ensure probe state monitor is disabled.
+  probe_configure_invert_mask(false); // Re-initialize invert mask.
   protocol_execute_realtime();   // Check and execute run-time commands
-  if (sys.abort) { return; } // Check for system abort
 
   // Reset the stepper and planner buffers to remove the remainder of the probe motion.
   st_reset(); // Reset step segment buffer.
@@ -290,12 +292,21 @@ void mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_a
 
   // TODO: Update the g-code parser code to not require this target calculation but uses a gc_sync_position() call.
   // NOTE: The target[] variable updated here will be sent back and synced with the g-code parser.
-  system_convert_array_steps_to_mpos(target, sys_position);
+  
+  //!!! This is the problem. Need to set the g-code parser to update the position appropriately.
+  // - Probe initialization fail: Retain current position.
+  // - Probe successful: Update new positions across everything, since held before the target.
+  // - Probe did not contact (alarm or not): Copy original target position as normal
+   
+//   system_convert_array_steps_to_mpos(target, sys_position);
 
   #ifdef MESSAGE_PROBE_COORDINATES
     // All done! Output the probe position as message.
     report_probe_parameters();
   #endif
+
+  if (sys.probe_succeeded) { return(GC_PROBE_FOUND); } // Successful probe cycle.
+  else { return(GC_PROBE_FAIL_END); } // Failed to trigger probe within travel. With or without error.
 }
 
 

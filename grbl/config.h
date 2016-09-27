@@ -254,10 +254,10 @@
 // NOTE: This feature is new and experimental. Make sure the GUI you are using supports this mode.
 #define REPORT_GUI_MODE // Default enabled. Comment to disable.
 
-// The status report change for Grbl v1.0 and after also removed the ability to disable/enable data fields
-// from the report. This caused issues for GUI developers, who've had to manage several scenarios and
-// configurations. The increased efficiency of the new reporting style allows for all data fields to be
-// sent without potential performance issues.
+// The status report change for Grbl v1.0 and after also removed the ability to disable/enable most data
+// fields from the report. This caused issues for GUI developers, who've had to manage several scenarios
+// and configurations. The increased efficiency of the new reporting style allows for all data fields to 
+// be sent without potential performance issues.
 // NOTE: The options below are here only provide a way to disable certain data fields if a unique
 // situation demands it, but be aware GUIs may depend on this data. If disabled, it may not be compatible.
 #define REPORT_FIELD_BUFFER_STATE // Default enabled. Comment to disable.
@@ -453,16 +453,6 @@
 // #define RX_BUFFER_SIZE 128 // (1-254) Uncomment to override defaults in serial.h
 // #define TX_BUFFER_SIZE 90  // (1-254)
 
-// Toggles XON/XOFF software flow control for serial communications. Not officially supported
-// due to problems involving the Atmega8U2 USB-to-serial chips on current Arduinos. The firmware
-// on these chips do not support XON/XOFF flow control characters and the intermediate buffer
-// in the chips cause latency and overflow problems with standard terminal programs. However,
-// using specifically-programmed UI's to manage this latency problem has been confirmed to work.
-// As well as, older FTDI FT232RL-based Arduinos(Duemilanove) are known to work with standard
-// terminal programs since their firmware correctly manage these XON/XOFF characters. In any
-// case, please report any successes to grbl administrators!
-// #define ENABLE_XONXOFF // Default disabled. Uncomment to enable.
-
 // A simple software debouncing feature for hard limit switches. When enabled, the interrupt
 // monitoring the hard limit switch pins will enable the Arduino's watchdog timer to re-check
 // the limit pin state after a delay of about 32msec. This can help with CNC machines with
@@ -471,6 +461,10 @@
 // use shielded signal cables with their shielding connected to ground (old USB/computer cables
 // work well and are cheap to find) and wire in a low-pass circuit into each limit pin.
 // #define ENABLE_SOFTWARE_DEBOUNCE // Default disabled. Uncomment to enable.
+
+// Configures the position after a probing cycle during Grbl's check mode. Disabled sets
+// the position to the probe target, when enabled sets the position to the start position.
+// #define SET_CHECK_MODE_PROBE_TO_START // Default disabled. Uncomment to enable.
 
 // Force Grbl to check the state of the hard limit switches when the processor detects a pin
 // change inside the hard limit ISR routine. By default, Grbl will trigger the hard limits

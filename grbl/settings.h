@@ -51,6 +51,7 @@
   #define BITFLAG_RT_STATUS_OVERRIDES         bit(7)
 #else
   #define BITFLAG_RT_STATUS_POSITION_TYPE     bit(0)
+  #define BITFLAG_RT_STATUS_BUFFER_STATE      bit(1)
 #endif
 
 // Define settings restore bitflags.

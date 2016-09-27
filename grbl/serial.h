@@ -36,16 +36,6 @@
 
 #define SERIAL_NO_DATA 0xff
 
-#ifdef ENABLE_XONXOFF
-  #define RX_BUFFER_FULL 96 // XOFF high watermark
-  #define RX_BUFFER_LOW 64 // XON low watermark
-  #define SEND_XOFF 1
-  #define SEND_XON 2
-  #define XOFF_SENT 3
-  #define XON_SENT 4
-  #define XOFF_CHAR 0x13
-  #define XON_CHAR 0x11
-#endif
 
 void serial_init();
 
@@ -58,7 +48,11 @@ uint8_t serial_read();
 // Reset and empty data in read buffer. Used by e-stop and reset.
 void serial_reset_read_buffer();
 
+// Returns the number of bytes available in the RX serial buffer.
+uint8_t serial_get_rx_buffer_available();
+
 // Returns the number of bytes used in the RX serial buffer.
+// NOTE: Deprecated. Not used unless classic status reports are enabled in config.h.
 uint8_t serial_get_rx_buffer_count();
 
 // Returns the number of bytes used in the TX serial buffer.
