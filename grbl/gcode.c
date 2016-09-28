@@ -77,8 +77,6 @@ uint8_t gc_execute_line(char *line)
   uint8_t axis_command = AXIS_COMMAND_NONE;
   uint8_t axis_0, axis_1, axis_linear;
   uint8_t coord_select = 0; // Tracks G10 P coordinate selection for execution
-  float coordinate_data[N_AXIS]; // Multi-use variable to store coordinate data for execution
-  float parameter_data[N_AXIS]; // Multi-use variable to store parameter data for execution
 
   // Initialize bitflag tracking variables for axis indices compatible operations.
   uint8_t axis_words = 0; // XYZ tracking
@@ -526,11 +524,12 @@ uint8_t gc_execute_line(char *line)
   // is active. The read pauses the processor temporarily and may cause a rare crash. For
   // future versions on processors with enough memory, all coordinate data should be stored
   // in memory and written to EEPROM only when there is not a cycle active.
-  memcpy(coordinate_data,gc_state.coord_system,sizeof(gc_state.coord_system));
+  float block_coord_system[N_AXIS];
+  memcpy(block_coord_system,gc_state.coord_system,sizeof(gc_state.coord_system));
   if ( bit_istrue(command_words,bit(MODAL_GROUP_G12)) ) { // Check if called in block
     if (gc_block.modal.coord_select > N_COORDINATE_SYSTEM) { FAIL(STATUS_GCODE_UNSUPPORTED_COORD_SYS); } // [Greater than N sys]
     if (gc_state.modal.coord_select != gc_block.modal.coord_select) {
-      if (!(settings_read_coord_data(gc_block.modal.coord_select,coordinate_data))) { FAIL(STATUS_SETTING_READ_FAIL); }
+      if (!(settings_read_coord_data(gc_block.modal.coord_select,block_coord_system))) { FAIL(STATUS_SETTING_READ_FAIL); }
     }
   }
 
@@ -562,21 +561,24 @@ uint8_t gc_execute_line(char *line)
       // Determine coordinate system to change and try to load from EEPROM.
       if (coord_select > 0) { coord_select--; } // Adjust P1-P6 index to EEPROM coordinate data indexing.
       else { coord_select = gc_block.modal.coord_select; } // Index P0 as the active coordinate system
-      if (!settings_read_coord_data(coord_select,parameter_data)) { FAIL(STATUS_SETTING_READ_FAIL); } // [EEPROM read fail]
+      
+      // NOTE: Store parameter data in IJK values. By rule, they are not in use with this command.
+      if (!settings_read_coord_data(coord_select,gc_block.values.ijk)) { FAIL(STATUS_SETTING_READ_FAIL); } // [EEPROM read fail]
 
-      // Pre-calculate the coordinate data changes. NOTE: Uses parameter_data since coordinate_data may be in use by G54-59.
+      // Pre-calculate the coordinate data changes.
       for (idx=0; idx<N_AXIS; idx++) { // Axes indices are consistent, so loop may be used.
         // Update axes defined only in block. Always in machine coordinates. Can change non-active system.
         if (bit_istrue(axis_words,bit(idx)) ) {
           if (gc_block.values.l == 20) {
             // L20: Update coordinate system axis at current position (with modifiers) with programmed value
-            parameter_data[idx] = gc_state.position[idx]-gc_state.coord_offset[idx]-gc_block.values.xyz[idx];
-            if (idx == TOOL_LENGTH_OFFSET_AXIS) { parameter_data[idx] -= gc_state.tool_length_offset; }
+            // WPos = MPos - WCS - G92 - TLO  ->  WCS = MPos - G92 - TLO - WPos
+            gc_block.values.ijk[idx] = gc_state.position[idx]-gc_state.coord_offset[idx]-gc_block.values.xyz[idx];
+            if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.ijk[idx] -= gc_state.tool_length_offset; }
           } else {
             // L2: Update coordinate system axis to programmed value.
-            parameter_data[idx] = gc_block.values.xyz[idx];
+            gc_block.values.ijk[idx] = gc_block.values.xyz[idx];
           }
-        }
+        } // Else, keep current stored value.
       }
       break;
     case NON_MODAL_SET_COORDINATE_OFFSET:
@@ -587,7 +589,8 @@ uint8_t gc_execute_line(char *line)
       // active coordinate system is selected, but is still active unless G92.1 disables it.
       for (idx=0; idx<N_AXIS; idx++) { // Axes indices are consistent, so loop may be used.
         if (bit_istrue(axis_words,bit(idx)) ) {
-          gc_block.values.xyz[idx] = gc_state.position[idx]-coordinate_data[idx]-gc_block.values.xyz[idx];
+          // WPos = MPos - WCS - G92 - TLO  ->  G92 = MPos - WCS - TLO - WPos
+          gc_block.values.xyz[idx] = gc_state.position[idx]-block_coord_system[idx]-gc_block.values.xyz[idx];
           if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] -= gc_state.tool_length_offset; }
         } else {
           gc_block.values.xyz[idx] = gc_state.coord_offset[idx];
@@ -612,7 +615,7 @@ uint8_t gc_execute_line(char *line)
               if (gc_block.non_modal_command != NON_MODAL_ABSOLUTE_OVERRIDE) {
                 // Apply coordinate offsets based on distance mode.
                 if (gc_block.modal.distance == DISTANCE_MODE_ABSOLUTE) {
-                  gc_block.values.xyz[idx] += coordinate_data[idx] + gc_state.coord_offset[idx];
+                  gc_block.values.xyz[idx] += block_coord_system[idx] + gc_state.coord_offset[idx];
                   if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] += gc_state.tool_length_offset; }
                 } else {  // Incremental mode
                   gc_block.values.xyz[idx] += gc_state.position[idx];
@@ -629,15 +632,16 @@ uint8_t gc_execute_line(char *line)
         case NON_MODAL_GO_HOME_1: // G30
           // [G28/30 Errors]: Cutter compensation is enabled.
           // Retreive G28/30 go-home position data (in machine coordinates) from EEPROM
+          // NOTE: Store parameter data in IJK values. By rule, they are not in use with this command.
           if (gc_block.non_modal_command == NON_MODAL_GO_HOME_0) {
-            if (!settings_read_coord_data(SETTING_INDEX_G28,parameter_data)) { FAIL(STATUS_SETTING_READ_FAIL); }
+            if (!settings_read_coord_data(SETTING_INDEX_G28,gc_block.values.ijk)) { FAIL(STATUS_SETTING_READ_FAIL); }
           } else { // == NON_MODAL_GO_HOME_1
-            if (!settings_read_coord_data(SETTING_INDEX_G30,parameter_data)) { FAIL(STATUS_SETTING_READ_FAIL); }
+            if (!settings_read_coord_data(SETTING_INDEX_G30,gc_block.values.ijk)) { FAIL(STATUS_SETTING_READ_FAIL); }
           }
           if (axis_words) {
             // Move only the axes specified in secondary move.
             for (idx=0; idx<N_AXIS; idx++) {
-              if (!(axis_words & (1<<idx))) { parameter_data[idx] = gc_state.position[idx]; }
+              if (!(axis_words & (1<<idx))) { gc_block.values.ijk[idx] = gc_state.position[idx]; }
             }
           } else {
             axis_command = AXIS_COMMAND_NONE; // Set to none if no intermediate motion.
@@ -964,7 +968,7 @@ uint8_t gc_execute_line(char *line)
   // [15. Coordinate system selection ]:
   if (gc_state.modal.coord_select != gc_block.modal.coord_select) {
     gc_state.modal.coord_select = gc_block.modal.coord_select;
-    memcpy(gc_state.coord_system,coordinate_data,sizeof(coordinate_data));
+    memcpy(gc_state.coord_system,block_coord_system,N_AXIS*sizeof(float));
     system_flag_wco_change();
   }
 
@@ -979,10 +983,10 @@ uint8_t gc_execute_line(char *line)
   // [19. Go to predefined position, Set G10, or Set axis offsets ]:
   switch(gc_block.non_modal_command) {
     case NON_MODAL_SET_COORDINATE_DATA:
-      settings_write_coord_data(coord_select,parameter_data);
+      settings_write_coord_data(coord_select,gc_block.values.xyz);
       // Update system coordinate system if currently active.
       if (gc_state.modal.coord_select == coord_select) {
-        memcpy(gc_state.coord_system,parameter_data,sizeof(parameter_data));
+        memcpy(gc_state.coord_system,gc_block.values.xyz,N_AXIS*sizeof(float));
         system_flag_wco_change();
       }
       break;
@@ -991,8 +995,8 @@ uint8_t gc_execute_line(char *line)
       // and absolute and incremental modes.
       pl_data->condition |= PL_COND_FLAG_RAPID_MOTION; // Set rapid motion condition flag.
       if (axis_command) { mc_line(gc_block.values.xyz, pl_data); }
-      mc_line(parameter_data, pl_data);
-      memcpy(gc_state.position, parameter_data, sizeof(parameter_data));
+      mc_line(gc_block.values.ijk, pl_data);
+      memcpy(gc_state.position, gc_block.values.ijk, N_AXIS*sizeof(float));
       break;
     case NON_MODAL_SET_HOME_0:
       settings_write_coord_data(SETTING_INDEX_G28,gc_state.position);
@@ -1085,8 +1089,7 @@ uint8_t gc_execute_line(char *line)
 
       // Execute coordinate change and spindle/coolant stop.
       if (sys.state != STATE_CHECK_MODE) {
-        if (!(settings_read_coord_data(gc_state.modal.coord_select,coordinate_data))) { FAIL(STATUS_SETTING_READ_FAIL); }
-        memcpy(gc_state.coord_system,coordinate_data,sizeof(coordinate_data));
+        if (!(settings_read_coord_data(gc_state.modal.coord_select,gc_state.coord_system))) { FAIL(STATUS_SETTING_READ_FAIL); }
         system_flag_wco_change(); // Set to refresh immediately just in case something altered.
         spindle_stop();
         coolant_set_state(COOLANT_DISABLE);

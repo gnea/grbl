@@ -1,4 +1,10 @@
 ----------------
+Date: 2016-09-27
+Author: Sonny Jeon
+Subject: Update README and clarifications in jogging document.
+
+
+----------------
 Date: 2016-09-26
 Author: Sonny Jeon
 Subject: v1.1b: Tweaked Bf reports, jogging doc, saved another 160 bytes, minor bug fixes
