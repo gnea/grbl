@@ -30,18 +30,76 @@
 
 
 // Internal report utilities to reduce flash with repetitive tasks turned into functions.
+void report_util_setting_prefix(uint8_t n) { serial_write('$'); print_uint8_base10(n); serial_write('='); }
 static void report_util_line_feed() { printPgmString(PSTR("\r\n")); }
 static void report_util_feedback_line_feed() { serial_write(']'); report_util_line_feed(); }
-void report_util_setting_prefix(uint8_t n) { serial_write('$'); print_uint8_base10(n); serial_write('='); }
-static void report_util_uint8_setting(uint8_t n, int val) { report_util_setting_prefix(n); print_uint8_base10(val); report_util_line_feed(); }
-static void report_util_float_setting(uint8_t n, float val) { report_util_setting_prefix(n); printFloat(val,N_DECIMAL_SETTINGVALUE); report_util_line_feed(); }
-static void report_util_rpm_setting(uint8_t n, float val) { report_util_setting_prefix(n); printFloat(val,N_DECIMAL_RPMVALUE); report_util_line_feed(); }
+// static void report_util_comment_line_feed() { serial_write(')'); report_util_line_feed(); }
 static void report_util_axis_values(float *axis_value) {
   uint8_t idx;
   for (idx=0; idx<N_AXIS; idx++) {
     printFloat_CoordValue(axis_value[idx]);
     if (idx < (N_AXIS-1)) { serial_write(','); }
   }
+}
+
+// static void report_util_setting_string(uint8_t n) {
+//   serial_write(' ');
+//   serial_write('(');
+//   switch(n) {
+//     case 0: printPgmString(PSTR("stp pulse:us")); break;
+//     case 1: printPgmString(PSTR("idl delay:ms")); break; 
+//     case 2: printPgmString(PSTR("stp inv:msk")); break;
+//     case 3: printPgmString(PSTR("dir inv:msk")); break;
+//     case 4: printPgmString(PSTR("stp enbl inv")); break;
+//     case 5: printPgmString(PSTR("lim inv")); break;
+//     case 6: printPgmString(PSTR("prb inv")); break;
+//     case 10: printPgmString(PSTR("rpt:msk")); break;
+//     case 11: printPgmString(PSTR("jnc dev:mm")); break;
+//     case 12: printPgmString(PSTR("arc tol:mm")); break;
+//     case 13: printPgmString(PSTR("rpt inch")); break;
+//     case 20: printPgmString(PSTR("sft lim")); break;
+//     case 21: printPgmString(PSTR("hrd lim")); break;
+//     case 22: printPgmString(PSTR("hm cyc")); break;
+//     case 23: printPgmString(PSTR("hm dir inv:msk")); break;
+//     case 24: printPgmString(PSTR("hm feed:mm/min")); break;
+//     case 25: printPgmString(PSTR("hm seek:mm/min")); break;
+//     case 26: printPgmString(PSTR("hm delay:ms")); break;
+//     case 27: printPgmString(PSTR("hm off:mm")); break;
+//     case 30: printPgmString(PSTR("rpm max")); break;
+//     case 31: printPgmString(PSTR("rpm min")); break;
+//     case 32: printPgmString(PSTR("laser")); break;
+//     default:
+//       n -= AXIS_SETTINGS_START_VAL;
+//       uint8_t idx = 0;
+//       while (n < 10) {
+//         if (n<10) {
+//           print_uint8_base10(n+idx);
+//           switch (idx) {
+//             case 0: printPgmString(PSTR(":stp/mm")); break;
+//             case 1: printPgmString(PSTR(":mm/min")); break;
+//             case 2: printPgmString(PSTR(":mm/s^2")); break;
+//             case 3: printPgmString(PSTR(":mm max")); break;
+//           }
+//         } else {
+//           n -= 10;
+//           idx++;
+//         }
+//       }
+//   }
+//   report_util_comment_line_feed();
+// }
+
+static void report_util_uint8_setting(uint8_t n, int val) { 
+  report_util_setting_prefix(n); 
+  print_uint8_base10(val); 
+  report_util_line_feed();
+//   report_util_setting_string(n); 
+}
+static void report_util_float_setting(uint8_t n, float val, uint8_t n_decimal) { 
+  report_util_setting_prefix(n); 
+  printFloat(val,n_decimal);
+  report_util_line_feed();
+//   report_util_setting_string(n);
 }
 
 
@@ -51,8 +109,7 @@ static void report_util_axis_values(float *axis_value) {
 // operation. Errors events can originate from the g-code parser, settings module, or asynchronously
 // from a critical error, such as a triggered hard limit. Interface should always monitor for these
 // responses.
-// NOTE: In silent mode, all error codes are greater than zero.
-// TODO: Install silent mode to return only numeric values, primarily for GUIs.
+// NOTE: In REPORT_GUI_MODE, all error codes are greater than zero.
 void report_status_message(uint8_t status_code)
 {
   switch(status_code) {
@@ -150,7 +207,6 @@ void report_alarm_message(int8_t alarm_code)
 // messages such as setup warnings, switch toggling, and how to exit alarms.
 // NOTE: For interfaces, messages are always placed within brackets. And if silent mode
 // is installed, the message number codes are less than zero.
-// TODO: Install silence feedback messages option in settings
 void report_feedback_message(uint8_t message_code)
 {
   printPgmString(PSTR("[MSG:"));
@@ -224,19 +280,19 @@ void report_grbl_settings() {
     report_util_uint8_setting(5,bit_istrue(settings.flags,BITFLAG_INVERT_LIMIT_PINS));
     report_util_uint8_setting(6,bit_istrue(settings.flags,BITFLAG_INVERT_PROBE_PIN));
     report_util_uint8_setting(10,settings.status_report_mask);
-    report_util_float_setting(11,settings.junction_deviation);
-    report_util_float_setting(12,settings.arc_tolerance);
+    report_util_float_setting(11,settings.junction_deviation,N_DECIMAL_SETTINGVALUE);
+    report_util_float_setting(12,settings.arc_tolerance,N_DECIMAL_SETTINGVALUE);
     report_util_uint8_setting(13,bit_istrue(settings.flags,BITFLAG_REPORT_INCHES));
     report_util_uint8_setting(20,bit_istrue(settings.flags,BITFLAG_SOFT_LIMIT_ENABLE));
     report_util_uint8_setting(21,bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE));
     report_util_uint8_setting(22,bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE));
     report_util_uint8_setting(23,settings.homing_dir_mask);
-    report_util_float_setting(24,settings.homing_feed_rate);
-    report_util_float_setting(25,settings.homing_seek_rate);
+    report_util_float_setting(24,settings.homing_feed_rate,N_DECIMAL_SETTINGVALUE);
+    report_util_float_setting(25,settings.homing_seek_rate,N_DECIMAL_SETTINGVALUE);
     report_util_uint8_setting(26,settings.homing_debounce_delay);
-    report_util_float_setting(27,settings.homing_pulloff);
-    report_util_rpm_setting(30,settings.rpm_max);
-    report_util_rpm_setting(31,settings.rpm_min);
+    report_util_float_setting(27,settings.homing_pulloff,N_DECIMAL_SETTINGVALUE);
+    report_util_float_setting(30,settings.rpm_max,N_DECIMAL_RPMVALUE);
+    report_util_float_setting(31,settings.rpm_min,N_DECIMAL_RPMVALUE);
     #ifdef VARIABLE_SPINDLE
       report_util_uint8_setting(32,bit_istrue(settings.flags,BITFLAG_LASER_MODE));
     #else
@@ -248,43 +304,15 @@ void report_grbl_settings() {
     for (set_idx=0; set_idx<AXIS_N_SETTINGS; set_idx++) {
       for (idx=0; idx<N_AXIS; idx++) {
         switch (set_idx) {
-          case 0: report_util_float_setting(val+idx,settings.steps_per_mm[idx]); break;
-          case 1: report_util_float_setting(val+idx,settings.max_rate[idx]); break;
-          case 2: report_util_float_setting(val+idx,settings.acceleration[idx]/(60*60)); break;
-          case 3: report_util_float_setting(val+idx,-settings.max_travel[idx]); break;
+          case 0: report_util_float_setting(val+idx,settings.steps_per_mm[idx],N_DECIMAL_SETTINGVALUE); break;
+          case 1: report_util_float_setting(val+idx,settings.max_rate[idx],N_DECIMAL_SETTINGVALUE); break;
+          case 2: report_util_float_setting(val+idx,settings.acceleration[idx]/(60*60),N_DECIMAL_SETTINGVALUE); break;
+          case 3: report_util_float_setting(val+idx,-settings.max_travel[idx],N_DECIMAL_SETTINGVALUE); break;
         }
       }
       val += AXIS_SETTINGS_INCREMENT;
     }
 
-
-    // printPgmString(PSTR("$0=")); print_uint8_base10(settings.pulse_microseconds);
-    // printPgmString(PSTR("\r\n$1=")); print_uint8_base10(settings.stepper_idle_lock_time);
-    // printPgmString(PSTR("\r\n$2=")); print_uint8_base10(settings.step_invert_mask);
-    // printPgmString(PSTR("\r\n$3=")); print_uint8_base10(settings.dir_invert_mask);
-    // printPgmString(PSTR("\r\n$4=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE));
-    // printPgmString(PSTR("\r\n$5=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_LIMIT_PINS));
-    // printPgmString(PSTR("\r\n$6=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_PROBE_PIN));
-    // printPgmString(PSTR("\r\n$10=")); print_uint8_base10(settings.status_report_mask);
-    // printPgmString(PSTR("\r\n$11=")); printFloat_SettingValue(settings.junction_deviation);
-    // printPgmString(PSTR("\r\n$12=")); printFloat_SettingValue(settings.arc_tolerance);
-    // printPgmString(PSTR("\r\n$13=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_REPORT_INCHES));
-    // printPgmString(PSTR("\r\n$20=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_SOFT_LIMIT_ENABLE));
-    // printPgmString(PSTR("\r\n$21=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE));
-    // printPgmString(PSTR("\r\n$22=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE));
-    // printPgmString(PSTR("\r\n$23=")); print_uint8_base10(settings.homing_dir_mask);
-    // printPgmString(PSTR("\r\n$24=")); printFloat_SettingValue(settings.homing_feed_rate);
-    // printPgmString(PSTR("\r\n$25=")); printFloat_SettingValue(settings.homing_seek_rate);
-    // printPgmString(PSTR("\r\n$26=")); print_uint8_base10(settings.homing_debounce_delay);
-    // printPgmString(PSTR("\r\n$27=")); printFloat_SettingValue(settings.homing_pulloff);
-    // printPgmString(PSTR("\r\n$30=")); printFloat_RPMValue(settings.rpm_max);
-    // printPgmString(PSTR("\r\n$31=")); printFloat_RPMValue(settings.rpm_min);
-    // #ifdef VARIABLE_SPINDLE
-    //   printPgmString(PSTR("\r\n$32=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_LASER_MODE));
-    //   printPgmString(PSTR("\r\n"));
-    // #else
-    //   printPgmString(PSTR("\r\n$32=0\r\n"));
-    // #endif
   #else
 
     printPgmString(PSTR("$0=")); print_uint8_base10(settings.pulse_microseconds);

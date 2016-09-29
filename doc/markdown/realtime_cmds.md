@@ -50,6 +50,7 @@ The normal ASCII realtime command characters used in Grbl v0.9 have been retaine
 
   - Places Grbl into a suspend or HOLD state. If in motion, the machine will decelerate to a stop and then be suspended.
   - Command executes when Grbl is in an IDLE, RUN, or JOG state. It is otherwise ignored.
+  - If jogging, a feed hold will cancel the jog motion and flush all remaining jog motions in the planner buffer. The state will return from JOG to IDLE or DOOR, if was detected as ajar during the active hold.
   - By machine control definition, a feed hold does not disable the spindle or coolant. Only motion.
   - An input pin is available to connect a button or switch.
 
@@ -66,9 +67,17 @@ Grbl v1.1 installed more than a dozen new realtime commands to control feed, rap
   - If already in a suspend state or HOLD, the DOOR state supersedes it.
   - If the parking compile-time option is enabled, Grbl will park the spindle to a specified location.
   - Command executes when Grbl is in an IDLE, HOLD, RUN, HOMING, or JOG state. It is otherwise ignored.
+  - If jogging, a safety door will cancel the jog and all queued motions in the planner buffer. When the safety door is closed and resumed, Grbl will return to an IDLE state.
   - An input pin is available to connect a button or switch, if enabled with a compile-time option.
   - Some builds of Grbl v0.9 used the `@` character for this command, but it was undocumented. Moved to extended-ASCII to prevent accidental commanding.
 
+
+- `0x85` : Jog Cancel
+
+  - Immediately cancels the current jog state by a feed hold and automatically flushing any remaining jog commands in the buffer.
+  - Command is ignored, if not in a JOG state or if jog cancel is already invoked and in-process.
+  - Grbl will return to the IDLE state or the DOOR state, if the safety door was detected as ajar during the cancel.
+  
 
 - Feed Overrides
 
@@ -114,7 +123,7 @@ Grbl v1.1 installed more than a dozen new realtime commands to control feed, rap
 
 - `0x9E` : Toggle Spindle Stop
 
-  - Toggles spindle enable or disable state immediately, but only while in the HOLD.
+  - Toggles spindle enable or disable state immediately, but only while in the HOLD state.
   - The command is otherwise ignored, especially while in motion. This prevents accidental disabling during a job that can either destroy the part/machine or personal injury. Industrial machines handle the spindle stop override similarly.
   - When motion restarts via cycle start, the last spindle state will be restored and wait 4.0 seconds (configurable) before resuming the tool path. This ensures the user doesn't forget to turn it back on.
   - While disabled, spindle speed override values may still be altered and will be in effect once the spindle is re-enabled.

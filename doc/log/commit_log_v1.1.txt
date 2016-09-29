@@ -1,6 +1,21 @@
 ----------------
 Date: 2016-09-27
 Author: Sonny Jeon
+Subject: Refactored g-code parser. Saved 60bytes flash and some ram. Edited Readme.
+
+- Freed up another 60 bytes of flash and 12-24 bytes of stack RAM by
+using the pre-allocated IJK arc offset vector that is guaranteed to be
+not in use. Only G10 and G28/30 require fetching from EEPROM and
+retaining extra data. Both commands use axis words, which rules out
+G2/3 arcs using IJK offsets existing in same block. Not ideal, but
+every byte helps.
+
+- Edited README.
+
+
+----------------
+Date: 2016-09-27
+Author: Sonny Jeon
 Subject: Update README and clarifications in jogging document.
 
 

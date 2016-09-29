@@ -202,10 +202,7 @@ uint8_t system_execute_line(char *line)
           }
           break;
         case 'R' : // Restore defaults [IDLE/ALARM]
-          if (line[2] != 'S') { return(STATUS_INVALID_STATEMENT); }
-          if (line[3] != 'T') { return(STATUS_INVALID_STATEMENT); }
-          if (line[4] != '=') { return(STATUS_INVALID_STATEMENT); }
-          if (line[6] != 0) { return(STATUS_INVALID_STATEMENT); }
+          if ((line[2] != 'S') || (line[3] != 'T') || (line[4] != '=') || (line[6] != 0)) { return(STATUS_INVALID_STATEMENT); }
           switch (line[5]) {
             #ifdef ENABLE_RESTORE_EEPROM_DEFAULT_SETTINGS
               case '$': settings_restore(SETTINGS_RESTORE_DEFAULTS); break;

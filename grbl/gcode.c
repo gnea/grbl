@@ -983,10 +983,10 @@ uint8_t gc_execute_line(char *line)
   // [19. Go to predefined position, Set G10, or Set axis offsets ]:
   switch(gc_block.non_modal_command) {
     case NON_MODAL_SET_COORDINATE_DATA:
-      settings_write_coord_data(coord_select,gc_block.values.xyz);
+      settings_write_coord_data(coord_select,gc_block.values.ijk);
       // Update system coordinate system if currently active.
       if (gc_state.modal.coord_select == coord_select) {
-        memcpy(gc_state.coord_system,gc_block.values.xyz,N_AXIS*sizeof(float));
+        memcpy(gc_state.coord_system,gc_block.values.ijk,N_AXIS*sizeof(float));
         system_flag_wco_change();
       }
       break;

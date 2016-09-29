@@ -52,7 +52,6 @@
 #define CMD_STATUS_REPORT '?'
 #define CMD_CYCLE_START '~'
 #define CMD_FEED_HOLD '!'
-// #define CMD_SAFETY_DOOR '@'  // Moved to extended ASCII.
 
 // NOTE: All override realtime commands must be in the extended ASCII character set, starting
 // at character value 128 (0x80) and up to 255 (0xFF). If the normal set of realtime commands,
@@ -63,7 +62,8 @@
 // #define CMD_CYCLE_START 0x82
 // #define CMD_FEED_HOLD 0x83
 #define CMD_SAFETY_DOOR 0x84
-#define CMD_DEBUG_REPORT 0x85 // Only when DEBUG enabled, sends debug report in '{}' braces.
+#define CMD_JOG_CANCEL  0x85
+#define CMD_DEBUG_REPORT 0x86 // Only when DEBUG enabled, sends debug report in '{}' braces.
 #define CMD_FEED_OVR_RESET 0x90         // Restores feed override value to 100%.
 #define CMD_FEED_OVR_COARSE_PLUS 0x91
 #define CMD_FEED_OVR_COARSE_MINUS 0x92

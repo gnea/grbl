@@ -276,9 +276,9 @@ void protocol_exec_rt_system()
         // to halt and cancel the remainder of the motion.
         if (rt_exec & EXEC_MOTION_CANCEL) {
           // MOTION_CANCEL only occurs during a CYCLE, but a HOLD and SAFETY_DOOR may been initiated beforehand
-          // to hold the CYCLE. If so, only flag that motion cancel is complete.
-          // NOTE: State is still STATE_CYCLE.
-          sys.suspend |= SUSPEND_MOTION_CANCEL;  // Indicate motion cancel when resuming.
+          // to hold the CYCLE. Motion cancel is valid for a single planner block motion only, while jog cancel
+          // will handle and clear multiple planner block motions.
+          if (!(sys.state & STATE_JOG)) { sys.suspend |= SUSPEND_MOTION_CANCEL; } // NOTE: State is STATE_CYCLE.
         }
 
         // Execute a feed hold with deceleration, if required. Then, suspend system.
