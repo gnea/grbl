@@ -25,7 +25,7 @@
 #ifdef SPINDLE_MINIMUM_PWM
   #define SPINDLE_PWM_MIN_VALUE SPINDLE_MINIMUM_PWM
 #else
-  #define SPINDLE_PWM_MIN_VALUE 0
+  #define SPINDLE_PWM_MIN_VALUE 0.0
 #endif
 #define SPINDLE_PWM_RANGE (SPINDLE_PWM_MAX_VALUE-SPINDLE_PWM_MIN_VALUE)
 
@@ -63,7 +63,8 @@ void spindle_init()
 }
 
 
-// Stop and start spindle routines. Called by all spindle routines and stepper ISR.
+// Stop and start spindle routines. Called by all spindle routines and various interrupts. 
+// Keep routine small, fast, and efficient.
 void spindle_stop()
 {
   // On the Uno, spindle enable and PWM are shared. Other CPUs have seperate enable pin.
@@ -87,6 +88,7 @@ void spindle_stop()
 
 
 #ifdef VARIABLE_SPINDLE
+  // Called by spindle state functions and stepper ISR. Keep routine small, fast, and efficient.
   void spindle_set_speed(uint8_t pwm_value)
   {
     if (pwm_value == SPINDLE_PWM_OFF_VALUE) {
@@ -102,15 +104,15 @@ void spindle_stop()
           SPINDLE_ENABLE_PORT |= (1<<SPINDLE_ENABLE_BIT);
         #endif
       #endif
-
     }
   }
 
 
+  // Called by spindle state functions and step segment generator.
   uint8_t spindle_compute_pwm_value(float rpm) // 328p PWM register is 8-bit.
   {
     // Calculate PWM register value based on rpm max/min settings and programmed rpm.
-    if ((settings.rpm_min >= settings.rpm_max) || (rpm > settings.rpm_max)) {
+    if ((settings.rpm_min >= settings.rpm_max) || (rpm >= settings.rpm_max)) {
       // No PWM range possible. Set simple on/off spindle control pin state.
       return(SPINDLE_PWM_MAX_VALUE);
     } else if (rpm < settings.rpm_min) {

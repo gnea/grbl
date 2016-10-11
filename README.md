@@ -40,6 +40,8 @@ Grbl includes full acceleration management with look ahead. That means the contr
 
 - **Laser Mode** : The new "laser" mode will cause Grbl to move continuously through consecutive G1, G2, and G3 commands with spindle speed changes. When "laser" mode is disabled, Grbl will instead come to a stop to ensure a spindle comes up to speed properly. Spindle speed overrides also work with laser mode so you can tweak the laser power, if you need to during the job. Switch between "laser" mode and "normal" mode via a `$` setting.
 
+- **Sleep Mode** : Grbl may now be put to "sleep" via a `$SLP` command. This will disable everything, including the stepper drivers. Nice to have when you are leaving your machine unattended and want to power down everything automatically. Only a reset exits the sleep state.
+
 - **Significant Interface Improvements**: Just this one time and done simultaneously with adding override data and controls, Grbl has tweaked the communication interface to make it easier for developers to write and maintain their GUIs. _NOTE: GUIs need to specifically update their code to be compatible with v1.1 and later._
 
 	- **New Status Reports**: To account for the additional override data, status reports have been tweaked to cram more data into it, while still being smaller than before. Documentation is included, outlining how it has been changed. 

@@ -186,6 +186,10 @@ uint8_t system_execute_line(char *line)
             }
           } else { return(STATUS_SETTING_DISABLED); }
           break;
+        case 'S' : // Puts Grbl to sleep [IDLE/ALARM]
+          if ((line[2] != 'L') || (line[3] != 'P') || (line[4] != 0)) { return(STATUS_INVALID_STATEMENT); }
+          system_set_exec_state_flag(EXEC_SLEEP); // Set to execute sleep mode immediately
+          break;
         case 'I' : // Print or store build info. [IDLE/ALARM]
           if ( line[++char_counter] == 0 ) {
             settings_read_build_info(line);

@@ -28,8 +28,6 @@ settings_t settings;
 void settings_store_startup_line(uint8_t n, char *line)
 {
   #ifdef FORCE_BUFFER_SYNC_DURING_EEPROM_WRITE
-    // TODO: Alter the startup line parsing to prevent motions from being executed before this call.
-    // Implement it like the jog parsing.
     protocol_buffer_synchronize(); // A startup line may contain a motion and be executing. 
   #endif
   uint32_t addr = n*(LINE_BUFFER_SIZE+1)+EEPROM_ADDR_STARTUP_BLOCK;
@@ -288,8 +286,8 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
       case 25: settings.homing_seek_rate = value; break;
       case 26: settings.homing_debounce_delay = int_value; break;
       case 27: settings.homing_pulloff = value; break;
-      case 30: settings.rpm_max = value; break;
-      case 31: settings.rpm_min = value; break;
+      case 30: settings.rpm_max = value; spindle_init(); break; // Re-initialize spindle rpm calibration
+      case 31: settings.rpm_min = value; spindle_init(); break; // Re-initialize spindle rpm calibration
       case 32:
         #ifdef VARIABLE_SPINDLE
           if (int_value) { settings.flags |= BITFLAG_LASER_MODE; }

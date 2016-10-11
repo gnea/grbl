@@ -231,6 +231,8 @@ void report_feedback_message(uint8_t message_code)
       printPgmString(PSTR("Restoring defaults")); break;
     case MESSAGE_SPINDLE_RESTORE:
       printPgmString(PSTR("Restoring spindle")); break;
+    case MESSAGE_SLEEP_MODE:
+      printPgmString(PSTR("Sleeping")); break;
   }
   report_util_feedback_line_feed();
 }
@@ -245,7 +247,7 @@ void report_init_message()
 // Grbl help message
 void report_grbl_help() {
   #ifdef REPORT_GUI_MODE
-    printPgmString(PSTR("[HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $C $X $H ~ ! ? ctrl-x]\r\n"));
+    printPgmString(PSTR("[HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $SLP $C $X $H ~ ! ? ctrl-x]\r\n"));
   #else
     printPgmString(PSTR("$$ (view Grbl settings)\r\n"
                         "$# (view # parameters)\r\n"
@@ -255,6 +257,7 @@ void report_grbl_help() {
                         "$x=value (save Grbl setting)\r\n"
                         "$Nx=line (save startup block)\r\n"
                         "$J=line (jog)\r\n"
+                        "$SLP (sleep mode)\r\n"
                         "$C (check gcode mode)\r\n"
                         "$X (kill alarm lock)\r\n"
                         "$H (run homing cycle)\r\n"
@@ -571,6 +574,7 @@ void report_realtime_status()
           else { printPgmString(PSTR("<Hold")); }
         }
         break;
+      case STATE_SLEEP: printPgmString(PSTR("<Sleep")); break;        
     }
 
     // If reporting a position, convert the current step count (current_position) to millimeters.
@@ -681,22 +685,23 @@ void report_realtime_status()
     system_convert_array_steps_to_mpos(print_position,current_position);
 
     // Report current machine state and sub-states
+    serial_write('<');
     switch (sys.state) {
-      case STATE_IDLE: printPgmString(PSTR("<Idle")); break;
-      case STATE_CYCLE: printPgmString(PSTR("<Run")); break;
+      case STATE_IDLE: printPgmString(PSTR("Idle")); break;
+      case STATE_CYCLE: printPgmString(PSTR("Run")); break;
       case STATE_HOLD:
         if (!(sys.suspend & SUSPEND_JOG_CANCEL)) {
-          printPgmString(PSTR("<Hold:"));
+          printPgmString(PSTR("Hold:"));
           if (sys.suspend & SUSPEND_HOLD_COMPLETE) { serial_write('0'); } // Ready to resume
           else { serial_write('1'); } // Actively holding
           break;
         } // Continues to print jog state during jog cancel.
-      case STATE_JOG: printPgmString(PSTR("<Jog")); break;
-      case STATE_HOMING: printPgmString(PSTR("<Home")); break;
-      case STATE_ALARM: printPgmString(PSTR("<Alarm")); break;
-      case STATE_CHECK_MODE: printPgmString(PSTR("<Check")); break;
+      case STATE_JOG: printPgmString(PSTR("Jog")); break;
+      case STATE_HOMING: printPgmString(PSTR("Home")); break;
+      case STATE_ALARM: printPgmString(PSTR("Alarm")); break;
+      case STATE_CHECK_MODE: printPgmString(PSTR("Check")); break;
       case STATE_SAFETY_DOOR:
-        printPgmString(PSTR("<Door:"));
+        printPgmString(PSTR("Door:"));
         if (sys.suspend & SUSPEND_INITIATE_RESTORE) {
           serial_write('3'); // Restoring
         } else {
@@ -711,10 +716,7 @@ void report_realtime_status()
           }
         }
         break;
-      // case STATE_SLEEP: printPgmString(PSTR("<Sleep:")); // [Grbl-Mega Only]
-        // if (sys.suspend & SUSPEND_RETRACT_COMPLETE) { printPgmString(PSTR("0")); } // Parked
-        // else { printPgmString(PSTR("1")); } // Actively holding and retracting
-        // break;
+      case STATE_SLEEP: printPgmString(PSTR("Sleep")); break;
     }
 
     float wco[N_AXIS];
@@ -730,26 +732,13 @@ void report_realtime_status()
       }
     }
 
+    // Report machine position
     if (bit_istrue(settings.status_report_mask,BITFLAG_RT_STATUS_POSITION_TYPE)) {
       printPgmString(PSTR("|MPos:"));
     } else {
       printPgmString(PSTR("|WPos:"));
     }
     report_util_axis_values(print_position);
-
-    // Report machine position
-    // if (bit_istrue(settings.status_report_mask,BITFLAG_RT_STATUS_POSITION_TYPE)) {
-    //   printPgmString(PSTR("|MPos:"));
-    // } else {
-    //   // Report work position
-    //   printPgmString(PSTR("|WPos:"));
-    //   for (idx=0; idx< N_AXIS; idx++) {
-    //     // Apply work coordinate offsets and tool length offset to current position.
-    //     print_position[idx] -= gc_state.coord_system[idx]+gc_state.coord_offset[idx];
-    //     if (idx == TOOL_LENGTH_OFFSET_AXIS) { print_position[idx] -= gc_state.tool_length_offset; }
-    //   }
-    // }
-    // report_util_axis_values(print_position);
 
     // Returns planner and serial read buffer states.
     #ifdef REPORT_FIELD_BUFFER_STATE
@@ -815,23 +804,6 @@ void report_realtime_status()
         printPgmString(PSTR("|WCO:"));
         report_util_axis_values(wco);
       }
-      // if (sys.report_wco_counter++ >= REPORT_WCO_REFRESH_BUSY_COUNT) {
-      //   if (sys.state & (STATE_HOMING | STATE_CYCLE | STATE_HOLD | STATE_JOG | STATE_SAFETY_DOOR)) {
-      //     sys.report_wco_counter = 1; // Reset counter for slow refresh
-      //   } else { sys.report_wco_counter = (REPORT_WCO_REFRESH_BUSY_COUNT-REPORT_WCO_REFRESH_IDLE_COUNT+1); }
-      //   if (sys.report_ovr_counter >= REPORT_OVR_REFRESH_BUSY_COUNT) {
-      //     sys.report_ovr_counter = (REPORT_OVR_REFRESH_BUSY_COUNT-1); // Set override on next report.
-      //   }
-      //   printPgmString(PSTR("|WCO:"));
-      //   float axis_offset;
-      //   uint8_t idx;
-      //   for (idx=0; idx<N_AXIS; idx++) {
-      //     axis_offset = gc_state.coord_system[idx]+gc_state.coord_offset[idx];
-      //     if (idx == TOOL_LENGTH_OFFSET_AXIS) { axis_offset += gc_state.tool_length_offset; }
-      //     printFloat_CoordValue(axis_offset);
-      //     if (idx < (N_AXIS-1)) { serial_write(','); }
-      //   }
-      // }
     #endif
 
     #ifdef REPORT_FIELD_OVERRIDES

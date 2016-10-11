@@ -23,7 +23,7 @@ The start up message always prints upon startup and after a reset. Whenever you 
 Every string Grbl receives is assumed to be a G-code block/line for it to execute, except for some special system commands Grbl uses for configuration, provide feedback to the user on what and how it's doing, or perform some task such as a homing cycle. To see a list of these system commands, type `$` followed by an enter, and Grbl will respond with:
 
 ```
-[HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $C $X $H ~ ! ? ctrl-x]
+[HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $SLP $C $X $H ~ ! ? ctrl-x]
 ```
 
 - _**NOTE:** Grbl v1.1's new override real-time commands are not included in the help message. They use the extended-ASCII character set, which are not easily type-able, and require a GUI that supports them. This is for two reasons: Establish enough characters for all of the overrides with extra for later growth, and prevent accidental keystrokes or characters in a g-code file from enacting an override inadvertently. _
@@ -249,6 +249,8 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
   - `[MSG:Pgm End]` - M2/30 program end message to denote g-code modes have been restored to defaults according to the M2/30 g-code description.
 
   - `[MSG:Restoring defaults]` - Appears as an acknowledgement message when restoring EEPROM defaults via a `$RST=` command. An 'ok' still appears immediately after to denote the `$RST=` was parsed and executed.
+  
+  - `[MSG:Sleeping]` - Appears as an acknowledgement message when Grbl's sleep mode is invoked by issuing a `$SLP` command when idle. Note that Grbl-Mega may invoke this at any time when the sleep timer option has been enabled and the timeout has been exceeded. Grbl may only be exited by a reset in the sleep state and will automatically enter an alarm state since the steppers were disabled.
 
 - **Queried Feedback Messages:**
 
@@ -362,7 +364,7 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 
     - **Machine State:**
 
-      - Valid states types:  `Idle, Run, Hold, Jog, Alarm, Door, Check, Home`
+      - Valid states types:  `Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep`
 
       - Sub-states may be included via `:` a colon delimiter and numeric code.
 

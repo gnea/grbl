@@ -83,7 +83,6 @@ void serial_init()
 
 
 // Writes one byte to the TX serial buffer. Called by main program.
-// TODO: Check if we can speed this up for writing strings, rather than single bytes.
 void serial_write(uint8_t data) {
   // Calculate next head
   uint8_t next_head = serial_tx_buffer_head + 1;

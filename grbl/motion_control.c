@@ -290,16 +290,6 @@ uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_prob
   plan_reset(); // Reset planner buffer. Zero planner positions. Ensure probing motion is cleared.
   plan_sync_position(); // Sync planner position to current machine position.
 
-  // TODO: Update the g-code parser code to not require this target calculation but uses a gc_sync_position() call.
-  // NOTE: The target[] variable updated here will be sent back and synced with the g-code parser.
-  
-  //!!! This is the problem. Need to set the g-code parser to update the position appropriately.
-  // - Probe initialization fail: Retain current position.
-  // - Probe successful: Update new positions across everything, since held before the target.
-  // - Probe did not contact (alarm or not): Copy original target position as normal
-   
-//   system_convert_array_steps_to_mpos(target, sys_position);
-
   #ifdef MESSAGE_PROBE_COORDINATES
     // All done! Output the probe position as message.
     report_probe_parameters();

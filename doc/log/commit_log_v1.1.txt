@@ -1,4 +1,22 @@
 ----------------
+Date: 2016-09-28
+Author: Sonny Jeon
+Subject: New jog cancel real-time command. Parser typo fix from last push.
+
+- Added a new jog cancel real-time command. Rather than depending on a
+feed hold to cancel a jogging motion, this realtime command can be used
+instead. The main advantage is if a feed hold is used, you can
+accidentally hold the machine right when Grbl returns to IDLE after
+completing a jog. And the GUI doesn’t have to worry about tracking this
+either.
+
+- Fixed a typo in the g-code parser edits from the last push. Was
+causing the G10 set coordinate system command to not work correctly.
+
+- Updated the documentation with the jog cancel command.
+
+
+----------------
 Date: 2016-09-27
 Author: Sonny Jeon
 Subject: Refactored g-code parser. Saved 60bytes flash and some ram. Edited Readme.

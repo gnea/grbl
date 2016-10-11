@@ -2,7 +2,7 @@
 
 --------
 
-### _Specific details are available in the interface.md document._
+### _Specific details are available in the other markdown documents._
 --------
 
 #### GUI Interface Tweaks from Grbl v0.9
@@ -33,7 +33,9 @@ Grbl v1.1's interface protocol has been tweaked in the attempt to make GUI devel
 
 - `>G54G20:ok` : The open chevron indicates startup line execution. The `:ok` suffix shows it executed correctly without adding an unmatched `ok` response on a new line.
 
-On a final note, this interface tweak came about out of necessity, as more data is being sent back from Grbl and it is capable of doing many more things. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before Grbl v1.1 goes to master, please do immediately so we can all vet the new alteration before its installed.
+In addition, all `$x=val` settings, `error:`, and `ALARM:` messages no longer contain human-readable strings, but rather codes that are defined in other documents. The `$` help message is also reduced to just showing the available commands. Doing this saves incredible amounts of flash space. Otherwise, the new overrides features would not have fit.
+
+On a final note, these interface tweaks came about out of necessity, because more data is being sent back from Grbl, it is capable of doing many more things, and flash space is at a premium. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before Grbl v1.1 goes to master, please do immediately so we can all vet the new alteration before its installed.
 
 ----
 
@@ -92,3 +94,13 @@ On a final note, this interface tweak came about out of necessity, as more data 
   - Grbl is executing g-code block that does not contain a motion, like `G20G54` or `G4P1` dwell. (NOTE: Looking to fixing this later.)
 
 -------
+
+#### New Commands
+
+- `$SLP` - Grbl v1.1 now has a sleep mode that can be invoked by this command. It requires Grbl to be in either an IDLE or ALARM state. Once invoked, Grbl will de-energize all connected systems, including the spindle, coolant, and stepper drivers. It'll enter a suspend state that can only be exited by a reset. When reset, Grbl will re-initiatize in an ALARM state because the steppers were disabled and position can not be guaranteed.
+	-  NOTE: Grbl-Mega can invoke the sleep mode at any time, when the sleep timeout feature is enabled in config.h. It does so when Grbl has not received any external input after a timeout period.
+
+- 	`$J=line` New jogging commands. This command behaves much like a normal G1 command, but there are some key differences. Jog commands don't alter the g-code parser state, meaning a GUI doesn't have to manage it anymore. Jog commands may be queued and cancelled at any time, where they are automatically flushed from the planner buffer without requiring a reset. See the jogging documentation on how they work and how they may be used to implement a low-latency joystick or rotary dial.
+
+- Laser mode `$` setting - When enabled, laser mode will move through consecutive G1, G2, and G3 motion commands that have different spindle speed values without stopping. A spindle speed of zero will disable the laser without stopping as well. However, when spindle states change, like M3 or M5, stops are still enforced.
+	- NOTE: Parking motions are automatically disabled when laser mode is enabled to prevent burning.

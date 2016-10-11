@@ -901,7 +901,7 @@ uint8_t gc_execute_line(char *line)
   if (gc_state.spindle_speed != gc_block.values.s) {
     #ifdef VARIABLE_SPINDLE
       // Do not stop motion if in laser mode and a G1, G2, or G3 motion is being executed.
-      if ( !(bit_istrue(settings.flags,BITFLAG_LASER_MODE) && (axis_command == AXIS_COMMAND_MOTION_MODE) &&
+      if ( (bit_isfalse(settings.flags,BITFLAG_LASER_MODE) && (axis_command == AXIS_COMMAND_MOTION_MODE) &&
           ((gc_block.modal.motion == MOTION_MODE_LINEAR ) || (gc_block.modal.motion == MOTION_MODE_CW_ARC) || (gc_block.modal.motion == MOTION_MODE_CCW_ARC)) ) ) {
         // Update running spindle only if not in check mode and not already enabled.
         if (gc_state.modal.spindle != SPINDLE_DISABLE) { spindle_run(gc_state.modal.spindle, gc_block.values.s); }

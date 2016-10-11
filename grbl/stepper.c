@@ -232,7 +232,7 @@ void st_go_idle()
 
   // Set stepper driver idle state, disabled or enabled, depending on settings and circumstances.
   bool pin_state = false; // Keep enabled.
-  if (((settings.stepper_idle_lock_time != 0xff) || sys_rt_exec_alarm) && sys.state != STATE_HOMING) {
+  if (((settings.stepper_idle_lock_time != 0xff) || sys_rt_exec_alarm || sys.state == STATE_SLEEP) && sys.state != STATE_HOMING) {
     // Force stepper dwell to lock axes for a defined amount of time to ensure the axes come to a complete
     // stop and not drift from residual inertial forces at the end of the last movement.
     delay_ms(settings.stepper_idle_lock_time);
@@ -738,13 +738,22 @@ void st_prep_buffer()
 					prep.maximum_speed = prep.exit_speed;
 				}
 			}
-
-			#ifdef VARIABLE_SPINDLE
-        st_prep_block->spindle_pwm = spindle_compute_pwm_value((0.01*sys.spindle_speed_ovr)*pl_block->spindle_speed);
+      
+      #ifdef VARIABLE_SPINDLE  
+        bit_true(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM); // Force update whenever updating block.
       #endif
-
     }
-
+    
+    #ifdef VARIABLE_SPINDLE
+      if (sys.step_control & STEP_CONTROL_UPDATE_SPINDLE_PWM) {    
+			  // Configure correct spindle PWM state for block. Updates with planner changes and spindle speed overrides.
+			  if (pl_block->condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)) {
+          st_prep_block->spindle_pwm = spindle_compute_pwm_value((0.01*sys.spindle_speed_ovr)*pl_block->spindle_speed);
+        } else { st_prep_block->spindle_pwm = SPINDLE_PWM_OFF_VALUE; }
+        bit_false(sys.step_control,STEP_CONTROL_UPDATE_SPINDLE_PWM);
+      }
+    #endif
+    
     // Initialize new segment
     segment_t *prep_segment = &segment_buffer[segment_buffer_head];
 
