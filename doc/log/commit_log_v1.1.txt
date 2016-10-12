@@ -1,4 +1,42 @@
 ----------------
+Date: 2016-10-11
+Author: Sonny Jeon
+Subject: v1.1c: New sleep mode. Laser mode and other bug fixes.
+
+- New $SLP sleep mode that will disable spindle, coolant, and stepper
+enable pins. Allows users to disable their steppers without having to
+alter their settings. A reset is required to exit and re-initializes in
+alarm state.
+
+- Laser mode wasn’t updating the spindle PWM correctly (effected
+spindle speed overrides) and not checking for modal states either.
+Fixed both issues.
+
+- While in laser mode, parking motions are ignored, since the power off
+delay with the retract motion would burn the material. It will just
+turn off and not move. A restore immediately powers up and resumes. No
+delays.
+
+- Changing rpm max and min settings did not update the spindle PWM
+calculations. Now fixed.
+
+- Increased default planner buffer from 16 to 17 block. It seems to be
+stable, but need to monitor this carefully.
+
+- Removed software debounce routine for limit pins. Obsolete.
+
+- Fixed a couple parking motion bugs. One related to restoring
+incorrectly and the other the parking rate wasn’t compatible with the
+planner structs.
+
+- Fixed a bug caused by refactoring the critical alarms in a recent
+push. Soft limits weren’t invoking a critical alarm.
+
+- Updated the documentation with the new sleep feature and added some
+more details to the change summary.
+
+
+----------------
 Date: 2016-09-28
 Author: Sonny Jeon
 Subject: New jog cancel real-time command. Parser typo fix from last push.
