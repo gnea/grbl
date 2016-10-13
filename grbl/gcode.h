@@ -2,9 +2,9 @@
   gcode.h - rs274/ngc parser.
   Part of Grbl
 
-  Copyright (c) 2011-2015 Sungeun K. Jeon
+  Copyright (c) 2011-2016 Sungeun K. Jeon for Gnea Research LLC
   Copyright (c) 2009-2011 Simen Svale Skogsrud
-  
+
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -23,10 +23,10 @@
 #define gcode_h
 
 
-// Define modal group internal numbers for checking multiple command violations and tracking the 
+// Define modal group internal numbers for checking multiple command violations and tracking the
 // type of command that is called in the block. A modal group is a group of g-code commands that are
 // mutually exclusive, or cannot exist on the same line, because they each toggle a state or execute
-// a unique motion. These are defined in the NIST RS274-NGC v3 g-code standard, available online, 
+// a unique motion. These are defined in the NIST RS274-NGC v3 g-code standard, available online,
 // and are similar/identical to other g-code interpreters by manufacturers (Haas,Fanuc,Mazak,etc).
 // NOTE: Modal group define values must be sequential and starting from zero.
 #define MODAL_GROUP_G0 0 // [G4,G10,G28,G28.1,G30,G30.1,G53,G92,G92.1] Non-modal
@@ -93,8 +93,8 @@
 #define PROGRAM_FLOW_COMPLETED 2 // M2, M30
 
 // Modal Group G5: Feed rate mode
-#define FEED_RATE_MODE_UNITS_PER_MIN 0 // G94 (Default: Must be zero)
-#define FEED_RATE_MODE_INVERSE_TIME 1 // G93
+#define FEED_RATE_MODE_UNITS_PER_MIN  0 // G94 (Default: Must be zero)
+#define FEED_RATE_MODE_INVERSE_TIME   PL_COND_FLAG_INVERSE_TIME // G93 (NOTE: Uses planner condition bit flag)
 
 // Modal Group G6: Units mode
 #define UNITS_MODE_MM 0 // G21 (Default: Must be zero)
@@ -108,13 +108,13 @@
 
 // Modal Group M7: Spindle control
 #define SPINDLE_DISABLE 0 // M5 (Default: Must be zero)
-#define SPINDLE_ENABLE_CW 1 // M3
-#define SPINDLE_ENABLE_CCW 2 // M4
+#define SPINDLE_ENABLE_CW   PL_COND_FLAG_SPINDLE_CW // M3 (NOTE: Uses planner condition bit flag)
+#define SPINDLE_ENABLE_CCW  PL_COND_FLAG_SPINDLE_CCW // M4 (NOTE: Uses planner condition bit flag)
 
 // Modal Group M8: Coolant control
 #define COOLANT_DISABLE 0 // M9 (Default: Must be zero)
-#define COOLANT_MIST_ENABLE 1 // M7
-#define COOLANT_FLOOD_ENABLE 2 // M8
+#define COOLANT_FLOOD_ENABLE  PL_COND_FLAG_COOLANT_FLOOD // M8 (NOTE: Uses planner condition bit flag)
+#define COOLANT_MIST_ENABLE   PL_COND_FLAG_COOLANT_MIST  // M7 (NOTE: Uses planner condition bit flag)
 
 // Modal Group G8: Tool length offset
 #define TOOL_LENGTH_OFFSET_CANCEL 0 // G49 (Default: Must be zero)
@@ -122,7 +122,6 @@
 
 // Modal Group G12: Active work coordinate system
 // N/A: Stores coordinate system value (54-59) to change to.
-
 
 // Define parameter word mapping.
 #define WORD_F  0
@@ -138,6 +137,23 @@
 #define WORD_X  10
 #define WORD_Y  11
 #define WORD_Z  12
+
+// Define g-code parser position updating flags
+#define GC_UPDATE_POS_TARGET   0
+#define GC_UPDATE_POS_SYSTEM   1
+#define GC_UPDATE_POS_NONE     2
+
+// Define probe cycle exit states and assign proper position updating.
+#define GC_PROBE_FOUND      GC_UPDATE_POS_SYSTEM
+#define GC_PROBE_ABORT      GC_UPDATE_POS_NONE
+#define GC_PROBE_FAIL_INIT  GC_UPDATE_POS_NONE
+#define GC_PROBE_FAIL_END   GC_UPDATE_POS_TARGET
+#ifdef SET_CHECK_MODE_PROBE_TO_START
+  #define GC_PROBE_CHECK_MODE   GC_UPDATE_POS_NONE  
+#else
+  #define GC_PROBE_CHECK_MODE   GC_UPDATE_POS_TARGET
+#endif
+
 
 
 // NOTE: When this struct is zeroed, the above defines set the defaults for the system.
@@ -155,7 +171,7 @@ typedef struct {
   uint8_t program_flow;    // {M0,M1,M2,M30}
   uint8_t coolant;         // {M7,M8,M9}
   uint8_t spindle;         // {M3,M4,M5}
-} gc_modal_t;  
+} gc_modal_t;
 
 typedef struct {
   float f;         // Feed
@@ -173,7 +189,7 @@ typedef struct {
 
 typedef struct {
   gc_modal_t modal;
-  
+
   float spindle_speed;          // RPM
   float feed_rate;              // Millimeters/min
   uint8_t tool;                 // Tracks tool number. NOT USED.
@@ -181,24 +197,21 @@ typedef struct {
 
   float position[N_AXIS];       // Where the interpreter considers the tool to be at this point in the code
 
-  float coord_system[N_AXIS];   // Current work coordinate system (G54+). Stores offset from absolute machine
-                                // position in mm. Loaded from EEPROM when called.  
-  float coord_offset[N_AXIS];   // Retains the G92 coordinate offset (work coordinates) relative to
-                                // machine zero in mm. Non-persistent. Cleared upon reset and boot.    
-  float tool_length_offset;     // Tracks tool length offset value when enabled.
+  float coord_system[N_AXIS];    // Current work coordinate system (G54+). Stores offset from absolute machine
+                                 // position in mm. Loaded from EEPROM when called.
+  float coord_offset[N_AXIS];    // Retains the G92 coordinate offset (work coordinates) relative to
+                                 // machine zero in mm. Non-persistent. Cleared upon reset and boot.
+  float tool_length_offset;      // Tracks tool length offset value when enabled.
 } parser_state_t;
 extern parser_state_t gc_state;
 
-typedef struct {
-//   uint16_t command_words;  // NOTE: If this bitflag variable fills, G and M words can be separated.
-//   uint16_t value_words;
 
+typedef struct {
   uint8_t non_modal_command;
   gc_modal_t modal;
   gc_values_t values;
-
 } parser_block_t;
-extern parser_block_t gc_block;
+
 
 // Initialize the parser
 void gc_init();
@@ -207,6 +220,6 @@ void gc_init();
 uint8_t gc_execute_line(char *line);
 
 // Set g-code parser position. Input in steps.
-void gc_sync_position(); 
+void gc_sync_position();
 
 #endif

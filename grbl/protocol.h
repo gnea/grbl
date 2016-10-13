@@ -2,7 +2,7 @@
   protocol.h - controls Grbl execution protocol and procedures
   Part of Grbl
 
-  Copyright (c) 2011-2015 Sungeun K. Jeon
+  Copyright (c) 2011-2016 Sungeun K. Jeon for Gnea Research LLC
   Copyright (c) 2009-2011 Simen Svale Skogsrud
 
   Grbl is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 // NOTE: Not a problem except for extreme cases, but the line buffer size can be too small
 // and g-code blocks can get truncated. Officially, the g-code standards support up to 256
 // characters. In future versions, this will be increased, when we know how much extra
-// memory space we can invest into here or we re-write the g-code parser not to have this 
+// memory space we can invest into here or we re-write the g-code parser not to have this
 // buffer.
 #ifndef LINE_BUFFER_SIZE
   #define LINE_BUFFER_SIZE 80
@@ -39,15 +39,6 @@ void protocol_main_loop();
 // Checks and executes a realtime command at various stop points in main program
 void protocol_execute_realtime();
 void protocol_exec_rt_system();
-
-// Notify the stepper subsystem to start executing the g-code program in buffer.
-// void protocol_cycle_start();
-
-// Reinitializes the buffer after a feed hold for a resume.
-// void protocol_cycle_reinitialize(); 
-
-// Initiates a feed hold of the running program
-// void protocol_feed_hold();
 
 // Executes the auto cycle feature, if enabled.
 void protocol_auto_cycle_start();
