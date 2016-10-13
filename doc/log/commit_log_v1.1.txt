@@ -1,4 +1,16 @@
 ----------------
+Date: 2016-10-12
+Author: Sonny Jeon
+Subject: Spindle speed bug fix.
+
+- Spindle speed updating wasn’t working in the g-code parser due to
+some borked up logic on my part. Fixed it and should be operating as
+intended for both normal and laser spindle modes.
+
+- Elaborated a little more on the new sleep mode in the documentation.
+
+
+----------------
 Date: 2016-10-11
 Author: Sonny Jeon
 Subject: v1.1c: New sleep mode. Laser mode and other bug fixes.

@@ -202,8 +202,7 @@ void st_wake_up()
   if (bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE)) { STEPPERS_DISABLE_PORT |= (1<<STEPPERS_DISABLE_BIT); }
   else { STEPPERS_DISABLE_PORT &= ~(1<<STEPPERS_DISABLE_BIT); }
 
-  // Initialize stepper output bits
-  st.dir_outbits = dir_port_invert_mask;
+  // Initialize stepper output bits to ensure first ISR call does not step.
   st.step_outbits = step_port_invert_mask;
 
   // Initialize step pulse timing from settings. Here to ensure updating after re-writing.
@@ -294,7 +293,6 @@ void st_go_idle()
 // with probing and homing cycles that require true real-time positions.
 ISR(TIMER1_COMPA_vect)
 {
-// SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
   if (busy) { return; } // The busy-flag is used to avoid reentering this interrupt
 
   // Set the direction pins a couple of nanoseconds before we step the steppers
@@ -416,7 +414,6 @@ ISR(TIMER1_COMPA_vect)
 
   st.step_outbits ^= step_port_invert_mask;  // Apply step port invert mask
   busy = false;
-// SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
 }
 
 
@@ -480,6 +477,7 @@ void st_reset()
   busy = false;
 
   st_generate_step_dir_invert_masks();
+  st.dir_outbits = dir_port_invert_mask; // Initialize direction bits to default.
 
   // Initialize step and direction port pins.
   STEP_PORT = (STEP_PORT & ~STEP_MASK) | step_port_invert_mask;

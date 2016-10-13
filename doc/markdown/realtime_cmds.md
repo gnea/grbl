@@ -1,6 +1,6 @@
 ## Grbl v1.1 Realtime commands
 
-Realtime commands are single control characters that may be sent to Grbl to command and perform an action in real-time, regardless of what Grbl is doing at the time. These commands include a reset, feed hold, resume, status report query, and overrides (in v1.1).
+Realtime commands are single control characters that may be sent to Grbl to command and perform an action in real-time. This means that they can be sent at anytime, anywhere, and Grbl will immediately respond, regardless of what it is doing at the time. These commands include a reset, feed hold, resume, status report query, and overrides (in v1.1).
 
 A realtime command:
 
@@ -8,9 +8,11 @@ A realtime command:
 
 - Is a single character that may be sent to Grbl at any time.
 
-- Does not require a line feed or carraige return after them.
+- Does not require a line feed or carriage return after them.
 
-- Is not considered a part of the streaming protocol.
+- Is not considered a part of the streaming protocol. 
+
+- Are intercepted when they are received and never placed in a buffer to be parsed by Grbl.
 
 - Will ignore multiple commands until it has executed the first received command.
 
@@ -21,11 +23,11 @@ A realtime command:
 - Descriptions explain how they work and what to expect.
 
 #### ASCII Realtime Command Descriptions
-The normal ASCII realtime command characters used in Grbl v0.9 have been retained in Grbl v1.1 and are described below for completeness.
+Four realtime commands are type-able by users on a keyboard and shown in the `$` Grbl help message. These realtime command characters control some of Grbl's basic functions.
 
 - `0x18` (ctrl-x) : Soft-Reset
 
-  - Immediately halts and resets Grbl.
+  - Immediately halts and safely resets Grbl without a power-cycle.
   - Accepts and executes this command at any time.
   - If reset while in motion, Grbl will throw an alarm to indicate position may be lost from the motion halt.
   - If reset while in not motion, position is retained and re-homing is not required.
@@ -57,7 +59,7 @@ The normal ASCII realtime command characters used in Grbl v0.9 have been retaine
 
 #### Extended-ASCII Realtime Command Descriptions
 
-Grbl v1.1 installed more than a dozen new realtime commands to control feed, rapid, and spindle overrides. To help prevent users from inadvertently altering overrides with a keystroke and allow for more commands later on, all of the new control characters have been moved to the extended ASCII character set. These are not readily type-able on a keyboard, but, depending on the OS, they may be entered using specific keystroke and code. GUI developers will need to be able to send extended ASCII characters, values `128 (0x80)` to `255 (0xFF)`, to Grbl to take advantage of these new features.
+Grbl v1.1 installed more than a dozen new realtime commands to control feed, rapid, and spindle overrides. To help prevent users from inadvertently altering overrides with a keystroke and allow for more commands later on, all of the new control characters have been moved to the extended ASCII character set. These are not easily type-able on a keyboard, but, depending on the OS, they may be entered using specific keystroke and code. GUI developers will need to be able to send extended ASCII characters, values `128 (0x80)` to `255 (0xFF)`, to Grbl to take advantage of these new features.
 
 - `0x84` : Safety Door
 
@@ -124,10 +126,10 @@ Grbl v1.1 installed more than a dozen new realtime commands to control feed, rap
 - `0x9E` : Toggle Spindle Stop
 
   - Toggles spindle enable or disable state immediately, but only while in the HOLD state.
-  - The command is otherwise ignored, especially while in motion. This prevents accidental disabling during a job that can either destroy the part/machine or personal injury. Industrial machines handle the spindle stop override similarly.
+  - The command is otherwise ignored, especially while in motion. This prevents accidental disabling during a job that can either destroy the part/machine or cause personal injury. Industrial machines handle the spindle stop override similarly.
   - When motion restarts via cycle start, the last spindle state will be restored and wait 4.0 seconds (configurable) before resuming the tool path. This ensures the user doesn't forget to turn it back on.
   - While disabled, spindle speed override values may still be altered and will be in effect once the spindle is re-enabled.
-  - If a safety door is opened, the DOOR state will supercede the spindle stop override, where it will manage the spindle re-energizing itself upon closing the door and resuming. The prior spindle stop override state is cleared and reset.
+  - If a safety door is opened, the DOOR state will supersede the spindle stop override, where it will manage the spindle re-energizing itself upon closing the door and resuming. The prior spindle stop override state is cleared and reset.
 
 
 - `0xA0` : Toggle Flood Coolant
