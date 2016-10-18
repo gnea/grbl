@@ -1,4 +1,33 @@
 ----------------
+Date: 2016-10-17
+Author: Will Winder
+Subject: Modify code CSV format. (#10)
+
+- Wrap value in quotes to avoid issue with embedded commas. This occurs
+  in one of the alarm codes.
+
+- Change header row format to allow same parsing code as data rows.
+
+----------------
+Date: 2016-10-12
+Author: chamnit
+Subject: Merge branch 'dev' into edge
+
+
+----------------
+Date: 2016-10-12
+Author: chamnit
+Subject: Added settings documentation. Very minor bug fix to step direction handling.
+
+- Added v1.1 settings documentation to the markdown folder.
+
+- Fixed a very minor bug in the step direction handling upon wakeup.
+The direction mask would temporarily go back to default mask for about
+a millisecond when moving in the same non-default direction. It did not
+effect Grbl behavior before, but fixed for consistency.
+
+
+----------------
 Date: 2016-10-12
 Author: Sonny Jeon
 Subject: Spindle speed bug fix.

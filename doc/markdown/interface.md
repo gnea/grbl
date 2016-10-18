@@ -16,7 +16,7 @@ In other words, both commands sent to Grbl and messages received from Grbl have 
 The start up message always prints upon startup and after a reset. Whenever you see this message, this also means that Grbl has completed re-initializing all its systems, so everything starts out the same every time you use Grbl.
 
 * `X.Xx` indicates the major version number, followed by a minor version letter. The major version number indicates the general release, while the letter simply indicates a feature update or addition from the preceding minor version letter.
-* Bug fix revisions are tracked by the build info version number, printed when an `$I` command is sent. These revisions don't update the version number and are given by date revised in year, month, and day, like so `20160820`.
+* Bug fix revisions are tracked by the build info version number, printed when an `$I` command is sent. These revisions don't update the version number and are given by date revised in year, month, and day, like so `20161014`.
 
 #### Grbl `$` Help Message
 
@@ -26,7 +26,7 @@ Every string Grbl receives is assumed to be a G-code block/line for it to execut
 [HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $SLP $C $X $H ~ ! ? ctrl-x]
 ```
 
-- _**NOTE:** Grbl v1.1's new override real-time commands are not included in the help message. They use the extended-ASCII character set, which are not easily type-able, and require a GUI that supports them. This is for two reasons: Establish enough characters for all of the overrides with extra for later growth, and prevent accidental keystrokes or characters in a g-code file from enacting an override inadvertently. _
+- _**NOTE:** Grbl v1.1's new override real-time commands are not included in the help message. They use the extended-ASCII character set, which are not easily type-able, and require a GUI that supports them. This is for two reasons: Establish enough characters for all of the overrides with extra for later growth, and prevent accidental keystrokes or characters in a g-code file from enacting an override inadvertently._
 
 * Check out our [Configuring Grbl](https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.9) wiki page to find out what all of these commands mean and how to use them.
 
@@ -44,7 +44,7 @@ Every G-code block sent to Grbl and Grbl `$` system command that is terminated w
 
 * **`error:X`**: Something went wrong! Grbl did not recognize the command and did not execute anything inside that message. The `X` is given as a numeric error code to tell you exactly what happened. The table below decribes every one of them.
 
-| ID | Error Code Description |
+	| ID | Error Code Description |
 |:-------------:|----|
 | **`1`** | G-code words consist of a letter and a value. Letter was not found. |
 | **`2`** | Numeric value format is not valid or missing an expected value. |
@@ -153,8 +153,8 @@ $24=25.000
 $25=500.000
 $26=250
 $27=1.000
-$30=1000.
-$31=0.
+$30=1000
+$31=0
 $32=0
 $100=250.000
 $101=250.000
@@ -171,7 +171,7 @@ $132=200.000
 ok
 ```
 
-| `$x` Code | Setting Description, Units |
+	| `$x` Code | Setting Description, Units |
 |:-------------:|----|
 | **`0`** | Step pulse time, microseconds |
 | **`1`** | Step idle delay, milliseconds |
@@ -289,12 +289,35 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 
     - The `PRB:` probe parameter message includes an additional `:` and suffix value is a boolean. It denotes whether the last probe cycle was successful or not.
 
-  - `[VER:]` : Indicates build info and string from a `$I` user query. The build info message is shown below with a separate `ok` to confirm the `$I` was executed.
+  - `[VER:]` and `[OPT:]`: Indicates build info data from a `$I` user query. These build info messages are followed by an `ok` to confirm the `$I` was executed, like so:
+ 
       ```
-      [VER:v1.1a.20160923:]
+      [VER:v1.1d.20161014:Some string]
+      [OPT:VL]
       ok
       ```
-      - A string may appear after the `:` colon. It is a stored EEPROM string a user or OEM can place there for personal use or tracking purposes.
+      
+  		- The first line `[VER:]` contains the build version and date.
+      - A string may appear after the second `:` colon. It is a stored EEPROM string a user via a `$I=line` command or OEM can place there for personal use or tracking purposes.
+  		- The `[OPT:]` line follows immediately after and contains character codes for compile-time options that were either enabled or disabled. The codes are defined below and a CSV file is also provided for quick parsing. This is generally only used for quickly diagnosing firmware bugs or compatibility issues.
+
+		| `OPT` Code | Setting Description, Units |
+|:-------------:|----|
+| **`V`** | Variable spindle enabled |
+| **`N`** | Line numbers enabled |
+| **`M`** | Mist coolant enabled |
+| **`C`** | CoreXY enabled |
+| **`P`** | Parking motion enabled |
+| **`Z`** | Homing force origin enabled |
+| **`H`** | Homing single axis enabled |
+| **`L`** | Two limit switches on axis enabled |
+| **`R`** | Classic status reporting enabled |
+| **`*`** | Restore all EEPROM disabled |
+| **`$`** | Restore EEPROM `$` settings disabled |
+| **`#`** | Restore EEPROM parameter data disabled |
+| **`I`** | Build info write user string disabled |
+| **`E`** | Force sync upon EEPROM write disabled |
+| **`W`** | Force sync upon work coordinate offset change disabled |
 
   - `[echo:]` : Indicates an automated line echo from a command just prior to being parsed and executed. May be enabled only by a config.h option. Often used for debugging communication issues. A typical line echo message is shown below. A separate `ok` will eventually appear to confirm the line has been parsed and executed, but may not be immediate as with any line command containing motions.
       ```
@@ -371,17 +394,12 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 
       - Current sub-states are:
 
-        - `Hold:0` Hold complete. Ready to resume.
-
-        - `Hold:1` Hold in-progress. Reset will throw an alarm.
-
-        - `Door:0` Door closed. Ready to resume.
-
-        - `Door:1` Machine stopped. Door still ajar. Can't resume until closed.
-
-        - `Door:2` Door opened. Hold (or parking retract) in-progress. Reset will throw an alarm.
-
-        - `Door:3` Door closed and resuming. Restoring from park, if applicable. Reset will throw an alarm.
+        	- `Hold:0` Hold complete. Ready to resume.
+	     	- `Hold:1` Hold in-progress. Reset will throw an alarm.
+        	- `Door:0` Door closed. Ready to resume.
+        	- `Door:1` Machine stopped. Door still ajar. Can't resume until closed.
+        	- `Door:2` Door opened. Hold (or parking retract) in-progress. Reset will throw an alarm.
+			- `Door:3` Door closed and resuming. Restoring from park, if applicable. Reset will throw an alarm.
 
       - This data field is always present as the first field.
 
@@ -390,7 +408,6 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
         - Depending on `$10` status report mask settings, position may be sent as either:
 
           - `MPos:0.000,-10.000,5.000` machine position or
-
           - `WPos:-2.500,0.000,11.000` work position
 
         - Three position values are given in the order of X, Y, and Z. A fourth position value may exist in later versions for the A-axis.
@@ -413,15 +430,12 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
         - This data field appears:
 
           - In every 10 or 30 (configurable 1-255) status reports, depending on if Grbl is in a motion state or not.
-
           - Immediately in the next report, if an offset value has changed.
-
           - In the first report after a reset/power-cycle.
 
         - This data field will not appear if:
 
           - It is disabled in the config.h file. No `$` mask setting available.
-
           - The refresh counter is in-between intermittent reports.       
 
     - **Buffer State:**
@@ -449,26 +463,26 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
         - This data field will not appear if:
 
           - It is disabled in the config.h file. No `$` mask setting available.
-
           - The line number reporting not enabled in config.h. Different option to reporting data field.
-
           - No line number or `N0` is passed with the g-code block.
-
           - Grbl is homing, jogging, parking, or performing a system task/motion.
-
           - There is no motion in the g-code block like a `G4P1` dwell. (May be fixed in later versions.)
 
-    - **Current Rate:**
+    - **Current Feed and Speed:**
 
-        - `F:1000.` indicates current actual feed rate (speed) of the executing motion. Depending on machine max rate settings and acceleration, this value may not be the programmed rate.
-
-        - Value units, either in mm/min or inches/min, is dependent on the `$` report inches user setting.
+        - There are two versions of this data field that Grbl may respond with. 
+        
+        	- `F:500` contains real-time feed rate data as the value. This appears only when VARIABLE_SPINDLE is disabled in config.h, because spindle speed is not tracked in this mode.
+        	- `FS:500,8000` contains real-time feed rate, followed by spindle speed, data as the values. Note the `FS:`, rather than `F:`, data type name indicates spindle speed data is included.
+                
+        - The current feed rate value is in mm/min or inches/min, depending on the `$` report inches user setting. 
+        - The second value is the current spindle speed in RPM
+        
+        - These values will often not be the programmed feed rate or spindle speed, because several situations can alter or limit them. For example, overrides directly scale the programmed values to a different running value, while machine settings, acceleration profiles, and even the direction traveled can also limit rates to maximum values allowable.
 
         - As a operational note, reported rate is typically 30-50 msec behind actual position reported.
 
-        - This data field will not appear if:
-
-          - It is disabled in the config.h file. No `$` mask setting available.
+        - This data field will always appear, unless it was explicitly disabled in the config.h file.
 
     - **Input Pin State:**
 
@@ -479,13 +493,9 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
         - Each letter of `XYZPDHRS` denotes a particular 'triggered' input pin.
 
           - `X Y Z` XYZ limit pins, respectively
-
           - `P` the probe pin.
-
           - `D H R S` the door, hold, soft-reset, and cycle-start pins, respectively.
-
           - Example: `Pn:PZ` indicates the probe and z-limit pins are 'triggered'.
-
           - Note: `A` may be added in later versions for an A-axis limit pin.
 
         - Assume input pin letters are presented in no particular order.
@@ -495,58 +505,52 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
         - This data field will not appear if:
 
           - It is disabled in the config.h file. No `$` mask setting available.
-
           - No input pins are detected as triggered.
 
     - **Override Values:**
 
         - `Ov:100,100,100` indicates current override values in percent of programmed values for feed, rapids, and spindle speed, respectively.
 
+        - Override maximum, minimum, and increment sizes are all configurable within config.h. Assume that a user or OEM will alter these based on customized use-cases. Recommend not hard-coding these values into a GUI, but rather just show the actual override values and generic increment buttons.
+
         - Override values don't change often during a job once set and only requires intermittent refreshing. This data field appears:
 
           - After 10 or 20 (configurable 1-255) status reports, depending on is in a motion state or not.
-
           - If an override value has changed, this data field will appear immediately in the next report. However, if `WCO:` is present, this data field will be delayed one report.
-
           - In the second report after a reset/power-cycle.
 
         - This data field will not appear if:
 
           - It is disabled in the config.h file. No `$` mask setting available.
-
           - The override refresh counter is in-between intermittent reports.
-
           - `WCO:` exists in current report during refresh. Automatically set to try again on next report.
 
-    - **Toggle Overrides:**
+	- **Accessory State:**
 
-      - `T:SFM` indicates a toggle override is in effect or has been commanded.
+		- `A:SFM` indicates the current state of accessory machine components, such as the spindle and coolant.
 
-      - Like the pin state field, each letter denotes a particular toggle override.
+		- Due to the new toggle overrides, these machine components may not be running according to the g-code program. This data is provided to ensure the user knows exactly what Grbl is doing at any given time.
+		
+		- Each letter after `A:` denotes a particular state. When it appears, the state is enabled. When it does not appear, the state is disabled.
 
-        - `S` indicates the spindle stop toggle override is in effect. It will appear as long as the spindle stop override is active.
-
-        - `F` indicates the flood coolant toggle override was activated. It will only appear once after it has executed the coolant state change.
-
-        - `M` indicates the mist coolant toggle override was activated, if mist coolant is enabled via config.h. It will only appear once after it has executed the coolant state change.
-
-      - Assume toggle override letters are presented in no particular order.
-
-      - One or more active toggle override letter(s) will always be present with a `T:` data field.
-
+			- `S` indicates spindle is enabled in the CW direction. This does not appear with `C`.
+			- `C` indicates spindle is enabled in the CCW direction. This does not appear with `S`.
+        	- `F` indicates flood coolant is enabled.
+        	- `M` indicates mist coolant is enabled.
+		
+	   - Assume accessory state letters are presented in no particular order.
+      
       - This data field appears:
 
-        - If a toggle override is active or has recently executed and only when the override values field is also present (see override value field rules).
+			- When any accessory state is enabled.
+        	- Only with the override values field in the same message. Any accessory state change will trigger the accessory state and override values fields to be shown on the next report.
 
       - This data field will not appear if:
 
-        - If no toggle override is active or has been executed.
-
-        - It is disabled in the config.h file. No `$` mask setting available.
-
-        - If override refresh counter is in-between intermittent reports.
-
-        - `WCO:` exists in current report during refresh. Automatically set to try again on next report.
+        	- No accessory state is active.
+        	- It is disabled in the config.h file. No `$` mask setting available.
+        	- If override refresh counter is in-between intermittent reports.
+        	- `WCO:` exists in current report during refresh. Automatically set to try again on next report.
 
 
 -------

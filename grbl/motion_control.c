@@ -193,7 +193,7 @@ void mc_dwell(float seconds)
 // Perform homing cycle to locate and set machine zero. Only '$H' executes this command.
 // NOTE: There should be no motions in the buffer and Grbl must be in an idle state before
 // executing the homing cycle. This prevents incorrect buffered plans after homing.
-void mc_homing_cycle()
+void mc_homing_cycle(uint8_t cycle_mask)
 {
   // Check and abort homing cycle, if hard limits are already enabled. Helps prevent problems
   // with machines with limits wired on both ends of travel to one limit pin.
@@ -210,15 +210,21 @@ void mc_homing_cycle()
 
   // -------------------------------------------------------------------------------------
   // Perform homing routine. NOTE: Special motion case. Only system reset works.
-
-  // Search to engage all axes limit switches at faster homing seek rate.
-  limits_go_home(HOMING_CYCLE_0);  // Homing cycle 0
-  #ifdef HOMING_CYCLE_1
-    limits_go_home(HOMING_CYCLE_1);  // Homing cycle 1
+  
+  #ifdef HOMING_SINGLE_AXIS_COMMANDS
+    if (cycle_mask) { limits_go_home(cycle_mask); } // Perform homing cycle based on mask.
+    else
   #endif
-  #ifdef HOMING_CYCLE_2
-    limits_go_home(HOMING_CYCLE_2);  // Homing cycle 2
-  #endif
+  {
+    // Search to engage all axes limit switches at faster homing seek rate.
+    limits_go_home(HOMING_CYCLE_0);  // Homing cycle 0
+    #ifdef HOMING_CYCLE_1
+      limits_go_home(HOMING_CYCLE_1);  // Homing cycle 1
+    #endif
+    #ifdef HOMING_CYCLE_2
+      limits_go_home(HOMING_CYCLE_2);  // Homing cycle 2
+    #endif
+  }
 
   protocol_execute_realtime(); // Check for reset and set system abort.
   if (sys.abort) { return; } // Did not complete. Alarm state set by mc_alarm.
@@ -340,7 +346,7 @@ void mc_reset()
 
     // Kill spindle and coolant.
     spindle_stop();
-    coolant_set_state(COOLANT_DISABLE);
+    coolant_stop();
 
     // Kill steppers only if in any motion state, i.e. cycle, actively holding, or homing.
     // NOTE: If steppers are kept enabled via the step idle delay setting, this also keeps

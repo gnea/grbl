@@ -29,6 +29,8 @@ Grbl v1.1's interface protocol has been tweaked in the attempt to make GUI devel
 
 - `[VER:]` : Indicates build info and string from a `$I` user query.
 
+- `[OPT:]` : Indicates compile-time option info from a `$I` user query.
+
 - `[echo:]` : Indicates an automated line echo from a pre-parsed string prior to g-code parsing. Enabled by config.h option.
 
 - `>G54G20:ok` : The open chevron indicates startup line execution. The `:ok` suffix shows it executed correctly without adding an unmatched `ok` response on a new line.

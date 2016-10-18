@@ -527,6 +527,57 @@ void report_build_info(char *line)
   printPgmString(PSTR("[VER:" GRBL_VERSION "." GRBL_VERSION_BUILD ":"));
   printString(line);
   report_util_feedback_line_feed();
+  printPgmString(PSTR("[OPT:")); // Generate compile-time build option list
+  #ifdef VARIABLE_SPINDLE
+    serial_write('V');
+  #endif
+  #ifdef USE_LINE_NUMBERS
+    serial_write('N');
+  #endif
+  #ifdef ENABLE_M7
+    serial_write('M');
+  #endif
+  #ifdef COREXY
+    serial_write('C');
+  #endif
+  #ifdef PARKING_ENABLE
+    serial_write('P');
+  #endif
+  #ifdef HOMING_FORCE_SET_ORIGIN
+    serial_write('Z');
+  #endif
+  #ifdef HOMING_SINGLE_AXIS_COMMANDS
+    serial_write('H');
+  #endif
+  #ifdef LIMITS_TWO_SWITCHES_ON_AXES
+    serial_write('L');
+  #endif
+  #ifdef USE_CLASSIC_REALTIME_REPORT
+    serial_write('R');
+  #endif
+  #ifndef ENABLE_RESTORE_EEPROM_WIPE_ALL // NOTE: Shown when disabled.
+    serial_write('*');
+  #endif
+  #ifndef ENABLE_RESTORE_EEPROM_DEFAULT_SETTINGS // NOTE: Shown when disabled.
+    serial_write('$');
+  #endif
+  #ifndef ENABLE_RESTORE_EEPROM_CLEAR_PARAMETERS // NOTE: Shown when disabled.
+    serial_write('#');
+  #endif
+  #ifndef ENABLE_BUILD_INFO_WRITE_COMMAND // NOTE: Shown when disabled.
+    serial_write('I');
+  #endif
+  #ifndef FORCE_BUFFER_SYNC_DURING_EEPROM_WRITE // NOTE: Shown when disabled.
+    serial_write('E');
+  #endif
+  #ifndef FORCE_BUFFER_SYNC_DURING_WCO_CHANGE // NOTE: Shown when disabled.
+    serial_write('W');
+  #endif
+  
+  // NOTE: Compiled values, like override increments/max/min values, may be added at some point later.
+  // These will likely have a comma delimiter to separate them. 
+  
+  report_util_feedback_line_feed();
 }
 
 
@@ -663,15 +714,29 @@ void report_realtime_status()
       print_uint8_base10(sys.r_override);
       serial_write(',');
       print_uint8_base10(sys.spindle_speed_ovr);
-      if (sys.toggle_ovr_mask) {
-        printPgmString(PSTR("|T:"));
-        if (sys.toggle_ovr_mask & TOGGLE_OVR_STOP_ACTIVE_MASK) { serial_write('S'); }
-        if (sys.toggle_ovr_mask & TOGGLE_OVR_FLOOD_COOLANT) { serial_write('F'); }
+      
+      uint8_t sp_state = spindle_get_state();
+		  uint8_t cl_state = coolant_get_state();
+      if (sp_state || cl_state) {
+        printPgmString(PSTR(",A:"));
+        if (sp_state) { // != SPINDLE_STATE_DISABLE
+          #ifdef VARIABLE_SPINDLE 
+            #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
+              serial_write('S'); // CW
+            #else
+              if (sp_state == SPINDLE_STATE_CW) { serial_write('S'); } // CW
+              else { serial_write('C'); } // CCW
+            #endif
+          #else
+            if (sp_state & SPINDLE_STATE_CW) { serial_write('S'); } // CW
+            else { serial_write('C'); } // CCW
+          #endif
+        }
+        if (cl_state & COOLANT_STATE_FLOOD) { serial_write('F'); }
         #ifdef ENABLE_M7
-          if (sys.toggle_ovr_mask & TOGGLE_OVR_MIST_COOLANT) { serial_write('M'); }
+          if (cl_state & COOLANT_STATE_MIST) { serial_write('M'); }
         #endif
-        bit_false(sys.toggle_ovr_mask, (TOGGLE_OVR_FLOOD_COOLANT|TOGGLE_OVR_FLOOD_COOLANT));
-      }
+      }  
     }
 
     printPgmString(PSTR(">\r\n"));
@@ -764,10 +829,17 @@ void report_realtime_status()
       #endif
     #endif
 
-    // Report realtime rate
-    #ifdef REPORT_FIELD_CURRENT_RATE
-      printPgmString(PSTR("|F:"));
-      printFloat_RateValue(st_get_realtime_rate());
+    // Report realtime feed speed
+    #ifdef REPORT_FIELD_CURRENT_FEED_SPEED
+      #ifdef VARIABLE_SPINDLE
+        printPgmString(PSTR("|FS:"));
+        printFloat_RateValue(st_get_realtime_rate());
+        serial_write(',');
+        printFloat(sys.spindle_speed,N_DECIMAL_RPMVALUE);
+      #else
+        printPgmString(PSTR("|F:"));
+        printFloat_RateValue(st_get_realtime_rate());
+      #endif      
     #endif
 
     #ifdef REPORT_FIELD_PIN_STATE
@@ -818,15 +890,28 @@ void report_realtime_status()
         serial_write(',');
         print_uint8_base10(sys.spindle_speed_ovr);
 
-        if (sys.toggle_ovr_mask) {
-          printPgmString(PSTR("|T:"));
-          if (sys.toggle_ovr_mask & TOGGLE_OVR_STOP_ACTIVE_MASK) { serial_write('S'); }
-          if (sys.toggle_ovr_mask & TOGGLE_OVR_FLOOD_COOLANT) { serial_write('F'); }
+        uint8_t sp_state = spindle_get_state();
+				uint8_t cl_state = coolant_get_state();
+				if (sp_state || cl_state) {
+					printPgmString(PSTR("|A:"));
+          if (sp_state) { // != SPINDLE_STATE_DISABLE
+						#ifdef VARIABLE_SPINDLE 
+						  #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
+					 			serial_write('S'); // CW
+							#else
+								if (sp_state == SPINDLE_STATE_CW) { serial_write('S'); } // CW
+                else { serial_write('C'); } // CCW
+							#endif
+						#else
+							if (sp_state & SPINDLE_STATE_CW) { serial_write('S'); } // CW
+              else { serial_write('C'); } // CCW
+						#endif
+					}
+          if (cl_state & COOLANT_STATE_FLOOD) { serial_write('F'); }
           #ifdef ENABLE_M7
-            if (sys.toggle_ovr_mask & TOGGLE_OVR_MIST_COOLANT) { serial_write('M'); }
-          #endif
-          bit_false(sys.toggle_ovr_mask, (TOGGLE_OVR_FLOOD_COOLANT|TOGGLE_OVR_FLOOD_COOLANT));
-        }
+					  if (cl_state & COOLANT_STATE_MIST) { serial_write('M'); }
+				  #endif
+				}  
       }
     #endif
 

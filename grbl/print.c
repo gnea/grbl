@@ -149,9 +149,7 @@ void printFloat(float n, uint8_t decimal_places)
   unsigned char buf[13];
   uint8_t i = 0;
   uint32_t a = (long)n;
-  buf[decimal_places] = '.'; // Place decimal point, even if decimal places are zero.
   while(a > 0) {
-    if (i == decimal_places) { i++; } // Skip decimal point location
     buf[i++] = (a % 10) + '0'; // Get digit
     a /= 10;
   }
@@ -159,13 +157,14 @@ void printFloat(float n, uint8_t decimal_places)
      buf[i++] = '0'; // Fill in zeros to decimal point for (n < 1)
   }
   if (i == decimal_places) { // Fill in leading zero, if needed.
-    i++;
     buf[i++] = '0';
   }
 
   // Print the generated string.
-  for (; i > 0; i--)
+  for (; i > 0; i--) {
+    if (i == decimal_places) { serial_write('.'); } // Insert decimal point in right place.
     serial_write(buf[i-1]);
+  }
 }
 
 

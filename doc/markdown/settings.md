@@ -17,7 +17,7 @@ Once connected
  you should get the Grbl-prompt, which looks like this:
 
 ```
-Grbl 1.1c ['$' for help]
+Grbl 1.1d ['$' for help]
 ```
 
 Type $ and press enter to have Grbl print a help message. You should not see any local echo of the $ and enter. Grbl should respond with:
@@ -354,7 +354,7 @@ For example, say that you want to use your first startup block `$N0` to set your
 Once you have a startup block stored in Grbl's EEPROM, everytime you startup or reset you will see your startup block printed back to you, starting with an open-chevron `>`, and a `:ok` response from Grbl to indicate if it ran okay. So for the previous example, you'll see:
 
 ```
-Grbl 1.1c ['$' for help]
+Grbl 1.1d ['$' for help]
 >G20G54G17:ok
 
 ```

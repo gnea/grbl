@@ -174,17 +174,26 @@ uint8_t system_execute_line(char *line)
           else { report_ngc_parameters(); }
           break;
         case 'H' : // Perform homing cycle [IDLE/ALARM]
-          if (bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE)) {
-            // Block if safety door is ajar.
-            if (system_check_safety_door_ajar()) { return(STATUS_CHECK_DOOR); }
-            sys.state = STATE_HOMING; // Set system state variable
-            mc_homing_cycle();
-            if (!sys.abort) {  // Execute startup scripts after successful homing.
-              sys.state = STATE_IDLE; // Set to IDLE when complete.
-              st_go_idle(); // Set steppers to the settings idle state before returning.
-              system_execute_startup(line);
-            }
-          } else { return(STATUS_SETTING_DISABLED); }
+          if (bit_isfalse(settings.flags,BITFLAG_HOMING_ENABLE)) {return(STATUS_SETTING_DISABLED); }
+          if (system_check_safety_door_ajar()) { return(STATUS_CHECK_DOOR); } // Block if safety door is ajar.
+          sys.state = STATE_HOMING; // Set system state variable
+          if (line[2] == 0) {
+            mc_homing_cycle(HOMING_CYCLE_ALL);
+          #ifdef HOMING_SINGLE_AXIS_COMMANDS
+            } else if (line[3] == 0) {
+              switch (line[2]) {
+                case 'X': mc_homing_cycle(HOMING_CYCLE_X); break;
+                case 'Y': mc_homing_cycle(HOMING_CYCLE_Y); break;
+                case 'Z': mc_homing_cycle(HOMING_CYCLE_Z); break;
+                default: return(STATUS_INVALID_STATEMENT);
+              }
+          #endif
+          } else { return(STATUS_INVALID_STATEMENT); }
+          if (!sys.abort) {  // Execute startup scripts after successful homing.
+            sys.state = STATE_IDLE; // Set to IDLE when complete.
+            st_go_idle(); // Set steppers to the settings idle state before returning.
+            if (line[2] == 0) { system_execute_startup(line); }
+          }
           break;
         case 'S' : // Puts Grbl to sleep [IDLE/ALARM]
           if ((line[2] != 'L') || (line[3] != 'P') || (line[4] != 0)) { return(STATUS_INVALID_STATEMENT); }

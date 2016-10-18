@@ -22,22 +22,50 @@
 #ifndef spindle_control_h
 #define spindle_control_h
 
+#define SPINDLE_NO_SYNC false
+#define SPINDLE_FORCE_SYNC true
+
+#define SPINDLE_STATE_DISABLE  0  // Must be zero.
+#define SPINDLE_STATE_CW       bit(0)
+#define SPINDLE_STATE_CCW      bit(1)
+
 
 // Initializes spindle pins and hardware PWM, if enabled.
 void spindle_init();
 
-// Called by g-code parser when setting spindle state and requires a buffer sync.
-void spindle_run(uint8_t direction, float rpm);
+// Returns current spindle output state. Overrides may alter it from programmed states.
+uint8_t spindle_get_state();
 
+// Called by g-code parser when setting spindle state and requires a buffer sync.
 // Immediately sets spindle running state with direction and spindle rpm via PWM, if enabled.
-// Called by spindle_run() after sync and parking motion/spindle stop override during restore.
-void spindle_set_state(uint8_t state, uint8_t pwm_value);
+// Called by spindle_sync() after sync and parking motion/spindle stop override during restore.
+#ifdef VARIABLE_SPINDLE
+
+  // Called by g-code parser when setting spindle state and requires a buffer sync.
+  void spindle_sync(uint8_t state, float rpm);
+
+  // Sets spindle running state with direction, enable, and spindle PWM.
+  void spindle_set_state(uint8_t state, float rpm); 
+  
+  // Sets spindle PWM quickly for stepper ISR. Also called by spindle_set_state().
+  // NOTE: 328p PWM register is 8-bit.
+  void spindle_set_speed(uint8_t pwm_value);
+  
+  // Computes 328p-specific PWM register value for the given RPM for quick updating.
+  uint8_t spindle_compute_pwm_value(float rpm);
+  
+#else
+  
+  // Called by g-code parser when setting spindle state and requires a buffer sync.
+  void spindle_sync(uint8_t state);
+
+  // Sets spindle running state with direction and enable.
+  void spindle_set_state(uint8_t state);
+
+#endif
 
 // Stop and start spindle routines. Called by all spindle routines and stepper ISR.
 void spindle_stop();
-void spindle_set_speed(uint8_t pwm_value); // Variable spindle only.
-
-uint8_t spindle_compute_pwm_value(float rpm); // 328p PWM register is 8-bit. Variable spindle only.
 
 
 #endif
