@@ -1,5 +1,75 @@
 ----------------
 Date: 2016-10-17
+Author: Sonny Jeon
+Subject: v1.1d: Tweaked interface a bit. Added realtime spindle speed and build option data. Minor bug fixes.
+
+- Increment to v1.1d due to interface tweaks.
+
+- Based on GUI dev feedback, the toggle overrides report was removed
+and replace with showing “accessory state”. This shows a character if a
+particular accessory is enabled, like the spindle or flood coolant.
+These can be directly altered by the toggle overrides, so when they
+execute, a GUI will be able to observe the state altering as feedback.
+
+- Altered the real-time feed rate to show real-time spindle speed as
+well. It was an over-sight on my part. It’s needed because it’s hard to
+know what the current spindle speed is when overrides are altering it.
+Especially during something like a laser cutting job when its important
+to know how spindle speed overrides are effecting things.
+
+- Real-time spindle speed is not shown if VARIABLE_SPINDLE is disabled.
+The old real-time feed rate data field will show instead.
+
+- Compile-time option data is now included in another message
+immediately following the build info version string, starting with
+`[OPT:`. A character code follows the data type name with each
+indicating a particular option enabled or disabled. This will help
+immensely with debugging Grbl as well as help GUIs know exactly how
+Grbl was compiled.
+
+- These interface changes are detailed in the updated documentation.
+
+- Reduced the default planner buffer size from 17 to 16. Needed to free
+up some memory…
+
+- For increasing the serial TX buffer size from 90 to 104 bytes. The
+addition of real-time spindle speeds and accessory enable data required
+a bigger buffer. This is to ensure Grbl is performing at optimal levels.
+
+- Refactored parts of the spindle and coolant control code to make it
+more consistent to each other and how it was called. It was a little
+messy. The changes made it easier to track what each function call was
+doing based on what was calling it.
+
+- Created a couple of new get_state functions for the spindle and
+coolant. These are called by the accessory state report to look
+directly at the pin state, rather than track how it was set. This
+guarantees that the state is reported correctly.
+
+- Updated the g-code parser, parking motion, sleep mode, and spindle
+stop calls to refactored spindle and coolant code.
+
+- Added a compile-time option to enable homing individual axes, rather
+than having only the main homing cycle. The actual use case for this is
+pretty rare. It’s not recommended you enable this, unless you have a
+specific application for it. Otherwise, just alter the homing cycle
+itself.
+
+- Refactored the printFloat() function to not show a decimal point if
+there are no trailing values after it. For example, `1.` now shows `1`.
+
+- Fixed an issue regarding spindle speed overrides no being applied to
+blocks without motions.
+
+- Removed the toggle_ovr_mask system variable and replaced with
+spindle_stop_ovr system variable. Coolant toggles don’t need to be
+tracked.
+
+- Updated README
+
+
+----------------
+Date: 2016-10-17
 Author: Will Winder
 Subject: Modify code CSV format. (#10)
 

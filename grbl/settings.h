@@ -40,7 +40,7 @@
 #define BITFLAG_INVERT_PROBE_PIN   bit(7)
 
 // Define status reporting boolean enable bit flags in settings.status_report_mask
-#ifdef USE_CLASSIC_REALTIME_REPORT
+#ifdef USE_CLASSIC_GRBL_INTERFACE
   #define BITFLAG_RT_STATUS_MACHINE_POSITION  bit(0)
   #define BITFLAG_RT_STATUS_WORK_POSITION     bit(1)
   #define BITFLAG_RT_STATUS_PLANNER_BUFFER    bit(2)

@@ -260,13 +260,7 @@
 // to their default values at program end.
 #define RESTORE_OVERRIDES_AFTER_PROGRAM_END // Default enabled. Comment to disable.
 
-// Enables minimal reporting feedback mode for GUIs, where human-readable strings are not as important.
-// This saves nearly 2KB of flash space and may allow enough space to install other/future features.
-// GUIs will need to install a look-up table for the error-codes that Grbl sends back in their place.
-// NOTE: This feature is new and experimental. Make sure the GUI you are using supports this mode.
-#define REPORT_GUI_MODE // Default enabled. Comment to disable.
-
-// The status report change for Grbl v1.0 and after also removed the ability to disable/enable most data
+// The status report change for Grbl v1.1 and after also removed the ability to disable/enable most data
 // fields from the report. This caused issues for GUI developers, who've had to manage several scenarios
 // and configurations. The increased efficiency of the new reporting style allows for all data fields to 
 // be sent without potential performance issues.
@@ -293,13 +287,21 @@
 #define REPORT_WCO_REFRESH_BUSY_COUNT 30  // (1-255)
 #define REPORT_WCO_REFRESH_IDLE_COUNT 10  // (1-255) Must be less than or equal to the busy count
 
-// COMPATIBILITY OPTIONS:
-// Grbl v1.0 and later altered the formatting of the realtime status reports to make it more consistent
-// for parsing with cleaner delimiters and optimized messages. To use Grbl v0.9-style status reporting,
-// enable this compile option. This is generally useful if older GUIs require this formatting.
-// #define USE_CLASSIC_REALTIME_REPORT
-// #define REPORT_ALL_PIN_STATES // Default disabled. Comment to enable. NOTE: Compatible with old-style reports only.
-// #define REPORT_REALTIME_RATE // Disabled by default. Uncomment to enable.
+// ----- COMPATIBILITY OPTIONS: ------
+// The following options enabled the old-style v0.9 Grbl interface.
+// WARNING: DO NOT USE these compatibility options unless there is a really good reason to. If you are
+// trying to use Grbl v1.1 with a GUI that supports a v0.9-style interface, it will still not likely work.
+// A few things have been added, like override and accessory data and a new sleep state. These things will
+// still likely require the GUI to be updated to handle these. In other words, IT WILL STILL NOT WORK!
+// IT'S HIGHLY RECOMMENDED FOR GUIs TO UPDATE TO THE NEW INTERFACE FOR v1.1. Don't try to make it 
+// compatible with this old v0.9 style. It will be dropped in the near future. You have been warned.
+// NOTE: The compiled size of Grbl with these options enabled will exceed the flash limit of FTDI-based
+// Arduinos, like the Duemilanove and Nano. This will only fit on an Uno with the Optiboot bootloader.
+// #define USE_CLASSIC_GRBL_INTERFACE // Default disabled. Uncomment to enable.
+// #define REPORT_ALL_PIN_STATES // Default disabled. Uncomment to enable. Option obsolete in v1.1.
+// #define REPORT_REALTIME_RATE // Disabled by default. Uncomment to enable. Option obsolete in v1.1.
+// Enables minimal reporting feedback mode for GUIs, where human-readable strings are not as important.
+// -----------------------------------
 
 // The temporal resolution of the acceleration management subsystem. A higher number gives smoother
 // acceleration, particularly noticeable on machines that run at very high feedrates, but may negatively

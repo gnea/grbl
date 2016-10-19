@@ -7,7 +7,7 @@
 "Z","Homing force origin","Enabled"
 "H","Homing single axis commands","Enabled"
 "L","Two limit switches on axis","Enabled"
-"R","Classic status reporting","Enabled"
+"R","Classic compatibility mode","Enabled"
 "*","Restore all EEPROM command","Disabled"
 "$","Restore EEPROM `$` settings command","Disabled"
 "#","Restore EEPROM parameter data command","Disabled"
