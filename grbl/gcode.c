@@ -904,14 +904,14 @@ uint8_t gc_execute_line(char *line)
         if ( bit_istrue(settings.flags, BITFLAG_LASER_MODE) ) {
           // Do not stop motion if in laser mode and a G1, G2, or G3 motion is being executed.
           if (!( (axis_command == AXIS_COMMAND_MOTION_MODE) && ((gc_block.modal.motion == MOTION_MODE_LINEAR ) || (gc_block.modal.motion == MOTION_MODE_CW_ARC) || (gc_block.modal.motion == MOTION_MODE_CCW_ARC)) ) ) {
-            spindle_run(gc_state.modal.spindle, gc_block.values.s);
+            spindle_sync(gc_state.modal.spindle, gc_block.values.s);
           }
         } else {
-          spindle_run(gc_state.modal.spindle, gc_block.values.s);
+          spindle_sync(gc_state.modal.spindle, gc_block.values.s);
         }
       }
     #else
-      if (gc_state.modal.spindle != SPINDLE_DISABLE) { spindle_run(gc_state.modal.spindle, gc_block.values.s); }
+      if (gc_state.modal.spindle != SPINDLE_DISABLE) { spindle_sync(gc_state.modal.spindle); }
     #endif
     gc_state.spindle_speed = gc_block.values.s;
   }
@@ -925,7 +925,11 @@ uint8_t gc_execute_line(char *line)
   // [7. Spindle control ]:
   if (gc_state.modal.spindle != gc_block.modal.spindle) {
     // Update spindle control and apply spindle speed when enabling it in this block.
-    spindle_run(gc_block.modal.spindle, gc_state.spindle_speed);
+    #ifdef VARIABLE_SPINDLE
+      spindle_sync(gc_block.modal.spindle, gc_state.spindle_speed);
+    #else
+      spindle_sync(gc_block.modal.spindle);
+    #endif
     gc_state.modal.spindle = gc_block.modal.spindle;
   }
   pl_data->condition |= gc_state.modal.spindle; // Set condition flag for planner use.
@@ -934,7 +938,7 @@ uint8_t gc_execute_line(char *line)
   if (gc_state.modal.coolant != gc_block.modal.coolant) {
     // NOTE: Coolant M-codes are modal. Only one command per line is allowed. But, multiple states
     // can exist at the same time, while coolant disable clears all states.
-    coolant_run(gc_block.modal.coolant);
+    coolant_sync(gc_block.modal.coolant);
     if (gc_block.modal.coolant == COOLANT_DISABLE) { gc_state.modal.coolant = COOLANT_DISABLE; }
     else { gc_state.modal.coolant |= gc_block.modal.coolant; }
   }
@@ -1095,7 +1099,7 @@ uint8_t gc_execute_line(char *line)
       if (sys.state != STATE_CHECK_MODE) {
         if (!(settings_read_coord_data(gc_state.modal.coord_select,gc_state.coord_system))) { FAIL(STATUS_SETTING_READ_FAIL); }
         system_flag_wco_change(); // Set to refresh immediately just in case something altered.
-        spindle_stop();
+        spindle_set_state(SPINDLE_DISABLE,0.0);
         coolant_set_state(COOLANT_DISABLE);
       }
       report_feedback_message(MESSAGE_PROGRAM_END);

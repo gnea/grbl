@@ -746,8 +746,11 @@ void st_prep_buffer()
       if (sys.step_control & STEP_CONTROL_UPDATE_SPINDLE_PWM) {    
 			  // Configure correct spindle PWM state for block. Updates with planner changes and spindle speed overrides.
 			  if (pl_block->condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)) {
-          st_prep_block->spindle_pwm = spindle_compute_pwm_value((0.01*sys.spindle_speed_ovr)*pl_block->spindle_speed);
-        } else { st_prep_block->spindle_pwm = SPINDLE_PWM_OFF_VALUE; }
+          st_prep_block->spindle_pwm = spindle_compute_pwm_value(pl_block->spindle_speed);
+        } else { 
+					sys.spindle_speed = 0.0;
+					st_prep_block->spindle_pwm = SPINDLE_PWM_OFF_VALUE;
+				}
         bit_false(sys.step_control,STEP_CONTROL_UPDATE_SPINDLE_PWM);
       }
     #endif

@@ -106,10 +106,22 @@
 #define HOMING_CYCLE_1 ((1<<X_AXIS)|(1<<Y_AXIS))  // OPTIONAL: Then move X,Y at the same time.
 // #define HOMING_CYCLE_2                         // OPTIONAL: Uncomment and add axes mask to enable
 
+// NOTE: The following are two examples to setup homing for 2-axis machines.
+// #define HOMING_CYCLE_0 ((1<<X_AXIS)|(1<<Y_AXIS))  // NOT COMPATIBLE WITH COREXY: Homes both X-Y in one cycle. 
+
+// #define HOMING_CYCLE_0 (1<<X_AXIS)  // COREXY COMPATIBLE: First home X
+// #define HOMING_CYCLE_1 (1<<Y_AXIS)  // COREXY COMPATIBLE: Then home Y
+
 // Number of homing cycles performed after when the machine initially jogs to limit switches.
 // This help in preventing overshoot and should improve repeatability. This value should be one or
 // greater.
 #define N_HOMING_LOCATE_CYCLE 1 // Integer (1-128)
+
+// Enables single axis homing commands. $HX, $HY, and $HZ for X, Y, and Z-axis homing. The full homing 
+// cycle is still invoked by the $H command. This is disabled by default. It's here only to address
+// users that need to switch between a two-axis and three-axis machine. This is actually very rare.
+// If you have a two-axis machine, DON'T USE THIS. Instead, just alter the homing cycle for two-axes.
+// #define HOMING_SINGLE_AXIS_COMMANDS // Default disabled. Uncomment to enable.
 
 // After homing, Grbl will set by default the entire machine space into negative space, as is typical
 // for professional CNC machines, regardless of where the limit switches are located. Uncomment this
@@ -248,13 +260,7 @@
 // to their default values at program end.
 #define RESTORE_OVERRIDES_AFTER_PROGRAM_END // Default enabled. Comment to disable.
 
-// Enables minimal reporting feedback mode for GUIs, where human-readable strings are not as important.
-// This saves nearly 2KB of flash space and may allow enough space to install other/future features.
-// GUIs will need to install a look-up table for the error-codes that Grbl sends back in their place.
-// NOTE: This feature is new and experimental. Make sure the GUI you are using supports this mode.
-#define REPORT_GUI_MODE // Default enabled. Comment to disable.
-
-// The status report change for Grbl v1.0 and after also removed the ability to disable/enable most data
+// The status report change for Grbl v1.1 and after also removed the ability to disable/enable most data
 // fields from the report. This caused issues for GUI developers, who've had to manage several scenarios
 // and configurations. The increased efficiency of the new reporting style allows for all data fields to 
 // be sent without potential performance issues.
@@ -262,7 +268,7 @@
 // situation demands it, but be aware GUIs may depend on this data. If disabled, it may not be compatible.
 #define REPORT_FIELD_BUFFER_STATE // Default enabled. Comment to disable.
 #define REPORT_FIELD_PIN_STATE // Default enabled. Comment to disable.
-#define REPORT_FIELD_CURRENT_RATE // Default enabled. Comment to disable.
+#define REPORT_FIELD_CURRENT_FEED_SPEED // Default enabled. Comment to disable.
 #define REPORT_FIELD_WORK_COORD_OFFSET // Default enabled. Comment to disable.
 #define REPORT_FIELD_OVERRIDES // Default enabled. Comment to disable.
 #define REPORT_FIELD_LINE_NUMBERS // Default enabled. Comment to disable.
@@ -281,13 +287,21 @@
 #define REPORT_WCO_REFRESH_BUSY_COUNT 30  // (1-255)
 #define REPORT_WCO_REFRESH_IDLE_COUNT 10  // (1-255) Must be less than or equal to the busy count
 
-// COMPATIBILITY OPTIONS:
-// Grbl v1.0 and later altered the formatting of the realtime status reports to make it more consistent
-// for parsing with cleaner delimiters and optimized messages. To use Grbl v0.9-style status reporting,
-// enable this compile option. This is generally useful if older GUIs require this formatting.
-// #define USE_CLASSIC_REALTIME_REPORT
-// #define REPORT_ALL_PIN_STATES // Default disabled. Comment to enable. NOTE: Compatible with old-style reports only.
-// #define REPORT_REALTIME_RATE // Disabled by default. Uncomment to enable.
+// ----- COMPATIBILITY OPTIONS: ------
+// The following options enabled the old-style v0.9 Grbl interface.
+// WARNING: DO NOT USE these compatibility options unless there is a really good reason to. If you are
+// trying to use Grbl v1.1 with a GUI that supports a v0.9-style interface, it will still not likely work.
+// A few things have been added, like override and accessory data and a new sleep state. These things will
+// still likely require the GUI to be updated to handle these. In other words, IT WILL STILL NOT WORK!
+// IT'S HIGHLY RECOMMENDED FOR GUIs TO UPDATE TO THE NEW INTERFACE FOR v1.1. Don't try to make it 
+// compatible with this old v0.9 style. It will be dropped in the near future. You have been warned.
+// NOTE: The compiled size of Grbl with these options enabled will exceed the flash limit of FTDI-based
+// Arduinos, like the Duemilanove and Nano. This will only fit on an Uno with the Optiboot bootloader.
+// #define USE_CLASSIC_GRBL_INTERFACE // Default disabled. Uncomment to enable.
+// #define REPORT_ALL_PIN_STATES // Default disabled. Uncomment to enable. Option obsolete in v1.1.
+// #define REPORT_REALTIME_RATE // Disabled by default. Uncomment to enable. Option obsolete in v1.1.
+// Enables minimal reporting feedback mode for GUIs, where human-readable strings are not as important.
+// -----------------------------------
 
 // The temporal resolution of the acceleration management subsystem. A higher number gives smoother
 // acceleration, particularly noticeable on machines that run at very high feedrates, but may negatively
@@ -420,7 +434,7 @@
 // available RAM, like when re-compiling for a Mega2560. Or decrease if the Arduino begins to
 // crash due to the lack of available RAM or if the CPU is having trouble keeping up with planning
 // new incoming motions as they are executed.
-// #define BLOCK_BUFFER_SIZE 17 // Uncomment to override default in planner.h.
+// #define BLOCK_BUFFER_SIZE 16 // Uncomment to override default in planner.h.
 
 // Governs the size of the intermediary step segment buffer between the step execution algorithm
 // and the planner blocks. Each segment is set of steps executed at a constant velocity over a
@@ -451,7 +465,7 @@
 // around 90-100 characters. As long as the serial TX buffer doesn't get continually maxed, Grbl
 // will continue operating efficiently. Size the TX buffer around the size of a worst-case report.
 // #define RX_BUFFER_SIZE 128 // (1-254) Uncomment to override defaults in serial.h
-// #define TX_BUFFER_SIZE 90  // (1-254)
+// #define TX_BUFFER_SIZE 100 // (1-254)
 
 // Configures the position after a probing cycle during Grbl's check mode. Disabled sets
 // the position to the probe target, when enabled sets the position to the start position.

@@ -81,7 +81,7 @@ int main(void)
     sys.f_override = DEFAULT_FEED_OVERRIDE;
     sys.r_override = DEFAULT_RAPID_OVERRIDE;
     sys.spindle_speed_ovr = DEFAULT_SPINDLE_SPEED_OVERRIDE;
-    sys.toggle_ovr_mask = 0;
+    sys.spindle_stop_ovr = 0;
     sys.report_wco_counter = REPORT_WCO_REFRESH_BUSY_COUNT; // Set to include in first report.
     sys.report_ovr_counter = REPORT_OVR_REFRESH_BUSY_COUNT; // Set to include in first report.
 

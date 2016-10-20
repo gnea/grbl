@@ -114,15 +114,12 @@
   #define CONTROL_PIN_INDEX_CYCLE_START   bit(2)
 #endif
 
-// Define toggle override control states.
-#define TOGGLE_OVR_STOP_ENABLED        bit(0)
-#define TOGGLE_OVR_STOP_INITIATE       bit(1)
-#define TOGGLE_OVR_STOP_RESTORE        bit(2)
-#define TOGGLE_OVR_STOP_RESTORE_CYCLE  bit(3)
-#define TOGGLE_OVR_FLOOD_COOLANT       bit(4)
-#define TOGGLE_OVR_MIST_COOLANT        bit(5)
-#define TOGGLE_OVR_STOP_ACTIVE_MASK  (TOGGLE_OVR_STOP_ENABLED|TOGGLE_OVR_STOP_INITIATE|TOGGLE_OVR_STOP_RESTORE|TOGGLE_OVR_STOP_RESTORE_CYCLE)
-// NOTE: Mask is used to determine if spindle stop is active or disabled.
+// Define spindle stop override control states.
+#define SPINDLE_STOP_OVR_DISABLED       0  // Must be zero.
+#define SPINDLE_STOP_OVR_ENABLED        bit(0)
+#define SPINDLE_STOP_OVR_INITIATE       bit(1)
+#define SPINDLE_STOP_OVR_RESTORE        bit(2)
+#define SPINDLE_STOP_OVR_RESTORE_CYCLE  bit(3)
 
 
 // Define global system variables
@@ -137,9 +134,12 @@ typedef struct {
   uint8_t f_override;          // Feed rate override value in percent
   uint8_t r_override;          // Rapids override value in percent
   uint8_t spindle_speed_ovr;   // Spindle speed value in percent
-  uint8_t toggle_ovr_mask;          // Tracks toggle override states
+  uint8_t spindle_stop_ovr;    // Tracks spindle stop override states
   uint8_t report_ovr_counter;  // Tracks when to add override data to status reports.
   uint8_t report_wco_counter;  // Tracks when to add work coordinate offset data to status reports.
+  #ifdef VARIABLE_SPINDLE
+    float spindle_speed;
+  #endif
 } system_t;
 extern system_t sys;
 

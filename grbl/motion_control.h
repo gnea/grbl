@@ -27,6 +27,12 @@
 #define HOMING_CYCLE_LINE_NUMBER 0
 #define PARKING_MOTION_LINE_NUMBER 0
 
+#define HOMING_CYCLE_ALL  0  // Must be zero.
+#define HOMING_CYCLE_X    bit(X_AXIS)
+#define HOMING_CYCLE_Y    bit(Y_AXIS)
+#define HOMING_CYCLE_Z    bit(Z_AXIS)
+
+
 // Execute linear motion in absolute millimeter coordinates. Feed rate given in millimeters/second
 // unless invert_feed_rate is true. Then the feed_rate means that the motion should be completed in
 // (1 minute)/feed_rate time.
@@ -43,7 +49,7 @@ void mc_arc(float *target, plan_line_data_t *pl_data, float *position, float *of
 void mc_dwell(float seconds);
 
 // Perform homing cycle to locate machine zero. Requires limit switches.
-void mc_homing_cycle();
+void mc_homing_cycle(uint8_t cycle_mask);
 
 // Perform tool length probe cycle. Requires probe switch.
 uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_away, uint8_t is_no_error);

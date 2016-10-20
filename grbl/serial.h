@@ -28,9 +28,9 @@
 #endif
 #ifndef TX_BUFFER_SIZE
   #ifdef USE_LINE_NUMBERS
-    #define TX_BUFFER_SIZE 100
+    #define TX_BUFFER_SIZE 112
   #else
-    #define TX_BUFFER_SIZE 90
+    #define TX_BUFFER_SIZE 104
   #endif
 #endif
 
