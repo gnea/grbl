@@ -170,7 +170,7 @@ void spindle_stop()
 #ifdef VARIABLE_SPINDLE
   void spindle_set_state(uint8_t state, float rpm)
 #else
-  void spindle_set_state(uint8_t state)
+  void _spindle_set_state(uint8_t state)
 #endif
 {
   if (sys.abort) { return; } // Block during abort.
@@ -219,10 +219,10 @@ void spindle_stop()
     spindle_set_state(state,rpm);
   }
 #else
-  void spindle_sync(uint8_t state)
+  void _spindle_sync(uint8_t state)
   {
     if (sys.state == STATE_CHECK_MODE) { return; }
     protocol_buffer_synchronize(); // Empty planner buffer to ensure spindle is set when programmed.
-    spindle_set_state(state);
+    _spindle_set_state(state);
   }
 #endif

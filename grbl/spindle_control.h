@@ -57,10 +57,12 @@ uint8_t spindle_get_state();
 #else
   
   // Called by g-code parser when setting spindle state and requires a buffer sync.
-  void spindle_sync(uint8_t state);
+  #define spindle_sync(state, rpm) _spindle_sync(state)
+  void _spindle_sync(uint8_t state);
 
   // Sets spindle running state with direction and enable.
-  void spindle_set_state(uint8_t state);
+  #define spindle_set_state(state, rpm) _spindle_set_state(state)
+  void _spindle_set_state(uint8_t state);
 
 #endif
 

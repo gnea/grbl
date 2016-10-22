@@ -911,7 +911,7 @@ uint8_t gc_execute_line(char *line)
         }
       }
     #else
-      if (gc_state.modal.spindle != SPINDLE_DISABLE) { spindle_sync(gc_state.modal.spindle); }
+      if (gc_state.modal.spindle != SPINDLE_DISABLE) { spindle_sync(gc_state.modal.spindle, 0.0); }
     #endif
     gc_state.spindle_speed = gc_block.values.s;
   }
@@ -925,11 +925,7 @@ uint8_t gc_execute_line(char *line)
   // [7. Spindle control ]:
   if (gc_state.modal.spindle != gc_block.modal.spindle) {
     // Update spindle control and apply spindle speed when enabling it in this block.
-    #ifdef VARIABLE_SPINDLE
-      spindle_sync(gc_block.modal.spindle, gc_state.spindle_speed);
-    #else
-      spindle_sync(gc_block.modal.spindle);
-    #endif
+    spindle_sync(gc_block.modal.spindle, gc_state.spindle_speed);
     gc_state.modal.spindle = gc_block.modal.spindle;
   }
   pl_data->condition |= gc_state.modal.spindle; // Set condition flag for planner use.

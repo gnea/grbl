@@ -650,11 +650,7 @@ static void protocol_exec_rt_suspend()
                   // When in laser mode, ignore spindle spin-up delay. Set to turn on laser when cycle starts.
                   bit_true(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM);
                 } else {
-                  #ifdef VARIABLE_SPINDLE
-                    spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
-                  #else
-                    spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)));
-                  #endif
+                  spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
                   delay_sec(SAFETY_DOOR_SPINDLE_DELAY, DELAY_MODE_SYS_SUSPEND);
                 }
               }
@@ -712,11 +708,7 @@ static void protocol_exec_rt_suspend()
               // When in laser mode, ignore spindle spin-up delay. Set to turn on laser when cycle starts.
               bit_true(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM);
             } else {
-              #ifdef VARIABLE_SPINDLE
-                spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
-              #else
-                spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)));
-              #endif
+              spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
               delay_sec(SAFETY_DOOR_SPINDLE_DELAY, DELAY_MODE_SYS_SUSPEND);
             }
           }
