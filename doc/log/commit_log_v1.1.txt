@@ -1,4 +1,48 @@
 ----------------
+Date: 2016-10-22
+Author: Will Winder
+Subject: Minor VARIABLE_SPINDLE feature toggle refactoring (#16)
+
+* Modify code CSV format.
+
+- Wrap value in quotes to avoid issue with embedded commas. This occurs
+  in one of the alarm codes.
+
+- Change header row format to allow same parsing code as data rows.
+
+* VARIABLE_SPINDLE feature flag experiment.
+
+- Use a macro for 'spindle_set_speed' and 'spindle_sync' to reduce the
+  number of required VARIABLE_SPINDLE checks.
+
+
+----------------
+Date: 2016-10-18
+Author: Sonny Jeon
+Subject: Improved option for v0.9 GUI compatibility.
+
+- Addressed an issue with backward compatibility with Grbl v0.9-style
+GUIs.
+
+- It still may not work due to new data and states coming back from
+Grbl v1.1. Regardless, DO NOT TRY TO USE THE COMPATIBILITY MODE UNTIL
+THERE IS A REALLY GOOD REASON TO.
+
+- v0.9 GUI compatibility mode will be removed in future versions.
+You’ve been warned. It’s highly recommended for GUIs to update to the
+new v1.1 interface.
+
+- Compability mode will only fit on an Arduino Uno due to size
+increases.
+
+- Removed the REPORT_GUI_MODE compile option since it’s part of the
+v1.1 interface standard.
+
+- Updated the documentation to better describe the compatibility mode
+build option.
+
+
+----------------
 Date: 2016-10-17
 Author: Sonny Jeon
 Subject: v1.1d: Tweaked interface a bit. Added realtime spindle speed and build option data. Minor bug fixes.

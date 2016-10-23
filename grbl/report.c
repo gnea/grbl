@@ -734,7 +734,7 @@ void report_realtime_status()
       
       uint8_t sp_state = spindle_get_state();
 		  uint8_t cl_state = coolant_get_state();
-      if (sp_state || cl_state) {
+      if (sp_state | cl_state) {
         printPgmString(PSTR(",A:"));
         if (sp_state) { // != SPINDLE_STATE_DISABLE
           #ifdef VARIABLE_SPINDLE 

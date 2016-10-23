@@ -22,13 +22,6 @@
 #include "grbl.h"
 
 
-#ifdef SPINDLE_MINIMUM_PWM
-  #define SPINDLE_PWM_MIN_VALUE SPINDLE_MINIMUM_PWM
-#else
-  #define SPINDLE_PWM_MIN_VALUE 0.0
-#endif
-#define SPINDLE_PWM_RANGE (SPINDLE_PWM_MAX_VALUE-SPINDLE_PWM_MIN_VALUE)
-
 #ifdef VARIABLE_SPINDLE
   static float pwm_gradient; // Precalulated value to speed up rpm to PWM conversions.
 #endif
@@ -142,24 +135,28 @@ void spindle_stop()
   // Called by spindle_set_state() and step segment generator. Keep routine small and efficient.
   uint8_t spindle_compute_pwm_value(float rpm) // 328p PWM register is 8-bit.
   {
+    uint8_t pwm_value;
     rpm *= (0.01*sys.spindle_speed_ovr); // Scale by spindle speed override value.
     // Calculate PWM register value based on rpm max/min settings and programmed rpm.
     if ((settings.rpm_min >= settings.rpm_max) || (rpm >= settings.rpm_max)) {
       // No PWM range possible. Set simple on/off spindle control pin state.
       sys.spindle_speed = settings.rpm_max;
-      return(SPINDLE_PWM_MAX_VALUE);
-    } else if (rpm < settings.rpm_min) {
-      if (rpm == 0.0) { 
+      pwm_value = SPINDLE_PWM_MAX_VALUE;
+    } else if (rpm <= settings.rpm_min) {
+      if (rpm == 0.0) { // S0 disables spindle
         sys.spindle_speed = 0.0;
-        return(SPINDLE_PWM_OFF_VALUE); }
-      else { 
+        pwm_value = SPINDLE_PWM_OFF_VALUE;
+      } else { // Set minimum PWM output
         sys.spindle_speed = settings.rpm_min;
-        return(SPINDLE_PWM_MIN_VALUE); 
+        pwm_value = SPINDLE_PWM_MIN_VALUE;
       }
-    } else {
+    } else { 
+      // Compute intermediate PWM value with linear spindle speed model.
+      // NOTE: A nonlinear model could be installed here, if required, but keep it light-weight.
       sys.spindle_speed = rpm;
-      return(floor( (rpm-settings.rpm_min)*pwm_gradient + (SPINDLE_PWM_MIN_VALUE+0.5)));
+      pwm_value = floor( (rpm-settings.rpm_min)*pwm_gradient + (SPINDLE_PWM_MIN_VALUE+0.5));
     }
+    return(pwm_value);
   }
 #endif
 

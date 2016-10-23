@@ -360,7 +360,8 @@
 // setting, like rpm max to max PWM. So the variable spindle pin will not output the voltage range between
 // 0V for disabled and the voltage set by the minimum PWM for minimum rpm.
 // NOTE: Compute duty cycle at the minimum PWM by this equation: (% duty cycle)=(SPINDLE_MINIMUM_PWM/256)*100
-// #define SPINDLE_MINIMUM_PWM 5 // Default disabled. Uncomment to enable. Integer (0-255)
+// Value must be greater than zero.
+// #define SPINDLE_MINIMUM_PWM 5 // Default disabled. Uncomment to enable. Integer (1-255)
 
 // By default on a 328p(Uno), Grbl combines the variable spindle PWM and the enable into one pin to help
 // preserve I/O pins. For certain setups, these may need to be separate pins. This configure option uses
@@ -577,6 +578,12 @@
 #if defined(PARKING_ENABLE)
   #if defined(HOMING_FORCE_SET_ORIGIN)
     #error "HOMING_FORCE_SET_ORIGIN is not supported with PARKING_ENABLE at this time."
+  #endif
+#endif
+
+#if defined(SPINDLE_MINIMUM_PWM)
+  #if !(SPINDLE_MINIMUM_PWM > 0)
+    #error "SPINDLE_MINIMUM_PWM must be greater than zero."
   #endif
 #endif
 

@@ -125,7 +125,13 @@
   // Variable spindle configuration below. Do not change unless you know what you are doing.
   // NOTE: Only used when variable spindle is enabled.
   #define SPINDLE_PWM_MAX_VALUE     255 // Don't change. 328p fast PWM mode fixes top value as 255.
+  #ifdef SPINDLE_MINIMUM_PWM
+    #define SPINDLE_PWM_MIN_VALUE   SPINDLE_MINIMUM_PWM
+  #else
+    #define SPINDLE_PWM_MIN_VALUE   1   // Must be greater than zero.
+  #endif
   #define SPINDLE_PWM_OFF_VALUE     0
+  #define SPINDLE_PWM_RANGE         (SPINDLE_PWM_MAX_VALUE-SPINDLE_PWM_MIN_VALUE)
   #define SPINDLE_TCCRA_REGISTER	  TCCR2A
   #define SPINDLE_TCCRB_REGISTER	  TCCR2B
   #define SPINDLE_OCR_REGISTER      OCR2A
