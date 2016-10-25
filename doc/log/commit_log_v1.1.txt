@@ -1,4 +1,19 @@
 ----------------
+Date: 2016-10-23
+Author: Sonny Jeon
+Subject: Spindle speed close to minimum fix.
+
+- When spindle speed is close to the minimum rpm, the PWM value would
+be zero or lower than allowed. The computation error was caused by
+setting the minimum PWM value to zero, when it should have been 1.
+
+- Added a compiler check for minimum PWM to be greater than zero.
+
+- Moved some of the spindle PWM macros to a more appropriate place in
+the cpu_map.h.
+
+
+----------------
 Date: 2016-10-22
 Author: Will Winder
 Subject: Minor VARIABLE_SPINDLE feature toggle refactoring (#16)

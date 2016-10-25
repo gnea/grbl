@@ -34,10 +34,17 @@ int main(void)
   stepper_init();  // Configure stepper pins and interrupt timers
   system_init();   // Configure pinout pins and pin-change interrupt
 
-  memset(&sys, 0, sizeof(system_t));  // Clear all system variables
-  sys.abort = true;   // Set abort to complete initialization
+  memset(sys_position,0,sizeof(sys_position)); // Clear machine position.
   sei(); // Enable interrupts
 
+  // Initialize system state.
+  #ifdef FORCE_INITIALIZATION_ALARM
+    // Force Grbl into an ALARM state upon a power-cycle or hard reset.
+    sys.state = STATE_ALARM;
+  #else
+    sys.state = STATE_IDLE;
+  #endif
+  
   // Check for power-up and set system alarm if homing is enabled to force homing cycle
   // by setting Grbl's alarm state. Alarm locks out all g-code commands, including the
   // startup scripts, but allows access to settings and internal commands. Only a homing
@@ -49,17 +56,23 @@ int main(void)
     if (bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE)) { sys.state = STATE_ALARM; }
   #endif
 
-  // Force Grbl into an ALARM state upon a power-cycle or hard reset.
-  #ifdef FORCE_INITIALIZATION_ALARM
-    sys.state = STATE_ALARM;
-  #endif
-
   // Grbl initialization loop upon power-up or a system abort. For the latter, all processes
   // will return to this loop to be cleanly re-initialized.
   for(;;) {
 
-    // TODO: Separate configure task that require interrupts to be disabled, especially upon
-    // a system abort and ensuring any active interrupts are cleanly reset.
+    // Reset system variables.
+    uint8_t prior_state = sys.state;
+    memset(&sys, 0, sizeof(system_t)); // Clear system struct variable.
+    sys.state = prior_state;
+    sys.f_override = DEFAULT_FEED_OVERRIDE;  // Set to 100%
+    sys.r_override = DEFAULT_RAPID_OVERRIDE; // Set to 100%
+    sys.spindle_speed_ovr = DEFAULT_SPINDLE_SPEED_OVERRIDE; // Set to 100%
+		memset(sys_probe_position,0,sizeof(sys_probe_position)); // Clear probe position.
+    sys_probe_state = 0;
+    sys_rt_exec_state = 0;
+    sys_rt_exec_alarm = 0;
+    sys_rt_exec_motion_override = 0;
+    sys_rt_exec_accessory_override = 0;
 
     // Reset Grbl primary systems.
     serial_reset_read_buffer(); // Clear serial read buffer
@@ -74,22 +87,6 @@ int main(void)
     // Sync cleared gcode and planner positions to current system position.
     plan_sync_position();
     gc_sync_position();
-
-    // Reset system variables.
-    sys.abort = sys.suspend = sys.soft_limit = false;
-    sys.step_control = STEP_CONTROL_NORMAL_OP;
-    sys.f_override = DEFAULT_FEED_OVERRIDE;
-    sys.r_override = DEFAULT_RAPID_OVERRIDE;
-    sys.spindle_speed_ovr = DEFAULT_SPINDLE_SPEED_OVERRIDE;
-    sys.spindle_stop_ovr = 0;
-    sys.report_wco_counter = REPORT_WCO_REFRESH_BUSY_COUNT; // Set to include in first report.
-    sys.report_ovr_counter = REPORT_OVR_REFRESH_BUSY_COUNT; // Set to include in first report.
-
-    sys_probe_state = 0;
-    sys_rt_exec_state = 0;
-    sys_rt_exec_alarm = 0;
-    sys_rt_exec_motion_override = 0;
-    sys_rt_exec_accessory_override = 0;
 
     // Print welcome message. Indicates an initialization has occured at power-up or with a reset.
     report_init_message();

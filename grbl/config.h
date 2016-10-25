@@ -281,11 +281,11 @@
 // and agressive streaming. There is also a busy and an idle refresh count, which sets up Grbl to send
 // refreshes more often when its not doing anything important. With a good GUI, this data doesn't need
 // to be refreshed very often, on the order of a several seconds.
-// NOTE: The refresh count cannot be set to zero and must be one or greater.
+// NOTE: WCO refresh must be 2 or greater. OVR refresh must be 1 or greater.
 #define REPORT_OVR_REFRESH_BUSY_COUNT 20  // (1-255)
 #define REPORT_OVR_REFRESH_IDLE_COUNT 10  // (1-255) Must be less than or equal to the busy count
-#define REPORT_WCO_REFRESH_BUSY_COUNT 30  // (1-255)
-#define REPORT_WCO_REFRESH_IDLE_COUNT 10  // (1-255) Must be less than or equal to the busy count
+#define REPORT_WCO_REFRESH_BUSY_COUNT 30  // (2-255)
+#define REPORT_WCO_REFRESH_IDLE_COUNT 10  // (2-255) Must be less than or equal to the busy count
 
 // ----- COMPATIBILITY OPTIONS: ------
 // The following options enabled the old-style v0.9 Grbl interface.
@@ -357,11 +357,13 @@
 // Used by variable spindle output only. This forces the PWM output to a minimum duty cycle when enabled.
 // The PWM pin will still read 0V when the spindle is disabled. Most users will not need this option, but
 // it may be useful in certain scenarios. This minimum PWM settings coincides with the spindle rpm minimum
-// setting, like rpm max to max PWM. So the variable spindle pin will not output the voltage range between
-// 0V for disabled and the voltage set by the minimum PWM for minimum rpm.
+// setting, like rpm max to max PWM. This is handy if you need a larger voltage difference between 0V disabled
+// and the voltage set by the minimum PWM for minimum rpm. This difference is 0.02V per PWM value. So, when
+// minimum PWM is at 1, only 0.02 volts separate enabled and disabled. At PWM 5, this would be 0.1V. Keep
+// in mind that you will begin to lose PWM resolution with increased minimum PWM values, since you have less
+// and less range over the total 256 PWM levels to signal different spindle speeds.
 // NOTE: Compute duty cycle at the minimum PWM by this equation: (% duty cycle)=(SPINDLE_MINIMUM_PWM/256)*100
-// Value must be greater than zero.
-// #define SPINDLE_MINIMUM_PWM 5 // Default disabled. Uncomment to enable. Integer (1-255)
+// #define SPINDLE_MINIMUM_PWM 5 // Default disabled. Uncomment to enable. Must be greater than zero. Integer (1-255).
 
 // By default on a 328p(Uno), Grbl combines the variable spindle PWM and the enable into one pin to help
 // preserve I/O pins. For certain setups, these may need to be separate pins. This configure option uses
@@ -511,6 +513,8 @@
 // Enable the '$I=(string)' build info write command. If disabled, any existing build info data must
 // be placed into EEPROM via external means with a valid checksum value. This macro option is useful
 // to prevent this data from being over-written by a user, when used to store OEM product data.
+// NOTE: If disabled and to ensure Grbl can never alter the build info line, you'll also need to enable
+// the SETTING_RESTORE_ALL macro above and remove SETTINGS_RESTORE_BUILD_INFO from the mask.
 // NOTE: See the included grblWrite_BuildInfo.ino example file to write this string seperately.
 #define ENABLE_BUILD_INFO_WRITE_COMMAND // '$I=' Default enabled. Comment to disable.
 
@@ -558,34 +562,7 @@
 #define PARKING_PULLOUT_RATE 100.0 // Pull-out/plunge slow feed rate in mm/min.
 #define PARKING_PULLOUT_INCREMENT 5.0 // Spindle pull-out and plunge distance in mm. Incremental distance.
                                       // Must be positive value or equal to zero.
-
-
-// ---------------------------------------------------------------------------------------
-// COMPILE-TIME ERROR CHECKING OF DEFINE VALUES:
-
-#ifndef HOMING_CYCLE_0
-  #error "Required HOMING_CYCLE_0 not defined."
-#endif
-
-#if defined(USE_SPINDLE_DIR_AS_ENABLE_PIN) && !defined(VARIABLE_SPINDLE)
-  #error "USE_SPINDLE_DIR_AS_ENABLE_PIN may only be used with VARIABLE_SPINDLE enabled"
-#endif
-
-#if defined(USE_SPINDLE_DIR_AS_ENABLE_PIN) && !defined(CPU_MAP_ATMEGA328P)
-  #error "USE_SPINDLE_DIR_AS_ENABLE_PIN may only be used with a 328p processor"
-#endif
-
-#if defined(PARKING_ENABLE)
-  #if defined(HOMING_FORCE_SET_ORIGIN)
-    #error "HOMING_FORCE_SET_ORIGIN is not supported with PARKING_ENABLE at this time."
-  #endif
-#endif
-
-#if defined(SPINDLE_MINIMUM_PWM)
-  #if !(SPINDLE_MINIMUM_PWM > 0)
-    #error "SPINDLE_MINIMUM_PWM must be greater than zero."
-  #endif
-#endif
+                                      
 
 /* ---------------------------------------------------------------------------------------
    OEM Single File Configuration Option

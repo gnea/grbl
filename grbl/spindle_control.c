@@ -202,7 +202,7 @@ void spindle_stop()
   
   }
   
-  sys.report_ovr_counter = REPORT_OVR_REFRESH_BUSY_COUNT; // Set to report change immediately
+  sys.report_ovr_counter = 0; // Set to report change immediately
 }
 
 

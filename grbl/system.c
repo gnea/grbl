@@ -279,7 +279,7 @@ void system_flag_wco_change()
   #ifdef FORCE_BUFFER_SYNC_DURING_WCO_CHANGE
     protocol_buffer_synchronize();
   #endif
-  sys.report_wco_counter = REPORT_WCO_REFRESH_BUSY_COUNT;
+  sys.report_wco_counter = 0;
 }
 
 

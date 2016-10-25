@@ -803,7 +803,7 @@ void report_realtime_status()
 
     float wco[N_AXIS];
     if (bit_isfalse(settings.status_report_mask,BITFLAG_RT_STATUS_POSITION_TYPE) ||
-        (sys.report_wco_counter >= REPORT_WCO_REFRESH_BUSY_COUNT) ) {
+        (sys.report_wco_counter == 0) ) {
       for (idx=0; idx< N_AXIS; idx++) {
         // Apply work coordinate offsets and tool length offset to current position.
         wco[idx] = gc_state.coord_system[idx]+gc_state.coord_offset[idx];
@@ -883,23 +883,23 @@ void report_realtime_status()
     #endif
 
     #ifdef REPORT_FIELD_WORK_COORD_OFFSET
-      if (sys.report_wco_counter++ >= REPORT_WCO_REFRESH_BUSY_COUNT) {
+      if (sys.report_wco_counter > 0) { sys.report_wco_counter--; }
+      else {
         if (sys.state & (STATE_HOMING | STATE_CYCLE | STATE_HOLD | STATE_JOG | STATE_SAFETY_DOOR)) {
-          sys.report_wco_counter = 1; // Reset counter for slow refresh
-        } else { sys.report_wco_counter = (REPORT_WCO_REFRESH_BUSY_COUNT-REPORT_WCO_REFRESH_IDLE_COUNT+1); }
-        if (sys.report_ovr_counter >= REPORT_OVR_REFRESH_BUSY_COUNT) {
-          sys.report_ovr_counter = (REPORT_OVR_REFRESH_BUSY_COUNT-1); // Set override on next report.
-        }
+          sys.report_wco_counter = (REPORT_WCO_REFRESH_BUSY_COUNT-1); // Reset counter for slow refresh
+        } else { sys.report_wco_counter = (REPORT_WCO_REFRESH_IDLE_COUNT-1); }
+        if (sys.report_ovr_counter == 0) { sys.report_ovr_counter = 1; } // Set override on next report.
         printPgmString(PSTR("|WCO:"));
         report_util_axis_values(wco);
       }
     #endif
 
     #ifdef REPORT_FIELD_OVERRIDES
-      if (sys.report_ovr_counter++ >= REPORT_OVR_REFRESH_BUSY_COUNT) {
+      if (sys.report_ovr_counter > 0) { sys.report_ovr_counter--; }
+      else {
         if (sys.state & (STATE_HOMING | STATE_CYCLE | STATE_HOLD | STATE_JOG | STATE_SAFETY_DOOR)) {
-          sys.report_ovr_counter = 1; // Reset counter for slow refresh
-        } else { sys.report_ovr_counter = (REPORT_OVR_REFRESH_BUSY_COUNT-REPORT_OVR_REFRESH_IDLE_COUNT+1); }
+          sys.report_ovr_counter = (REPORT_OVR_REFRESH_BUSY_COUNT-1); // Reset counter for slow refresh
+        } else { sys.report_ovr_counter = (REPORT_OVR_REFRESH_IDLE_COUNT-1); }
         printPgmString(PSTR("|Ov:"));
         print_uint8_base10(sys.f_override);
         serial_write(',');

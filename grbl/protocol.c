@@ -424,7 +424,7 @@ void protocol_exec_rt_system()
     if ((new_f_override != sys.f_override) || (new_r_override != sys.r_override)) {
       sys.f_override = new_f_override;
       sys.r_override = new_r_override;
-      sys.report_ovr_counter = REPORT_OVR_REFRESH_BUSY_COUNT; // Set to report change immediately
+      sys.report_ovr_counter = 0; // Set to report change immediately
       plan_update_velocity_profile_parameters();
       plan_cycle_reinitialize();
     }
@@ -447,7 +447,7 @@ void protocol_exec_rt_system()
     if (last_s_override != sys.spindle_speed_ovr) {
       bit_true(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM);
       sys.spindle_speed_ovr = last_s_override;
-      sys.report_ovr_counter = REPORT_OVR_REFRESH_BUSY_COUNT; // Set to report change immediately
+      sys.report_ovr_counter = 0; // Set to report change immediately
     }
 
     if (rt_exec & EXEC_SPINDLE_OVR_STOP) {
@@ -512,11 +512,6 @@ static void protocol_exec_rt_suspend()
     float retract_waypoint = PARKING_PULLOUT_INCREMENT;
     plan_line_data_t plan_data;
     plan_line_data_t *pl_data = &plan_data;
-    memset(pl_data,0,sizeof(plan_line_data_t));
-    pl_data->condition = (PL_COND_FLAG_SYSTEM_MOTION|PL_COND_FLAG_NO_FEED_OVERRIDE);
-    #ifdef USE_LINE_NUMBERS
-      pl_data->line_number = PARKING_MOTION_LINE_NUMBER;
-    #endif
   #endif
 
   plan_block_t *block = plan_get_current_block();
@@ -555,9 +550,16 @@ static void protocol_exec_rt_suspend()
           #ifndef PARKING_ENABLE
 
             spindle_set_state(SPINDLE_DISABLE,0.0); // De-energize
-            coolant_set_state(COOLANT_DISABLE);; // De-energize
+            coolant_set_state(COOLANT_DISABLE);     // De-energize
 
           #else
+					
+					  // Initialize planner state data
+						memset(pl_data,0,sizeof(plan_line_data_t));
+    				pl_data->condition = (PL_COND_FLAG_SYSTEM_MOTION|PL_COND_FLAG_NO_FEED_OVERRIDE);
+    				#ifdef USE_LINE_NUMBERS
+      				pl_data->line_number = PARKING_MOTION_LINE_NUMBER;
+    				#endif
 
             // Get current position and store restore location and spindle retract waypoint.
             system_convert_array_steps_to_mpos(parking_target,sys_position);
@@ -597,7 +599,7 @@ static void protocol_exec_rt_suspend()
               // Parking motion not possible. Just disable the spindle and coolant.
               // NOTE: Laser mode does not start a parking motion to ensure the laser stops immediately.
               spindle_set_state(SPINDLE_DISABLE,0.0); // De-energize
-              coolant_set_state(COOLANT_DISABLE);; // De-energize
+              coolant_set_state(COOLANT_DISABLE);     // De-energize
 
             }
 
@@ -672,7 +674,11 @@ static void protocol_exec_rt_suspend()
                   // Regardless if the retract parking motion was a valid/safe motion or not, the
                   // restore parking motion should logically be valid, either by returning to the
                   // original position through valid machine space or by not moving at all.
+									// NOTE: If retract is restarted, spindle and coolant states will be cleared in
+									// the beginning of the retract routine.
                   pl_data->feed_rate = PARKING_PULLOUT_RATE;
+									pl_data->condition = restore_condition;
+									pl_data->spindle_speed = restore_spindle_speed;
                   mc_parking_motion(restore_target, pl_data);
                 }
               }

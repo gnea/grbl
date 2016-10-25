@@ -94,7 +94,7 @@
 #define SUSPEND_JOG_CANCEL        bit(7) // Indicates a jog cancel in process and to reset buffers when complete.
 
 // Define step segment generator state flags.
-#define STEP_CONTROL_NORMAL_OP            0
+#define STEP_CONTROL_NORMAL_OP            0  // Must be zero.
 #define STEP_CONTROL_END_MOTION           bit(0)
 #define STEP_CONTROL_EXECUTE_HOLD         bit(1)
 #define STEP_CONTROL_EXECUTE_SYS_MOTION   bit(2)
@@ -124,8 +124,8 @@
 
 // Define global system variables
 typedef struct {
-  uint8_t abort;               // System abort flag. Forces exit back to main loop for reset.
   uint8_t state;               // Tracks the current system state of Grbl.
+  uint8_t abort;               // System abort flag. Forces exit back to main loop for reset.             
   uint8_t suspend;             // System suspend bitflag variable that manages holds, cancels, and safety door.
   uint8_t soft_limit;          // Tracks soft limit errors for the state machine. (boolean)
   uint8_t step_control;        // Governs the step segment generator depending on system state.
@@ -147,7 +147,7 @@ extern system_t sys;
 int32_t sys_position[N_AXIS];      // Real-time machine (aka home) position vector in steps.
 int32_t sys_probe_position[N_AXIS]; // Last probe position in machine coordinates and steps.
 
-volatile uint8_t sys_probe_state;  // Probing state value.  Used to coordinate the probing cycle with stepper ISR.
+volatile uint8_t sys_probe_state;   // Probing state value.  Used to coordinate the probing cycle with stepper ISR.
 volatile uint8_t sys_rt_exec_state;   // Global realtime executor bitflag variable for state management. See EXEC bitmasks.
 volatile uint8_t sys_rt_exec_alarm;   // Global realtime executor bitflag variable for setting various alarms.
 volatile uint8_t sys_rt_exec_motion_override; // Global realtime executor bitflag variable for motion-based overrides.

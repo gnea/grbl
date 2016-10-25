@@ -107,7 +107,7 @@ void coolant_set_state(uint8_t mode)
     #endif
   
   }
-  sys.report_ovr_counter = REPORT_OVR_REFRESH_BUSY_COUNT; // Set to report change immediately
+  sys.report_ovr_counter = 0; // Set to report change immediately
 }
 
 
