@@ -7,6 +7,7 @@
 "Z","Homing force origin","Enabled"
 "H","Homing single axis commands","Enabled"
 "L","Two limit switches on axis","Enabled"
+"A","Allow feed rate overrides in probe cycles","Enabled"
 "R","Classic compatibility mode","Enabled"
 "*","Restore all EEPROM command","Disabled"
 "$","Restore EEPROM `$` settings command","Disabled"

@@ -1040,6 +1040,9 @@ uint8_t gc_execute_line(char *line)
       } else {
         // NOTE: gc_block.values.xyz is returned from mc_probe_cycle with the updated position value. So
         // upon a successful probing cycle, the machine position and the returned value should be the same.
+        #ifndef ALLOW_FEED_OVERRIDE_DURING_PROBE_CYCLES
+          pl_data->condition |= PL_COND_FLAG_NO_FEED_OVERRIDE;
+        #endif
         uint8_t is_probe_away = false;
         uint8_t is_no_error = false;
         if ((gc_state.modal.motion == MOTION_MODE_PROBE_AWAY) || (gc_state.modal.motion == MOTION_MODE_PROBE_AWAY_NO_ERROR)) { is_probe_away = true; }

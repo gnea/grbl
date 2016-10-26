@@ -540,6 +540,13 @@
 // that any of these commands are used need continuous motions through them.
 #define FORCE_BUFFER_SYNC_DURING_WCO_CHANGE // Default enabled. Comment to disable.
 
+// By default, Grbl disables feed rate overrides for all G38.x probe cycle commands. Although this
+// may be different than some pro-class machine control, it's arguable that it should be this way. 
+// Most probe sensors produce different levels of error that is dependent on rate of speed. By 
+// keeping probing cycles to their programmed feed rates, the probe sensor should be a lot more
+// repeatable. If needed, you can disable this behavior by uncommenting the define below.
+// #define ALLOW_FEED_OVERRIDE_DURING_PROBE_CYCLES // Default disabled. Uncomment to enable.
+
 // Enables and configures parking motion methods upon a safety door state. Primarily for OEMs
 // that desire this feature for their integrated machines. At the moment, Grbl assumes that
 // the parking motion only involves one axis, although the parking implementation was written

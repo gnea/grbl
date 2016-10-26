@@ -569,6 +569,9 @@ void report_build_info(char *line)
     #ifdef LIMITS_TWO_SWITCHES_ON_AXES
       serial_write('L');
     #endif
+    #ifdef ALLOW_FEED_OVERRIDE_DURING_PROBE_CYCLES
+      serial_write('A');
+    #endif
     #ifdef USE_CLASSIC_GRBL_INTERFACE
       serial_write('R');
     #endif

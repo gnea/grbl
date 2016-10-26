@@ -1,4 +1,15 @@
 ----------------
+Date: 2016-10-25
+Author: chamnit
+Subject: Resolved parking accessory handling issue.
+
+- Yikes. Totally borked the last parking “fix”. Testing shows that all
+accessories are now properly handled when retracting and restoring. It
+was caused by not accounting for the planner re-factoring correctly in
+the parking code.
+
+
+----------------
 Date: 2016-10-24
 Author: Sonny Jeon
 Subject: Minor re-factoring. Fix an issue with parking and spindle restore.
