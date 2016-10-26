@@ -1,6 +1,19 @@
 ----------------
 Date: 2016-10-25
 Author: chamnit
+Subject: Mandate all probe cycles ignore feed overrides.
+
+- For repeatability reasons, all G38.x probe cycles ignore feed rate
+overrides and move at their programmed speed.
+
+- The mandate can be removed with a new config.h option.
+
+- Updated the documentation to reflect the change.
+
+
+----------------
+Date: 2016-10-25
+Author: chamnit
 Subject: Resolved parking accessory handling issue.
 
 - Yikes. Totally borked the last parking “fix”. Testing shows that all

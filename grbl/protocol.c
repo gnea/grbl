@@ -579,14 +579,14 @@ static void protocol_exec_rt_suspend()
               if (parking_target[PARKING_AXIS] < retract_waypoint) {
                 parking_target[PARKING_AXIS] = retract_waypoint;
                 pl_data->feed_rate = PARKING_PULLOUT_RATE;
-                // NOTE: Retain accessory state for retract motion, then clear for remaining parking motions.
-                pl_data->condition |= (restore_condition & PL_COND_ACCESSORY_MASK);
+                pl_data->condition |= (restore_condition & PL_COND_ACCESSORY_MASK); // Retain accessory state
                 pl_data->spindle_speed = restore_spindle_speed;
                 mc_parking_motion(parking_target, pl_data);
-                pl_data->condition = (PL_COND_FLAG_SYSTEM_MOTION|PL_COND_FLAG_NO_FEED_OVERRIDE);
-                pl_data->spindle_speed = 0.0;
               }
 
+              // NOTE: Clear accessory state after retract and after an aborted restore motion.
+              pl_data->condition = (PL_COND_FLAG_SYSTEM_MOTION|PL_COND_FLAG_NO_FEED_OVERRIDE);
+              pl_data->spindle_speed = 0.0;
               spindle_set_state(SPINDLE_DISABLE,0.0); // De-energize
               coolant_set_state(COOLANT_DISABLE); // De-energize
 
@@ -677,10 +677,8 @@ static void protocol_exec_rt_suspend()
                   // Regardless if the retract parking motion was a valid/safe motion or not, the
                   // restore parking motion should logically be valid, either by returning to the
                   // original position through valid machine space or by not moving at all.
-									// NOTE: If retract is restarted, spindle and coolant states will be cleared in
-									// the beginning of the retract routine.
                   pl_data->feed_rate = PARKING_PULLOUT_RATE;
-									pl_data->condition |= (restore_condition & PL_COND_ACCESSORY_MASK);
+									pl_data->condition |= (restore_condition & PL_COND_ACCESSORY_MASK); // Restore accessory state
 									pl_data->spindle_speed = restore_spindle_speed;
                   mc_parking_motion(restore_target, pl_data);
                 }
