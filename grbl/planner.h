@@ -45,6 +45,7 @@
 #define PL_COND_FLAG_SPINDLE_CCW       bit(5)
 #define PL_COND_FLAG_COOLANT_FLOOD     bit(6)
 #define PL_COND_FLAG_COOLANT_MIST      bit(7)
+#define PL_COND_ACCESSORY_MASK (PL_COND_FLAG_SPINDLE_CW|PL_COND_FLAG_SPINDLE_CCW|PL_COND_FLAG_COOLANT_FLOOD|PL_COND_FLAG_COOLANT_MIST)
 
 
 // This struct stores a linear movement of a g-code block motion with its critical "nominal" values

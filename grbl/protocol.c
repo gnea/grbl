@@ -506,12 +506,17 @@ void protocol_exec_rt_system()
 static void protocol_exec_rt_suspend()
 {
   #ifdef PARKING_ENABLE
-    // Declare parking local variables
+    // Declare and initialize parking local variables
     float restore_target[N_AXIS];
     float parking_target[N_AXIS];
     float retract_waypoint = PARKING_PULLOUT_INCREMENT;
     plan_line_data_t plan_data;
     plan_line_data_t *pl_data = &plan_data;
+    memset(pl_data,0,sizeof(plan_line_data_t));
+    pl_data->condition = (PL_COND_FLAG_SYSTEM_MOTION|PL_COND_FLAG_NO_FEED_OVERRIDE);
+    #ifdef USE_LINE_NUMBERS
+      pl_data->line_number = PARKING_MOTION_LINE_NUMBER;
+    #endif
   #endif
 
   plan_block_t *block = plan_get_current_block();
@@ -554,13 +559,6 @@ static void protocol_exec_rt_suspend()
 
           #else
 					
-					  // Initialize planner state data
-						memset(pl_data,0,sizeof(plan_line_data_t));
-    				pl_data->condition = (PL_COND_FLAG_SYSTEM_MOTION|PL_COND_FLAG_NO_FEED_OVERRIDE);
-    				#ifdef USE_LINE_NUMBERS
-      				pl_data->line_number = PARKING_MOTION_LINE_NUMBER;
-    				#endif
-
             // Get current position and store restore location and spindle retract waypoint.
             system_convert_array_steps_to_mpos(parking_target,sys_position);
             if (bit_isfalse(sys.suspend,SUSPEND_RESTART_RETRACT)) {
@@ -581,7 +579,12 @@ static void protocol_exec_rt_suspend()
               if (parking_target[PARKING_AXIS] < retract_waypoint) {
                 parking_target[PARKING_AXIS] = retract_waypoint;
                 pl_data->feed_rate = PARKING_PULLOUT_RATE;
+                // NOTE: Retain accessory state for retract motion, then clear for remaining parking motions.
+                pl_data->condition |= (restore_condition & PL_COND_ACCESSORY_MASK);
+                pl_data->spindle_speed = restore_spindle_speed;
                 mc_parking_motion(parking_target, pl_data);
+                pl_data->condition = (PL_COND_FLAG_SYSTEM_MOTION|PL_COND_FLAG_NO_FEED_OVERRIDE);
+                pl_data->spindle_speed = 0.0;
               }
 
               spindle_set_state(SPINDLE_DISABLE,0.0); // De-energize
@@ -677,7 +680,7 @@ static void protocol_exec_rt_suspend()
 									// NOTE: If retract is restarted, spindle and coolant states will be cleared in
 									// the beginning of the retract routine.
                   pl_data->feed_rate = PARKING_PULLOUT_RATE;
-									pl_data->condition = restore_condition;
+									pl_data->condition |= (restore_condition & PL_COND_ACCESSORY_MASK);
 									pl_data->spindle_speed = restore_spindle_speed;
                   mc_parking_motion(restore_target, pl_data);
                 }

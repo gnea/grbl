@@ -1,4 +1,25 @@
 ----------------
+Date: 2016-10-24
+Author: Sonny Jeon
+Subject: Minor re-factoring. Fix an issue with parking and spindle restore.
+
+- Altered the report counters to be count down, rather than count up.
+Simplified some of the logic.
+
+- Fixed an issue with parking restore. The spindle state would disable
+then reenable.
+
+- Clarified some of the config.h descriptions.
+
+- Moved the compile-time checks from config.h to grbl.h. They don’t
+belong in the config.h file.
+
+- Refactored the initialization of the system variables in main.c.
+System position and probe position were undefined when power cycled,
+but were zero anyway. Added clear vector code to make it explicit.
+
+
+----------------
 Date: 2016-10-23
 Author: Sonny Jeon
 Subject: Spindle speed close to minimum fix.
