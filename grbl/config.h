@@ -569,7 +569,12 @@
 #define PARKING_PULLOUT_RATE 100.0 // Pull-out/plunge slow feed rate in mm/min.
 #define PARKING_PULLOUT_INCREMENT 5.0 // Spindle pull-out and plunge distance in mm. Incremental distance.
                                       // Must be positive value or equal to zero.
-                                      
+        
+// Experimental feature that adjusts laser power (PWM output) based on current running speed of the
+// machine. When laser mode is enabled, Grbl will turn off the spindle PWM pin whenever it is not 
+// moving, which may be confusing to some users to why their laser is not on. This behavior may change
+// in future iterations of this feature, where it will turn on to the minimum rpm value when active.
+// #define LASER_CONSTANT_POWER_PER_RATE
 
 /* ---------------------------------------------------------------------------------------
    OEM Single File Configuration Option

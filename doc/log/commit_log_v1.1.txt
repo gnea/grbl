@@ -1,4 +1,20 @@
 ----------------
+Date: 2016-10-26
+Author: Sonny Jeon
+Subject: Add high-frequency spindle output option. Minor parking motion re-factoring.
+
+- Some laser controllers were reported to need a very high PWM
+frequency. Added a line to enable this in cpu_map.h, if needed.
+
+- Cleaned up some of the parking code. Mostly just editing the comments.
+
+- Moved the accessory state resetting after the initial parking
+retract. Should ensure the accessory state is properly handled upon an
+aborted parking restore. Not certain if this was a problem before
+though. Just to be sure.
+
+
+----------------
 Date: 2016-10-25
 Author: chamnit
 Subject: Mandate all probe cycles ignore feed overrides.

@@ -151,6 +151,10 @@ typedef struct {
   float exit_speed;       // Exit speed of executing block (mm/min)
   float accelerate_until; // Acceleration ramp end measured from end of block (mm)
   float decelerate_after; // Deceleration ramp start measured from end of block (mm)
+
+  #ifdef LASER_CONSTANT_POWER_PER_RATE
+    float inv_rate;    // Used by PWM laser mode
+  #endif
 } st_prep_t;
 static st_prep_t prep;
 
@@ -644,6 +648,11 @@ void st_prep_buffer()
         } else {
           prep.current_speed = sqrt(pl_block->entry_speed_sqr);
         }
+        
+        #ifdef LASER_CONSTANT_POWER_PER_RATE
+          // Pre-compute inverse programmed rate to speed up PWM updating per step segment.
+          prep.inv_rate = 1.0/pl_block->programmed_rate;
+        #endif
       }
 
 			/* ---------------------------------------------------------------------------------
@@ -741,19 +750,6 @@ void st_prep_buffer()
         bit_true(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM); // Force update whenever updating block.
       #endif
     }
-    
-    #ifdef VARIABLE_SPINDLE
-      if (sys.step_control & STEP_CONTROL_UPDATE_SPINDLE_PWM) {    
-			  // Configure correct spindle PWM state for block. Updates with planner changes and spindle speed overrides.
-			  if (pl_block->condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)) {
-          st_prep_block->spindle_pwm = spindle_compute_pwm_value(pl_block->spindle_speed);
-        } else { 
-					sys.spindle_speed = 0.0;
-					st_prep_block->spindle_pwm = SPINDLE_PWM_OFF_VALUE;
-				}
-        bit_false(sys.step_control,STEP_CONTROL_UPDATE_SPINDLE_PWM);
-      }
-    #endif
     
     // Initialize new segment
     segment_t *prep_segment = &segment_buffer[segment_buffer_head];
@@ -860,7 +856,36 @@ void st_prep_buffer()
       }
     } while (mm_remaining > prep.mm_complete); // **Complete** Exit loop. Profile complete.
 
+    /* -----------------------------------------------------------------------------------
+       Compute spindle speed PWM output for step segment
+    */
+    #ifdef VARIABLE_SPINDLE
 
+      #ifdef LASER_CONSTANT_POWER_PER_RATE    
+        if ((settings.flags & BITFLAG_LASER_MODE) || (sys.step_control & STEP_CONTROL_UPDATE_SPINDLE_PWM)) {
+      #else
+        if (sys.step_control & STEP_CONTROL_UPDATE_SPINDLE_PWM) {
+      #endif
+			  if (pl_block->condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)) {
+          float rpm = pl_block->spindle_speed;
+          #ifdef LASER_CONSTANT_POWER_PER_RATE
+            // NOTE: Feed and rapid overrides are independent of PWM value and do not alter laser power/rate.        
+            if (settings.flags & BITFLAG_LASER_MODE) { 
+              // If current_speed is zero, then may need to be rpm_min*(100/MAX_SPINDLE_SPEED_OVERRIDE)
+              // but this would be instantaneous only and during a motion. May not matter at all.
+              rpm *= (prep.current_speed * prep.inv_rate);
+            }
+          #endif
+          st_prep_block->spindle_pwm = spindle_compute_pwm_value(rpm);
+        } else { 
+					sys.spindle_speed = 0.0;
+					st_prep_block->spindle_pwm = SPINDLE_PWM_OFF_VALUE;
+				}
+        bit_false(sys.step_control,STEP_CONTROL_UPDATE_SPINDLE_PWM);
+      }
+
+    #endif
+    
     /* -----------------------------------------------------------------------------------
        Compute segment step rate, steps to execute, and apply necessary rate corrections.
        NOTE: Steps are computed by direct scalar conversion of the millimeter distance
@@ -976,8 +1001,8 @@ void st_prep_buffer()
 // divided by the ACCELERATION TICKS PER SECOND in seconds.
 float st_get_realtime_rate()
 {
-   if (sys.state & (STATE_CYCLE | STATE_HOMING | STATE_HOLD | STATE_JOG | STATE_SAFETY_DOOR)){
-     return prep.current_speed;
-   }
+  if (sys.state & (STATE_CYCLE | STATE_HOMING | STATE_HOLD | STATE_JOG | STATE_SAFETY_DOOR)){
+    return prep.current_speed;
+  }
   return 0.0f;
 }

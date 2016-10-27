@@ -698,32 +698,39 @@ static void protocol_exec_rt_suspend()
 
         // Feed hold manager. Controls spindle stop override states.
         // NOTE: Hold ensured as completed by condition check at the beginning of suspend routine.
-        if (sys.spindle_stop_ovr & SPINDLE_STOP_OVR_INITIATE) { // Handles beginning of spindle stop
-
-          if (gc_state.modal.spindle != SPINDLE_DISABLE) {
-            spindle_set_state(SPINDLE_DISABLE,0.0); // De-energize
-            sys.spindle_stop_ovr = SPINDLE_STOP_OVR_ENABLED; // Set stop override state to enabled, if de-energized.
-          } else {
+        if (sys.spindle_stop_ovr) {
+          // Handles beginning of spindle stop
+          if (sys.spindle_stop_ovr & SPINDLE_STOP_OVR_INITIATE) {
+            if (gc_state.modal.spindle != SPINDLE_DISABLE) {
+              spindle_set_state(SPINDLE_DISABLE,0.0); // De-energize
+              sys.spindle_stop_ovr = SPINDLE_STOP_OVR_ENABLED; // Set stop override state to enabled, if de-energized.
+            } else {
+              sys.spindle_stop_ovr = SPINDLE_STOP_OVR_DISABLED; // Clear stop override state
+            }
+          // Handles restoring of spindle state
+          } else if (sys.spindle_stop_ovr & (SPINDLE_STOP_OVR_RESTORE | SPINDLE_STOP_OVR_RESTORE_CYCLE)) {
+            if (gc_state.modal.spindle != SPINDLE_DISABLE) {
+              report_feedback_message(MESSAGE_SPINDLE_RESTORE);
+              if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)) {
+                // When in laser mode, ignore spindle spin-up delay. Set to turn on laser when cycle starts.
+                bit_true(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM);
+              } else {
+                spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
+                delay_sec(SAFETY_DOOR_SPINDLE_DELAY, DELAY_MODE_SYS_SUSPEND);
+              }
+            }
+            if (sys.spindle_stop_ovr & SPINDLE_STOP_OVR_RESTORE_CYCLE) {
+              system_set_exec_state_flag(EXEC_CYCLE_START);  // Set to resume program.
+            }
             sys.spindle_stop_ovr = SPINDLE_STOP_OVR_DISABLED; // Clear stop override state
           }
-
-        } else if (sys.spindle_stop_ovr & (SPINDLE_STOP_OVR_RESTORE | SPINDLE_STOP_OVR_RESTORE_CYCLE)) { // Handles restoring of spindle state
-
-          if (gc_state.modal.spindle != SPINDLE_DISABLE) {
-            report_feedback_message(MESSAGE_SPINDLE_RESTORE);
-            if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)) {
-              // When in laser mode, ignore spindle spin-up delay. Set to turn on laser when cycle starts.
-              bit_true(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM);
-            } else {
-              spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
-              delay_sec(SAFETY_DOOR_SPINDLE_DELAY, DELAY_MODE_SYS_SUSPEND);
-            }
+        } else {
+          // Handles spindle state during hold. NOTE: Spindle speed overrides may be altered during hold state.
+          // NOTE: STEP_CONTROL_UPDATE_SPINDLE_PWM is automatically reset upon resume in step generator.
+          if (bit_istrue(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM)) {
+            spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
+            bit_false(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM);
           }
-          if (sys.spindle_stop_ovr & SPINDLE_STOP_OVR_RESTORE_CYCLE) {
-            system_set_exec_state_flag(EXEC_CYCLE_START);  // Set to resume program.
-          }
-          sys.spindle_stop_ovr = SPINDLE_STOP_OVR_DISABLED; // Clear stop override state
-
         }
 
       }
