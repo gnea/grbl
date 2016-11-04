@@ -51,54 +51,60 @@
 
 // Define command actions for within execution-type modal groups (motion, stopping, non-modal). Used
 // internally by the parser to know which command to execute.
+// NOTE: Some macro values are assigned specific values to make g-code state reporting and parsing 
+// compile a litte smaller. Necessary due to being completely out of flash on the 328p. Although not
+// ideal, just be careful with values that state 'do not alter' and check both report.c and gcode.c 
+// to see how they are used, if you need to alter them.
 
 // Modal Group G0: Non-modal actions
 #define NON_MODAL_NO_ACTION 0 // (Default: Must be zero)
-#define NON_MODAL_DWELL 1 // G4
-#define NON_MODAL_SET_COORDINATE_DATA 2 // G10
-#define NON_MODAL_GO_HOME_0 3 // G28
-#define NON_MODAL_SET_HOME_0 4 // G28.1
-#define NON_MODAL_GO_HOME_1 5 // G30
-#define NON_MODAL_SET_HOME_1 6 // G30.1
-#define NON_MODAL_ABSOLUTE_OVERRIDE 7 // G53
-#define NON_MODAL_SET_COORDINATE_OFFSET 8 // G92
-#define NON_MODAL_RESET_COORDINATE_OFFSET 9 //G92.1
+#define NON_MODAL_DWELL 4 // G4 (Do not alter value)
+#define NON_MODAL_SET_COORDINATE_DATA 10 // G10 (Do not alter value)
+#define NON_MODAL_GO_HOME_0 28 // G28 (Do not alter value)
+#define NON_MODAL_SET_HOME_0 38 // G28.1 (Do not alter value)
+#define NON_MODAL_GO_HOME_1 30 // G30 (Do not alter value)
+#define NON_MODAL_SET_HOME_1 40 // G30.1 (Do not alter value)
+#define NON_MODAL_ABSOLUTE_OVERRIDE 53 // G53 (Do not alter value)
+#define NON_MODAL_SET_COORDINATE_OFFSET 92 // G92 (Do not alter value)
+#define NON_MODAL_RESET_COORDINATE_OFFSET 102 //G92.1 (Do not alter value)
 
 // Modal Group G1: Motion modes
 #define MOTION_MODE_SEEK 0 // G0 (Default: Must be zero)
-#define MOTION_MODE_LINEAR 1 // G1
-#define MOTION_MODE_CW_ARC 2  // G2
-#define MOTION_MODE_CCW_ARC 3  // G3
-#define MOTION_MODE_PROBE_TOWARD 4 // G38.2 NOTE: G38.2, G38.3, G38.4, G38.5 must be sequential. See report_gcode_modes().
-#define MOTION_MODE_PROBE_TOWARD_NO_ERROR 5 // G38.3
-#define MOTION_MODE_PROBE_AWAY 6 // G38.4
-#define MOTION_MODE_PROBE_AWAY_NO_ERROR 7 // G38.5
-#define MOTION_MODE_NONE 8 // G80
+#define MOTION_MODE_LINEAR 1 // G1 (Do not alter value)
+#define MOTION_MODE_CW_ARC 2  // G2 (Do not alter value)
+#define MOTION_MODE_CCW_ARC 3  // G3 (Do not alter value)
+#define MOTION_MODE_PROBE_TOWARD 140 // G38.2 (Do not alter value)
+#define MOTION_MODE_PROBE_TOWARD_NO_ERROR 141 // G38.3 (Do not alter value)
+#define MOTION_MODE_PROBE_AWAY 142 // G38.4 (Do not alter value)
+#define MOTION_MODE_PROBE_AWAY_NO_ERROR 143 // G38.5 (Do not alter value)
+#define MOTION_MODE_NONE 80 // G80 (Do not alter value)
 
 // Modal Group G2: Plane select
 #define PLANE_SELECT_XY 0 // G17 (Default: Must be zero)
-#define PLANE_SELECT_ZX 1 // G18
-#define PLANE_SELECT_YZ 2 // G19
+#define PLANE_SELECT_ZX 1 // G18 (Do not alter value)
+#define PLANE_SELECT_YZ 2 // G19 (Do not alter value)
 
 // Modal Group G3: Distance mode
 #define DISTANCE_MODE_ABSOLUTE 0 // G90 (Default: Must be zero)
-#define DISTANCE_MODE_INCREMENTAL 1 // G91
+#define DISTANCE_MODE_INCREMENTAL 1 // G91 (Do not alter value)
 
 // Modal Group G4: Arc IJK distance mode
 #define DISTANCE_ARC_MODE_INCREMENTAL 0 // G91.1 (Default: Must be zero)
 
 // Modal Group M4: Program flow
 #define PROGRAM_FLOW_RUNNING 0 // (Default: Must be zero)
-#define PROGRAM_FLOW_PAUSED 1 // M0, M1
-#define PROGRAM_FLOW_COMPLETED 2 // M2, M30
+#define PROGRAM_FLOW_PAUSED 3 // M0
+#define PROGRAM_FLOW_OPTIONAL_STOP 1 // M1 NOTE: Not supported, but valid and ignored.
+#define PROGRAM_FLOW_COMPLETED_M2  2 // M2 (Do not alter value)
+#define PROGRAM_FLOW_COMPLETED_M30 30 // M30 (Do not alter value)
 
 // Modal Group G5: Feed rate mode
 #define FEED_RATE_MODE_UNITS_PER_MIN  0 // G94 (Default: Must be zero)
-#define FEED_RATE_MODE_INVERSE_TIME   PL_COND_FLAG_INVERSE_TIME // G93 (NOTE: Uses planner condition bit flag)
+#define FEED_RATE_MODE_INVERSE_TIME   1 // G93 (Do not alter value)
 
 // Modal Group G6: Units mode
 #define UNITS_MODE_MM 0 // G21 (Default: Must be zero)
-#define UNITS_MODE_INCHES 1 // G20
+#define UNITS_MODE_INCHES 1 // G20 (Do not alter value)
 
 // Modal Group G7: Cutter radius compensation mode
 #define CUTTER_COMP_DISABLE 0 // G40 (Default: Must be zero)

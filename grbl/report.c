@@ -33,6 +33,8 @@
 void report_util_setting_prefix(uint8_t n) { serial_write('$'); print_uint8_base10(n); serial_write('='); }
 static void report_util_line_feed() { printPgmString(PSTR("\r\n")); }
 static void report_util_feedback_line_feed() { serial_write(']'); report_util_line_feed(); }
+static void report_util_gcode_modes_G() { printPgmString(PSTR(" G")); }
+static void report_util_gcode_modes_M() { printPgmString(PSTR(" M")); }
 // static void report_util_comment_line_feed() { serial_write(')'); report_util_line_feed(); }
 static void report_util_axis_values(float *axis_value) {
   uint8_t idx;
@@ -439,54 +441,48 @@ void report_gcode_modes()
   #else
     printPgmString(PSTR("[GC:G"));
   #endif
-  switch (gc_state.modal.motion) {
-    case MOTION_MODE_SEEK : serial_write('0'); break;
-    case MOTION_MODE_LINEAR : serial_write('1'); break;
-    case MOTION_MODE_CW_ARC : serial_write('2'); break;
-    case MOTION_MODE_CCW_ARC : serial_write('3'); break;
-    case MOTION_MODE_NONE : printPgmString(PSTR("80")); break;
-    default:
-      printPgmString(PSTR("38."));
-      print_uint8_base10(gc_state.modal.motion - (MOTION_MODE_PROBE_TOWARD-2));
+  if (gc_state.modal.motion >= MOTION_MODE_PROBE_TOWARD) {
+    printPgmString(PSTR("38."));
+    print_uint8_base10(gc_state.modal.motion - (MOTION_MODE_PROBE_TOWARD-2));
+  } else {
+    print_uint8_base10(gc_state.modal.motion);
   }
 
-  printPgmString(PSTR(" G"));
+  report_util_gcode_modes_G();
   print_uint8_base10(gc_state.modal.coord_select+54);
 
-  printPgmString(PSTR(" G1"));
-  switch (gc_state.modal.plane_select) {
-    case PLANE_SELECT_XY : serial_write('7'); break;
-    case PLANE_SELECT_ZX : serial_write('8'); break;
-    case PLANE_SELECT_YZ : serial_write('9'); break;
+  report_util_gcode_modes_G();
+  print_uint8_base10(gc_state.modal.plane_select+17);
+
+  report_util_gcode_modes_G();
+  print_uint8_base10(21-gc_state.modal.units);
+
+  report_util_gcode_modes_G();
+  print_uint8_base10(gc_state.modal.distance+90);
+
+  report_util_gcode_modes_G();
+  print_uint8_base10(94-gc_state.modal.feed_rate);
+
+  if (gc_state.modal.program_flow) {
+    report_util_gcode_modes_M();
+    switch (gc_state.modal.program_flow) {
+      case PROGRAM_FLOW_PAUSED : serial_write('0'); break;
+      // case PROGRAM_FLOW_OPTIONAL_STOP : serial_write('1'); break; // M1 is ignored and not supported.
+      case PROGRAM_FLOW_COMPLETED_M2 : 
+      case PROGRAM_FLOW_COMPLETED_M30 : 
+        print_uint8_base10(gc_state.modal.program_flow);
+        break;
+    }
   }
 
-  printPgmString(PSTR(" G2"));
-  if (gc_state.modal.units == UNITS_MODE_MM) { serial_write('1'); }
-  else { serial_write('0'); }
-
-  printPgmString(PSTR(" G9"));
-  if (gc_state.modal.distance == DISTANCE_MODE_ABSOLUTE) { serial_write('0'); }
-  else { serial_write('1'); }
-
-  printPgmString(PSTR(" G9"));
-  if (gc_state.modal.feed_rate == FEED_RATE_MODE_INVERSE_TIME) { serial_write('3'); }
-  else { serial_write('4'); }
-
-  printPgmString(PSTR(" M"));
-  switch (gc_state.modal.program_flow) {
-    case PROGRAM_FLOW_RUNNING : serial_write('0'); break;
-    case PROGRAM_FLOW_PAUSED : serial_write('1'); break;
-    case PROGRAM_FLOW_COMPLETED : serial_write('2'); break;
-  }
-
-  printPgmString(PSTR(" M"));
+  report_util_gcode_modes_M();
   switch (gc_state.modal.spindle) {
     case SPINDLE_ENABLE_CW : serial_write('3'); break;
     case SPINDLE_ENABLE_CCW : serial_write('4'); break;
     case SPINDLE_DISABLE : serial_write('5'); break;
   }
 
-  printPgmString(PSTR(" M"));
+  report_util_gcode_modes_M();
   #ifdef ENABLE_M7
     if (gc_state.modal.coolant) { // Note: Multiple coolant states may be active at the same time.
       if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_MIST) { serial_write('7'); }

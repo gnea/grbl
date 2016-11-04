@@ -149,35 +149,12 @@ uint8_t gc_execute_line(char *line)
             // No break. Continues to next line.
           case 4: case 53:
             word_bit = MODAL_GROUP_G0;
-            switch(int_value) {
-              case 4: gc_block.non_modal_command = NON_MODAL_DWELL; break; // G4
-              case 10: gc_block.non_modal_command = NON_MODAL_SET_COORDINATE_DATA; break; // G10
-              case 28:
-                switch(mantissa) {
-                  case 0: gc_block.non_modal_command = NON_MODAL_GO_HOME_0; break;  // G28
-                  case 10: gc_block.non_modal_command = NON_MODAL_SET_HOME_0; break; // G28.1
-                  default: FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G28.x command]
-                }
-                mantissa = 0; // Set to zero to indicate valid non-integer G command.
-                break;
-              case 30:
-                switch(mantissa) {
-                  case 0: gc_block.non_modal_command = NON_MODAL_GO_HOME_1; break;  // G30
-                  case 10: gc_block.non_modal_command = NON_MODAL_SET_HOME_1; break; // G30.1
-                  default: FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G30.x command]
-                }
-                mantissa = 0; // Set to zero to indicate valid non-integer G command.
-                break;
-              case 53: gc_block.non_modal_command = NON_MODAL_ABSOLUTE_OVERRIDE; break; // G53
-              case 92:
-                switch(mantissa) {
-                  case 0: gc_block.non_modal_command = NON_MODAL_SET_COORDINATE_OFFSET; break; // G92
-                  case 10: gc_block.non_modal_command = NON_MODAL_RESET_COORDINATE_OFFSET; break; // G92.1
-                  default: FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G92.x command]
-                }
-                mantissa = 0; // Set to zero to indicate valid non-integer G command.
-                break;
-            }
+            gc_block.non_modal_command = int_value;
+            if ((int_value == 28) || (int_value == 30) || (int_value == 92)) {
+              if ((mantissa != 0) || (mantissa != 10)) { FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); }
+              gc_block.non_modal_command += mantissa;
+              mantissa = 0; // Set to zero to indicate valid non-integer G command.
+            }                
             break;
           case 0: case 1: case 2: case 3: case 38:
             // Check for G0/1/2/3/38 being called with G10/28/30/92 on same block.
@@ -187,37 +164,22 @@ uint8_t gc_execute_line(char *line)
             // No break. Continues to next line.
           case 80:
             word_bit = MODAL_GROUP_G1;
-            switch(int_value) {
-              case 0: gc_block.modal.motion = MOTION_MODE_SEEK; break; // G0
-              case 1: gc_block.modal.motion = MOTION_MODE_LINEAR; break; // G1
-              case 2: gc_block.modal.motion = MOTION_MODE_CW_ARC; break; // G2
-              case 3: gc_block.modal.motion = MOTION_MODE_CCW_ARC; break; // G3
-              case 38:
-                switch(mantissa) {
-                  case 20: gc_block.modal.motion = MOTION_MODE_PROBE_TOWARD; break; // G38.2
-                  case 30: gc_block.modal.motion = MOTION_MODE_PROBE_TOWARD_NO_ERROR; break; // G38.3
-                  case 40: gc_block.modal.motion = MOTION_MODE_PROBE_AWAY; break; // G38.4
-                  case 50: gc_block.modal.motion = MOTION_MODE_PROBE_AWAY_NO_ERROR; break; // G38.5
-                  default: FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G38.x command]
-                }
-                mantissa = 0; // Set to zero to indicate valid non-integer G command.
-                break;
-              case 80: gc_block.modal.motion = MOTION_MODE_NONE; break; // G80
-            }
+            gc_block.modal.motion = int_value;
+            if (int_value == 38){
+              if ((mantissa != 20) || (mantissa != 30) || (mantissa != 40) || (mantissa != 50)) {
+                FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G38.x command]
+              }
+              gc_block.modal.motion += (mantissa/10)+100;
+            }  
             break;
           case 17: case 18: case 19:
             word_bit = MODAL_GROUP_G2;
-            switch(int_value) {
-              case 17: gc_block.modal.plane_select = PLANE_SELECT_XY; break;
-              case 18: gc_block.modal.plane_select = PLANE_SELECT_ZX; break;
-              case 19: gc_block.modal.plane_select = PLANE_SELECT_YZ; break;
-            }
+            gc_block.modal.plane_select = int_value - 17;
             break;
           case 90: case 91:
             if (mantissa == 0) {
               word_bit = MODAL_GROUP_G3;
-              if (int_value == 90) { gc_block.modal.distance = DISTANCE_MODE_ABSOLUTE; } // G90
-              else { gc_block.modal.distance = DISTANCE_MODE_INCREMENTAL; } // G91
+              gc_block.modal.distance = int_value - 90;
             } else {
               word_bit = MODAL_GROUP_G4;
               if ((mantissa != 10) || (int_value == 90)) { FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); } // [G90.1 not supported]
@@ -227,13 +189,11 @@ uint8_t gc_execute_line(char *line)
             break;
           case 93: case 94:
             word_bit = MODAL_GROUP_G5;
-            if (int_value == 93) { gc_block.modal.feed_rate = FEED_RATE_MODE_INVERSE_TIME; } // G93
-            else { gc_block.modal.feed_rate = FEED_RATE_MODE_UNITS_PER_MIN; } // G94
+            gc_block.modal.feed_rate = 94 - int_value;
             break;
           case 20: case 21:
             word_bit = MODAL_GROUP_G6;
-            if (int_value == 20) { gc_block.modal.units = UNITS_MODE_INCHES; }  // G20
-            else { gc_block.modal.units = UNITS_MODE_MM; } // G21
+            gc_block.modal.units = 21 - int_value;
             break;
           case 40:
             word_bit = MODAL_GROUP_G7;
@@ -258,7 +218,7 @@ uint8_t gc_execute_line(char *line)
           case 54: case 55: case 56: case 57: case 58: case 59:
             // NOTE: G59.x are not supported. (But their int_values would be 60, 61, and 62.)
             word_bit = MODAL_GROUP_G12;
-            gc_block.modal.coord_select = int_value-54; // Shift to array indexing.
+            gc_block.modal.coord_select = int_value - 54; // Shift to array indexing.
             break;
           case 61:
             word_bit = MODAL_GROUP_G13;
@@ -284,7 +244,7 @@ uint8_t gc_execute_line(char *line)
             switch(int_value) {
               case 0: gc_block.modal.program_flow = PROGRAM_FLOW_PAUSED; break; // Program pause
               case 1: break; // Optional stop not supported. Ignore.
-              case 2: case 30: gc_block.modal.program_flow = PROGRAM_FLOW_COMPLETED; break; // Program end and reset
+              default: gc_block.modal.program_flow = int_value; // Program end and reset
             }
             break;
           #ifndef USE_SPINDLE_DIR_AS_ENABLE_PIN
@@ -891,7 +851,7 @@ uint8_t gc_execute_line(char *line)
 
   // [2. Set feed rate mode ]:
   gc_state.modal.feed_rate = gc_block.modal.feed_rate;
-  pl_data->condition |= gc_state.modal.feed_rate; // Set condition flag for planner use.
+  if (gc_state.modal.feed_rate) { pl_data->condition |= PL_COND_FLAG_INVERSE_TIME; } // Set condition flag for planner use.
 
   // [3. Set feed rate ]:
   gc_state.feed_rate = gc_block.values.f; // Always copy this value. See feed rate error-checking.

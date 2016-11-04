@@ -1,4 +1,33 @@
 ----------------
+Date: 2016-10-27
+Author: Sonny Jeon
+Subject: Spindle speed overrides behavior tweak. New experimental laser dynamic power mode.
+
+- Spindle speed overrides now update immediately if they are changed
+while in a HOLD state. Previously, they would update after exiting the
+HOLD, which isn’t correct.
+
+- New experimental dynamic laser power mode that adjusts laser power
+based on current machine speed. Enabled by uncommenting
+LASER_CONSTANT_POWER_PER_RATE in config.h
+
+  - It assumes the programmed rate is the intended power/rate for the
+motion.
+  - Feed rate overrides (FRO) do not effect the power/rate. Meaning
+that spindle PWM will automatically lower with lower FRO and increase
+with higher FRO to keep it the same.
+  - Spindle speed overrides (SSO) will directly increase and decrease
+the power/rate. So 150% SSO will increase the PWM output by 150% for
+the same speed.
+  - The combination of FRO and SSO behaviors should allow for subtle
+and highly flexible tuning of how the laser cutter is operating in
+real-time and during the job.
+
+- Re-factored planner block rapid rate handling for the dynamic laser
+power feature. Should have had no effect on how Grbl operates.
+
+
+----------------
 Date: 2016-10-26
 Author: Sonny Jeon
 Subject: Add high-frequency spindle output option. Minor parking motion re-factoring.

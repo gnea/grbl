@@ -152,7 +152,7 @@ void spindle_stop()
       }
     } else { 
       // Compute intermediate PWM value with linear spindle speed model.
-      // NOTE: A nonlinear model could be installed here, if required, but keep it light-weight.
+      // NOTE: A nonlinear model could be installed here, if required, but keep it VERY light-weight.
       sys.spindle_speed = rpm;
       pwm_value = floor( (rpm-settings.rpm_min)*pwm_gradient + (SPINDLE_PWM_MIN_VALUE+0.5) );
     }

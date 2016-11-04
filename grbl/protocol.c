@@ -716,7 +716,6 @@ static void protocol_exec_rt_suspend()
                 bit_true(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM);
               } else {
                 spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
-                delay_sec(SAFETY_DOOR_SPINDLE_DELAY, DELAY_MODE_SYS_SUSPEND);
               }
             }
             if (sys.spindle_stop_ovr & SPINDLE_STOP_OVR_RESTORE_CYCLE) {
