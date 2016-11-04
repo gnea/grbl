@@ -1,4 +1,41 @@
 ----------------
+Date: 2016-11-04
+Author: Sonny Jeon
+Subject: Improved constant laser power per rate mode. Re-factored for flash size. Minor bug fixes.
+
+- NOTE: This commit has largely been untested.
+
+- Constant laser power per rate mode has been improved. Altered its
+implementation to be more responsive and accurate.
+
+- Based on LaserWeb dev feedback, only G1, G2, and G3 moves operate
+with constant laser power mode. Meaning that G0, G38.x, and $J jogging
+motions operate without it and will keep a constant power output. This
+was specifically requested as a way to focus the laser by keeping the
+laser on when not moving. Operationally, this shouldn’t alter how the
+laser mode operates.
+
+- Re-factored parts of the g-code parser and g-code state reports to
+save a few hundred bytes of flash. What was done makes the code a bit
+more unreadable (bad), but the flash space was in dire need. So, I’m
+willing to live with it for now.
+
+- Fixed a problem with $G g-code state reports. Showed `M0` program
+pause during a run state. Now fixed to show nothing during a run state.
+Also, `M30` program end was shown as `M2`. This was also corrected.
+
+- Improved spindle stop override responsiveness by removing the
+enforced spindle restoring delay. It’s not needed for a feature that is
+user controlled.
+
+- Fixed a bug with G2/3 arcs in inverse time mode.
+
+- Updated the interface.md document to make it more clear how WPos: or
+MPos: can be calculated from WCO:. Some GUI devs have failed to catch
+this in the documentation.
+
+
+----------------
 Date: 2016-10-27
 Author: Sonny Jeon
 Subject: Spindle speed overrides behavior tweak. New experimental laser dynamic power mode.

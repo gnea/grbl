@@ -151,7 +151,7 @@ uint8_t gc_execute_line(char *line)
             word_bit = MODAL_GROUP_G0;
             gc_block.non_modal_command = int_value;
             if ((int_value == 28) || (int_value == 30) || (int_value == 92)) {
-              if ((mantissa != 0) || (mantissa != 10)) { FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); }
+              if (!((mantissa == 0) || (mantissa == 10))) { FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); }
               gc_block.non_modal_command += mantissa;
               mantissa = 0; // Set to zero to indicate valid non-integer G command.
             }                
@@ -166,10 +166,11 @@ uint8_t gc_execute_line(char *line)
             word_bit = MODAL_GROUP_G1;
             gc_block.modal.motion = int_value;
             if (int_value == 38){
-              if ((mantissa != 20) || (mantissa != 30) || (mantissa != 40) || (mantissa != 50)) {
+              if (!((mantissa == 20) || (mantissa == 30) || (mantissa == 40) || (mantissa == 50))) {
                 FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G38.x command]
               }
               gc_block.modal.motion += (mantissa/10)+100;
+              mantissa = 0; // Set to zero to indicate valid non-integer G command.
             }  
             break;
           case 17: case 18: case 19:
