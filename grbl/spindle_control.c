@@ -136,7 +136,7 @@ void spindle_stop()
   uint8_t spindle_compute_pwm_value(float rpm) // 328p PWM register is 8-bit.
   {
     uint8_t pwm_value;
-    rpm *= (0.01*sys.spindle_speed_ovr); // Scale by spindle speed override value.
+    rpm *= (0.010*sys.spindle_speed_ovr); // Scale by spindle speed override value.
     // Calculate PWM register value based on rpm max/min settings and programmed rpm.
     if ((settings.rpm_min >= settings.rpm_max) || (rpm >= settings.rpm_max)) {
       // No PWM range possible. Set simple on/off spindle control pin state.
@@ -154,7 +154,7 @@ void spindle_stop()
       // Compute intermediate PWM value with linear spindle speed model.
       // NOTE: A nonlinear model could be installed here, if required, but keep it VERY light-weight.
       sys.spindle_speed = rpm;
-      pwm_value = floor( (rpm-settings.rpm_min)*pwm_gradient + (SPINDLE_PWM_MIN_VALUE+0.5) );
+      pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SPINDLE_PWM_MIN_VALUE;
     }
     return(pwm_value);
   }

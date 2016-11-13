@@ -49,45 +49,43 @@ static void report_util_setting_string(uint8_t n) {
   serial_write(' ');
   serial_write('(');
   switch(n) {
-    case 0: printPgmString(PSTR("stp pulse:us")); break;
-    case 1: printPgmString(PSTR("idl delay:ms")); break; 
-    case 2: printPgmString(PSTR("stp inv:msk")); break;
-    case 3: printPgmString(PSTR("dir inv:msk")); break;
-    case 4: printPgmString(PSTR("stp enbl inv")); break;
+    case 0: printPgmString(PSTR("stp pulse")); break;
+    case 1: printPgmString(PSTR("idl delay")); break; 
+    case 2: printPgmString(PSTR("stp inv")); break;
+    case 3: printPgmString(PSTR("dir inv")); break;
+    case 4: printPgmString(PSTR("stp en inv")); break;
     case 5: printPgmString(PSTR("lim inv")); break;
     case 6: printPgmString(PSTR("prb inv")); break;
-    case 10: printPgmString(PSTR("rpt:msk")); break;
-    case 11: printPgmString(PSTR("jnc dev:mm")); break;
-    case 12: printPgmString(PSTR("arc tol:mm")); break;
+    case 10: printPgmString(PSTR("rpt")); break;
+    case 11: printPgmString(PSTR("jnc dev")); break;
+    case 12: printPgmString(PSTR("arc tol")); break;
     case 13: printPgmString(PSTR("rpt inch")); break;
     case 20: printPgmString(PSTR("sft lim")); break;
     case 21: printPgmString(PSTR("hrd lim")); break;
     case 22: printPgmString(PSTR("hm cyc")); break;
-    case 23: printPgmString(PSTR("hm dir inv:msk")); break;
-    case 24: printPgmString(PSTR("hm feed:mm/min")); break;
-    case 25: printPgmString(PSTR("hm seek:mm/min")); break;
-    case 26: printPgmString(PSTR("hm delay:ms")); break;
-    case 27: printPgmString(PSTR("hm off:mm")); break;
+    case 23: printPgmString(PSTR("hm dir inv")); break;
+    case 24: printPgmString(PSTR("hm feed")); break;
+    case 25: printPgmString(PSTR("hm seek")); break;
+    case 26: printPgmString(PSTR("hm delay")); break;
+    case 27: printPgmString(PSTR("hm pulloff")); break;
     case 30: printPgmString(PSTR("rpm max")); break;
     case 31: printPgmString(PSTR("rpm min")); break;
     case 32: printPgmString(PSTR("laser")); break;
     default:
       n -= AXIS_SETTINGS_START_VAL;
       uint8_t idx = 0;
-      while (n < 10) {
-        if (n<10) {
-          print_uint8_base10(n+idx);
-          switch (idx) {
-            case 0: printPgmString(PSTR(":stp/mm")); break;
-            case 1: printPgmString(PSTR(":mm/min")); break;
-            case 2: printPgmString(PSTR(":mm/s^2")); break;
-            case 3: printPgmString(PSTR(":mm max")); break;
-          }
-        } else {
-          n -= 10;
-          idx++;
-        }
+      while (n >= AXIS_SETTINGS_INCREMENT) {
+        n -= AXIS_SETTINGS_INCREMENT;
+        idx++;
       }
+      serial_write(n+'x');
+      switch (idx) {
+        case 0: printPgmString(PSTR(":stp/mm")); break;
+        case 1: printPgmString(PSTR(":mm/min")); break;
+        case 2: printPgmString(PSTR(":mm/s^2")); break;
+        case 3: printPgmString(PSTR(":mm max")); break;
+      }
+      break;
   }
   report_util_comment_line_feed();
 }
@@ -97,14 +95,12 @@ static void report_util_setting_string(uint8_t n) {
   static void report_util_uint8_setting(uint8_t n, int val) { 
     report_util_setting_prefix(n); 
     print_uint8_base10(val); 
-    report_util_line_feed();
-  //   report_util_setting_string(n); 
+    report_util_line_feed(); // report_util_setting_string(n); 
   }
   static void report_util_float_setting(uint8_t n, float val, uint8_t n_decimal) { 
     report_util_setting_prefix(n); 
     printFloat(val,n_decimal);
-    report_util_line_feed();
-  //   report_util_setting_string(n);
+    report_util_line_feed(); // report_util_setting_string(n);
   }
 #endif
 
