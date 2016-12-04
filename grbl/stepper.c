@@ -62,11 +62,7 @@ typedef struct {
   uint32_t step_event_count;
   uint8_t direction_bits;
   #ifdef VARIABLE_SPINDLE
-    #ifdef LASER_CONSTANT_POWER_PER_RATE
-      uint8_t is_pwm_rate_adjusted; // Tracks motions that require constant laser power/rate
-    #else
-      uint8_t spindle_pwm;
-    #endif
+    uint8_t is_pwm_rate_adjusted; // Tracks motions that require constant laser power/rate
   #endif
 } st_block_t;
 static st_block_t st_block_buffer[SEGMENT_BUFFER_SIZE-1];
@@ -84,8 +80,8 @@ typedef struct {
   #else
     uint8_t prescaler;      // Without AMASS, a prescaler is required to adjust for slow timing.
   #endif
-  #ifdef LASER_CONSTANT_POWER_PER_RATE
-    uint8_t rate_adjusted_pwm;
+  #ifdef VARIABLE_SPINDLE
+    uint8_t spindle_pwm;
   #endif
 } segment_t;
 static segment_t segment_buffer[SEGMENT_BUFFER_SIZE];
@@ -159,8 +155,9 @@ typedef struct {
   float accelerate_until; // Acceleration ramp end measured from end of block (mm)
   float decelerate_after; // Deceleration ramp start measured from end of block (mm)
 
-  #ifdef LASER_CONSTANT_POWER_PER_RATE
+  #ifdef VARIABLE_SPINDLE
     float inv_rate;    // Used by PWM laser mode to speed up segment calculations.
+    uint8_t current_spindle_pwm; 
   #endif
 } st_prep_t;
 static st_prep_t prep;
@@ -360,20 +357,14 @@ ISR(TIMER1_COMPA_vect)
 
       #ifdef VARIABLE_SPINDLE
         // Set real-time spindle output as segment is loaded, just prior to the first step.
-        #ifdef LASER_CONSTANT_POWER_PER_RATE
-          spindle_set_speed(st.exec_segment->rate_adjusted_pwm);
-        #else
-          spindle_set_speed(st.exec_block->spindle_pwm);
-        #endif
+        spindle_set_speed(st.exec_segment->spindle_pwm);
       #endif
 
     } else {
       // Segment buffer empty. Shutdown.
       st_go_idle();
-      #ifdef LASER_CONSTANT_POWER_PER_RATE
-        // Ensure pwm is set properly upon completion of rate-controlled motion.
-        if (st.exec_block->is_pwm_rate_adjusted) { spindle_set_speed(SPINDLE_PWM_OFF_VALUE); }
-      #endif
+      // Ensure pwm is set properly upon completion of rate-controlled motion.
+      if (st.exec_block->is_pwm_rate_adjusted) { spindle_set_speed(SPINDLE_PWM_OFF_VALUE); }
       system_set_exec_state_flag(EXEC_CYCLE_STOP); // Flag main program for cycle end
       return; // Nothing to do but exit.
     }
@@ -664,16 +655,16 @@ void st_prep_buffer()
           prep.current_speed = sqrt(pl_block->entry_speed_sqr);
         }
         
-        #ifdef LASER_CONSTANT_POWER_PER_RATE
-          // Setup laser mode variables. PWM rate adjusted motions will always complete a motion with the
-          // spindle off. 
-          st_prep_block->is_pwm_rate_adjusted = false;
-          if (settings.flags & BITFLAG_LASER_MODE) {
+        // Setup laser mode variables. PWM rate adjusted motions will always complete a motion with the
+        // spindle off. 
+        st_prep_block->is_pwm_rate_adjusted = false;
+        if (settings.flags & BITFLAG_LASER_MODE) {
+          if (pl_block->condition & PL_COND_FLAG_SPINDLE_CCW) { 
             // Pre-compute inverse programmed rate to speed up PWM updating per step segment.
             prep.inv_rate = 1.0/pl_block->programmed_rate;
-            if (!(pl_block->condition & PL_COND_MOTION_MASK)) { st_prep_block->is_pwm_rate_adjusted = true; }
+            st_prep_block->is_pwm_rate_adjusted = true; 
           }
-        #endif
+        }
       }
 
 			/* ---------------------------------------------------------------------------------
@@ -881,32 +872,23 @@ void st_prep_buffer()
       /* -----------------------------------------------------------------------------------
         Compute spindle speed PWM output for step segment
       */
-      #ifdef LASER_CONSTANT_POWER_PER_RATE    
-        if (st_prep_block->is_pwm_rate_adjusted || (sys.step_control & STEP_CONTROL_UPDATE_SPINDLE_PWM)) {
-          if (pl_block->condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)) {
-            float rpm = pl_block->spindle_speed;
-            // NOTE: Feed and rapid overrides are independent of PWM value and do not alter laser power/rate.        
-            if (st_prep_block->is_pwm_rate_adjusted) { rpm *= (prep.current_speed * prep.inv_rate); }
-            // If current_speed is zero, then may need to be rpm_min*(100/MAX_SPINDLE_SPEED_OVERRIDE)
-            // but this would be instantaneous only and during a motion. May not matter at all.
-            prep_segment->rate_adjusted_pwm = spindle_compute_pwm_value(rpm);
-          } else { 
-            sys.spindle_speed = 0.0;
-            prep_segment->rate_adjusted_pwm = SPINDLE_PWM_OFF_VALUE;
-          }
-          bit_false(sys.step_control,STEP_CONTROL_UPDATE_SPINDLE_PWM);
+      
+      if (st_prep_block->is_pwm_rate_adjusted || (sys.step_control & STEP_CONTROL_UPDATE_SPINDLE_PWM)) {
+        if (pl_block->condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)) {
+          float rpm = pl_block->spindle_speed;
+          // NOTE: Feed and rapid overrides are independent of PWM value and do not alter laser power/rate.        
+          if (st_prep_block->is_pwm_rate_adjusted) { rpm *= (prep.current_speed * prep.inv_rate); }
+          // If current_speed is zero, then may need to be rpm_min*(100/MAX_SPINDLE_SPEED_OVERRIDE)
+          // but this would be instantaneous only and during a motion. May not matter at all.
+          prep.current_spindle_pwm = spindle_compute_pwm_value(rpm);
+        } else { 
+          sys.spindle_speed = 0.0;
+          prep.current_spindle_pwm = SPINDLE_PWM_OFF_VALUE;
         }
-      #else
-        if (sys.step_control & STEP_CONTROL_UPDATE_SPINDLE_PWM) {
-          if (pl_block->condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)) {
-            st_prep_block->spindle_pwm = spindle_compute_pwm_value(pl_block->spindle_speed);
-          } else { 
-            sys.spindle_speed = 0.0;
-            st_prep_block->spindle_pwm = SPINDLE_PWM_OFF_VALUE;
-          }
-          bit_false(sys.step_control,STEP_CONTROL_UPDATE_SPINDLE_PWM);
-        }
-      #endif
+        bit_false(sys.step_control,STEP_CONTROL_UPDATE_SPINDLE_PWM);
+      }
+      prep_segment->spindle_pwm = prep.current_spindle_pwm; // Reload segment PWM value
+
     #endif
     
     /* -----------------------------------------------------------------------------------

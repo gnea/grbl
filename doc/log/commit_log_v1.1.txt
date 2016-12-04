@@ -1,4 +1,19 @@
 ----------------
+Date: 2016-11-12
+Author: Sonny Jeon
+Subject: PWM calculation correction.
+
+- The PWM calculation was a little bit off and has been corrected.
+
+- Edited the unused settings strings to be smaller and just show what
+the settings are, rather than include units. May include this in the
+master build, if it fits.
+
+- The minimum spindle PWM define in config.h needed to be update for
+cpu map compatibilty.
+
+
+----------------
 Date: 2016-11-04
 Author: Sonny Jeon
 Subject: Fixed a g-code parser issue caused by last commit.

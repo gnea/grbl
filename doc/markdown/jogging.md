@@ -13,7 +13,8 @@ Executing a jog requires a specific command structure, as described below:
    - G20 or G21 - Inch and millimeter mode
    - G90 or G91 - Absolute and incremental distances
    - G53 - Move in machine coordinates
- - All other g-codes, m-codes, and value words are not accepted in the jog command.
+   - N line numbers are valid. Will show in reports, if enabled, but is otherwise ignored.
+ - All other g-codes, m-codes, and value words (including S and T) are not accepted in the jog command.
  - Spaces and comments are allowed in the command. These are removed by the pre-parser.
 
  - Example: G21 and G90 are active modal states prior to jogging. These are sequential commands.

@@ -295,7 +295,7 @@ void report_grbl_settings() {
     printPgmString(PSTR(" (soft limits, bool)\r\n$21=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE));
     printPgmString(PSTR(" (hard limits, bool)\r\n$22=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE));
     printPgmString(PSTR(" (homing cycle, bool)\r\n$23=")); print_uint8_base10(settings.homing_dir_mask);
-    printPgmString(PSTR(" (homing dir invert mask\r\n$24=")); printFloat(settings.homing_feed_rate,N_DECIMAL_SETTINGVALUE);
+    printPgmString(PSTR(" (homing dir invert mask)\r\n$24=")); printFloat(settings.homing_feed_rate,N_DECIMAL_SETTINGVALUE);
     printPgmString(PSTR(" (homing feed, mm/min)\r\n$25=")); printFloat(settings.homing_seek_rate,N_DECIMAL_SETTINGVALUE);
     printPgmString(PSTR(" (homing seek, mm/min)\r\n$26=")); print_uint8_base10(settings.homing_debounce_delay);
     printPgmString(PSTR(" (homing debounce, msec)\r\n$27=")); printFloat(settings.homing_pulloff,N_DECIMAL_SETTINGVALUE);

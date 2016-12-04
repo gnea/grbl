@@ -530,6 +530,11 @@ static void protocol_exec_rt_suspend()
       restore_condition = block->condition;
       restore_spindle_speed = block->spindle_speed;
     }
+    #ifdef DISABLE_LASER_DURING_HOLD
+      if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)) { 
+        system_set_exec_accessory_override_flag(EXEC_SPINDLE_OVR_STOP);
+      }
+    #endif
   #else
     if (block == NULL) { restore_condition = (gc_state.modal.spindle | gc_state.modal.coolant); }
     else { restore_condition = block->condition; }

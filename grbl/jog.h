@@ -27,6 +27,6 @@
 #define JOG_LINE_NUMBER 0
 
 // Sets up valid jog motion received from g-code parser, checks for soft-limits, and executes the jog.
-uint8_t jog_execute(parser_block_t *gc_block);
+uint8_t jog_execute(plan_line_data_t *pl_data, parser_block_t *gc_block);
 
 #endif

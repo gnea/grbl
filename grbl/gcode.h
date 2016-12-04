@@ -145,7 +145,7 @@
 #define WORD_Z  12
 
 // Define g-code parser position updating flags
-#define GC_UPDATE_POS_TARGET   0
+#define GC_UPDATE_POS_TARGET   0 // Must be zero
 #define GC_UPDATE_POS_SYSTEM   1
 #define GC_UPDATE_POS_NONE     2
 
@@ -160,6 +160,15 @@
   #define GC_PROBE_CHECK_MODE   GC_UPDATE_POS_TARGET
 #endif
 
+// Define gcode parser flags for handling special cases.
+#define GC_PARSER_NONE                  0 // Must be zero.
+#define GC_PARSER_JOG_MOTION            bit(0)
+#define GC_PARSER_CHECK_MANTISSA        bit(1)
+#define GC_PARSER_ARC_IS_CLOCKWISE      bit(2)
+#define GC_PARSER_PROBE_IS_AWAY         bit(3)
+#define GC_PARSER_PROBE_IS_NO_ERROR     bit(4)
+#define GC_PARSER_LASER_FORCE_SYNC      bit(5)
+#define GC_PARSER_LASER_DISABLE         bit(6)
 
 
 // NOTE: When this struct is zeroed, the above defines set the defaults for the system.

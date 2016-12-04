@@ -255,13 +255,18 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 
 - **Queried Feedback Messages:**
 
-  - `[GC:]` G-code Parser State Message
-    - Initiated by the user via a `$G` command. Grbl replies as follows, where the `[GC:` denotes the message type and is followed by a separate `ok` to confirm the `$G` was executed.
-     ```
-     [GC:G0 G54 G17 G21 G90 G94 M0 M5 M9 T0 F0. S0.]
+	- `[GC:]` G-code Parser State Message 
+	```
+     [GC:G0 G54 G17 G21 G90 G94 M5 M9 T0 F0.0 S0]
      ok
-     ```
-    - The shown g-code are the current modal states of Grbl's g-code parser. This may not correlate to what is executing since there are usually several motions queued in the planner buffer.
+	```
+   		- Initiated by the user via a `$G` command. Grbl replies as follows, where the `[GC:` denotes the message type and is followed by a separate `ok` to confirm the `$G` was executed.
+     	
+     	- The shown g-code are the current modal states of Grbl's g-code parser. This may not correlate to what is executing since there are usually several motions queued in the planner buffer.
+     	
+     	- NOTE: Program modal state has been fixed and will show `M0`, `M2`, or `M30` when they are active. During a run state, nothing will appear for program modal state.
+     	 
+
 
   - `[HLP:]` : Initiated by the user via a `$` print help command. The help message is shown below with a separate `ok` to confirm the `$` was executed.
     ```
@@ -588,5 +593,12 @@ Grbl v1.1's interface protocol has been tweaked in the attempt to make GUI devel
 - `[echo:]` : Indicates an automated line echo from a pre-parsed string prior to g-code parsing. Enabled by config.h option.
 
 - `>G54G20:ok` : The open chevron indicates startup line execution. The `:ok` suffix shows it executed correctly without adding an unmatched `ok` response on a new line.
+
+In addition, all `$x=val` settings, `error:`, and `ALARM:` messages no longer contain human-readable strings, but rather codes that are defined in other documents. The `$` help message is also reduced to just showing the available commands. Doing this saves incredible amounts of flash space. Otherwise, the new overrides features would not have fit.
+
+Other minor changes and bug fixes that may effect GUI parsing include:
+
+- Floating point values printed with zero precision do not show a decimal, or look like an integer. This includes spindle speed RPM and feed rate in mm mode.
+- `$G` reports fixed a long time bug with program modal state. It always showed `M0` program pause when running. Now during a normal program run, no program modal state is given until an `M0`, `M2`, or `M30` is active and then the appropriate state will be shown.
 
 On a final note, this interface tweak came about out of necessity, as more data is being sent back from Grbl and it is capable of doing many more things. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before Grbl v1.1 goes to master, please do immediately so we can all vet the new alteration before its installed.

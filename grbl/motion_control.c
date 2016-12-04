@@ -246,7 +246,7 @@ void mc_homing_cycle(uint8_t cycle_mask)
 
 // Perform tool length probe cycle. Requires probe switch.
 // NOTE: Upon probe failure, the program will be stopped and placed into ALARM state.
-uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_probe_away, uint8_t is_no_error)
+uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t parser_flags)
 {
   // TODO: Need to update this cycle so it obeys a non-auto cycle start.
   if (sys.state == STATE_CHECK_MODE) { return(GC_PROBE_CHECK_MODE); }
@@ -256,6 +256,8 @@ uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t is_prob
   if (sys.abort) { return(GC_PROBE_ABORT); } // Return if system reset has been issued.
 
   // Initialize probing control variables
+  uint8_t is_probe_away = bit_istrue(parser_flags,GC_PARSER_PROBE_IS_AWAY);
+  uint8_t is_no_error = bit_istrue(parser_flags,GC_PARSER_PROBE_IS_NO_ERROR);
   sys.probe_succeeded = false; // Re-initialize probe history before beginning cycle.
   probe_configure_invert_mask(is_probe_away);
 

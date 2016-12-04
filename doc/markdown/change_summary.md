@@ -37,6 +37,11 @@ Grbl v1.1's interface protocol has been tweaked in the attempt to make GUI devel
 
 In addition, all `$x=val` settings, `error:`, and `ALARM:` messages no longer contain human-readable strings, but rather codes that are defined in other documents. The `$` help message is also reduced to just showing the available commands. Doing this saves incredible amounts of flash space. Otherwise, the new overrides features would not have fit.
 
+Other minor changes and bug fixes that may effect GUI parsing include:
+
+- Floating point values printed with zero precision do not show a decimal, or look like an integer. This includes spindle speed RPM and feed rate in mm mode.
+- `$G` reports fixed a long time bug with program modal state. It always showed `M0` program pause when running. Now during a normal program run, no program modal state is given until an `M0`, `M2`, or `M30` is active and then the appropriate state will be shown.
+
 On a final note, these interface tweaks came about out of necessity, because more data is being sent back from Grbl, it is capable of doing many more things, and flash space is at a premium. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before Grbl v1.1 goes to master, please do immediately so we can all vet the new alteration before its installed.
 
 ----

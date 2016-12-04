@@ -22,18 +22,14 @@
 
 
 // Sets up valid jog motion received from g-code parser, checks for soft-limits, and executes the jog.
-uint8_t jog_execute(parser_block_t *gc_block)
+uint8_t jog_execute(plan_line_data_t *pl_data, parser_block_t *gc_block)
 {
-  // Initialize planner data struct for motion blocks.
+  // Initialize planner data struct for jogging motions.
   // NOTE: Spindle and coolant are allowed to fully function with overrides during a jog.
-  plan_line_data_t plan_data;
-  plan_line_data_t *pl_data = &plan_data;
-  memset(pl_data,0,sizeof(plan_line_data_t)); // Zero pl_data struct
   pl_data->feed_rate = gc_block->values.f;
-  pl_data->spindle_speed = gc_block->values.s; // Continue current spindle and coolant condition.
-  plan_data.condition = (PL_COND_FLAG_NO_FEED_OVERRIDE | gc_block->modal.spindle | gc_block->modal.coolant);
+  pl_data->condition |= PL_COND_FLAG_NO_FEED_OVERRIDE;
   #ifdef USE_LINE_NUMBERS
-    pl_data->line_number = JOG_LINE_NUMBER;
+    pl_data->line_number = gc_block.values.n;
   #endif
 
   if (bit_istrue(settings.flags,BITFLAG_SOFT_LIMIT_ENABLE)) {
