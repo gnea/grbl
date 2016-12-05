@@ -363,8 +363,10 @@ ISR(TIMER1_COMPA_vect)
     } else {
       // Segment buffer empty. Shutdown.
       st_go_idle();
-      // Ensure pwm is set properly upon completion of rate-controlled motion.
-      if (st.exec_block->is_pwm_rate_adjusted) { spindle_set_speed(SPINDLE_PWM_OFF_VALUE); }
+      #ifdef VARIABLE_SPINDLE
+        // Ensure pwm is set properly upon completion of rate-controlled motion.
+        if (st.exec_block->is_pwm_rate_adjusted) { spindle_set_speed(SPINDLE_PWM_OFF_VALUE); }
+      #endif
       system_set_exec_state_flag(EXEC_CYCLE_STOP); // Flag main program for cycle end
       return; // Nothing to do but exit.
     }
@@ -655,16 +657,18 @@ void st_prep_buffer()
           prep.current_speed = sqrt(pl_block->entry_speed_sqr);
         }
         
-        // Setup laser mode variables. PWM rate adjusted motions will always complete a motion with the
-        // spindle off. 
-        st_prep_block->is_pwm_rate_adjusted = false;
-        if (settings.flags & BITFLAG_LASER_MODE) {
-          if (pl_block->condition & PL_COND_FLAG_SPINDLE_CCW) { 
-            // Pre-compute inverse programmed rate to speed up PWM updating per step segment.
-            prep.inv_rate = 1.0/pl_block->programmed_rate;
-            st_prep_block->is_pwm_rate_adjusted = true; 
+        #ifdef VARIABLE_SPINDLE
+          // Setup laser mode variables. PWM rate adjusted motions will always complete a motion with the
+          // spindle off. 
+          st_prep_block->is_pwm_rate_adjusted = false;
+          if (settings.flags & BITFLAG_LASER_MODE) {
+            if (pl_block->condition & PL_COND_FLAG_SPINDLE_CCW) { 
+              // Pre-compute inverse programmed rate to speed up PWM updating per step segment.
+              prep.inv_rate = 1.0/pl_block->programmed_rate;
+              st_prep_block->is_pwm_rate_adjusted = true; 
+            }
           }
-        }
+        #endif
       }
 
 			/* ---------------------------------------------------------------------------------

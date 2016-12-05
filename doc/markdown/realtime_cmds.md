@@ -85,7 +85,7 @@ Grbl v1.1 installed more than a dozen new realtime commands to control feed, rap
 
   - Immediately alters the feed override value. An active feed motion is altered within tens of milliseconds.
   - Does not alter rapid rates, which include G0, G28, and G30, or jog motions.
-  - Feed override value can not be 1% or greater than 200%
+  - Feed override value can not be 10% or greater than 200%.
   - If feed override value does not change, the command is ignored.
   - Feed override range and increments may be changed in config.h.
   - The commands are:
@@ -112,7 +112,7 @@ Grbl v1.1 installed more than a dozen new realtime commands to control feed, rap
 
   - Immediately alters the spindle speed override value. An active spindle speed is altered within tens of milliseconds.
   - Override values may be changed at any time, regardless of if the spindle is enabled or disabled.
-  - Spindle override value can not be 50% or greater than 200%
+  - Spindle override value can not be 10% or greater than 200%
   - If spindle override value does not change, the command is ignored.
   - Spindle override range and increments may be altered in config.h.
   - The commands are:

@@ -631,10 +631,9 @@ uint8_t gc_execute_line(char *line)
 
   // [20. Motion modes ]:
   if (gc_block.modal.motion == MOTION_MODE_NONE) {
-    // [G80 Errors]: Axis word exist and are not used by a non-modal command.
-    if ((axis_words) && (axis_command != AXIS_COMMAND_NON_MODAL)) {
-      FAIL(STATUS_GCODE_AXIS_WORDS_EXIST); // [No axis words allowed]
-    }
+    // [G80 Errors]: Axis word are programmed while G80 is active.
+    // NOTE: Even non-modal commands or TLO that use axis words will throw this strict error.
+    if (axis_words) { FAIL(STATUS_GCODE_AXIS_WORDS_EXIST); } // [No axis words allowed]
 
   // Check remaining motion modes, if axis word are implicit (exist and not used by G10/28/30/92), or
   // was explicitly commanded in the g-code block.
@@ -859,32 +858,28 @@ uint8_t gc_execute_line(char *line)
         || (gc_block.modal.motion == MOTION_MODE_CCW_ARC)) ) {
       gc_parser_flags |= GC_PARSER_LASER_DISABLE;
     }
-    // M3 constant power laser requires planner syncs to update the laser in certain conditions. 
-    // certain conditions.
-    if (gc_state.modal.spindle == SPINDLE_ENABLE_CW) {
-      if ((gc_state.modal.motion == MOTION_MODE_LINEAR) || (gc_state.modal.motion == MOTION_MODE_CW_ARC) 
-          || (gc_state.modal.motion == MOTION_MODE_CCW_ARC)) {
-        if (gc_parser_flags & GC_PARSER_LASER_DISABLE) {
-          gc_parser_flags |= GC_PARSER_LASER_FORCE_SYNC; // Change from G1/2/3 motion mode.
-        } else {
-          // Any non-motion block with M3 enabled and G1/2/3 modal state requires a sync when
-          // the spindle speed changes. It is otherwise passed onto the planner.
-          if (gc_state.spindle_speed != gc_block.values.s) {
-            // NOTE: A G1/2/3 motion will always have axis words and be in AXIS_COMMAND_MOTION_MODE.
-            // A non-motion G1 or any non-modal command using axis words will alter axis_command.
-            if (!(axis_words) || (axis_command != AXIS_COMMAND_MOTION_MODE )) { 
-              gc_parser_flags |= GC_PARSER_LASER_FORCE_SYNC;
-            }
+
+    // Any motion mode with axis words is allowed to be passed from a spindle speed update. 
+    // NOTE: G1 and G0 without axis words sets axis_command to none. G28/30 are intentionally omitted.
+    // TODO: Check sync conditions for M3 enabled motions that don't enter the planner. (zero length).
+    if (axis_words && (axis_command == AXIS_COMMAND_MOTION_MODE)) { 
+      gc_parser_flags |= GC_PARSER_LASER_ISMOTION; 
+    } else {
+      // M3 constant power laser requires planner syncs to update the laser when changing between
+      // a G1/2/3 motion mode state and vice versa when there is no motion in the line.
+      if (gc_state.modal.spindle == SPINDLE_ENABLE_CW) {
+        if ((gc_state.modal.motion == MOTION_MODE_LINEAR) || (gc_state.modal.motion == MOTION_MODE_CW_ARC) 
+            || (gc_state.modal.motion == MOTION_MODE_CCW_ARC)) {
+          if (bit_istrue(gc_parser_flags,GC_PARSER_LASER_DISABLE)) { 
+            gc_parser_flags |= GC_PARSER_LASER_FORCE_SYNC; // Change from G1/2/3 motion mode.
           }
-        }
-      } else {
-        // When changing to a G1 motion mode without axis words from a non-G1/2/3 motion mode.
-        if (bit_isfalse(gc_parser_flags,GC_PARSER_LASER_DISABLE)) {
-          if (!(axis_words) || (axis_command != AXIS_COMMAND_MOTION_MODE )) { 
+        } else {
+          // When changing to a G1 motion mode without axis words from a non-G1/2/3 motion mode.
+          if (bit_isfalse(gc_parser_flags,GC_PARSER_LASER_DISABLE)) { 
             gc_parser_flags |= GC_PARSER_LASER_FORCE_SYNC;
           }
-        }
-      } 
+        } 
+      }
     }
   }
 
@@ -909,9 +904,11 @@ uint8_t gc_execute_line(char *line)
   if ((gc_state.spindle_speed != gc_block.values.s) || bit_istrue(gc_parser_flags,GC_PARSER_LASER_FORCE_SYNC)) {
     if (gc_state.modal.spindle != SPINDLE_DISABLE) { 
       #ifdef VARIABLE_SPINDLE
-        if (bit_istrue(gc_parser_flags,GC_PARSER_LASER_DISABLE)) {
-           spindle_sync(gc_state.modal.spindle, 0.0);
-        } else { spindle_sync(gc_state.modal.spindle, gc_block.values.s); }
+        if (bit_isfalse(gc_parser_flags,GC_PARSER_LASER_ISMOTION)) {
+          if (bit_istrue(gc_parser_flags,GC_PARSER_LASER_DISABLE)) {
+             spindle_sync(gc_state.modal.spindle, 0.0);
+          } else { spindle_sync(gc_state.modal.spindle, gc_block.values.s); }
+        }
       #else
         spindle_sync(gc_state.modal.spindle, 0.0);
       #endif

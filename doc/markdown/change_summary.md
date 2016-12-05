@@ -90,9 +90,8 @@ On a final note, these interface tweaks came about out of necessity, because mor
   - Overrides are included in every 10 or 20 status reports (configurable) depending on what Grbl is doing or, if an override value or toggle state changes, automatically in the next report.
   - There are two override fields:
     - `Ov:100,100,100` Organized as feed, rapid, and spindle speed overrides in percent.
-    - `T:SFM` with each letter `S`, `F`, and `M` are defined as spindle stop active, flood coolant toggled, and mist coolant toggled, respectively.
-
-
+    
+- Accessory states are shown alongside override reports when they are active. Like pin states, an accessory state report `A:SFM` contains a letter indicating an active accessory. Letters `S`, `C`, `F`, and `M` are defined as spindle CW, spindle CCW, flood coolant, and mist coolant, respectively. The pins are directly polled and shown here.
 
 - Line numbers, when enabled in config.h, are omitted when:
 
