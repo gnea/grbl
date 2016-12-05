@@ -194,7 +194,7 @@ uint8_t read_global_settings() {
 
 // A helper method to set settings from command line
 uint8_t settings_store_global_setting(uint8_t parameter, float value) {
-  if (value < 0.0) { return(STATUS_NEGATIVE_VALUE); }
+  if (value < 0.0f) { return(STATUS_NEGATIVE_VALUE); }
   if (parameter >= AXIS_SETTINGS_START_VAL) {
     // Store axis configuration. Axis numbering sequence set by AXIS_SETTING defines.
     // NOTE: Ensure the setting index corresponds to the report.c settings printout.
@@ -206,13 +206,13 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
         switch (set_idx) {
           case 0:
             #ifdef MAX_STEP_RATE_HZ
-              if (value*settings.max_rate[parameter] > (MAX_STEP_RATE_HZ*60.0)) { return(STATUS_MAX_STEP_RATE_EXCEEDED); }
+            if (value*settings.max_rate[parameter] >(MAX_STEP_RATE_HZ*60.0f)) { return(STATUS_MAX_STEP_RATE_EXCEEDED); }
             #endif
             settings.steps_per_mm[parameter] = value;
             break;
           case 1:
             #ifdef MAX_STEP_RATE_HZ
-              if (value*settings.steps_per_mm[parameter] > (MAX_STEP_RATE_HZ*60.0)) {  return(STATUS_MAX_STEP_RATE_EXCEEDED); }
+            if (value*settings.steps_per_mm[parameter] > (MAX_STEP_RATE_HZ*60.0f)) { return(STATUS_MAX_STEP_RATE_EXCEEDED); }
             #endif
             settings.max_rate[parameter] = value;
             break;
@@ -315,29 +315,3 @@ void settings_init() {
   }
 }
 
-
-// Returns step pin mask according to Grbl internal axis indexing.
-uint8_t get_step_pin_mask(uint8_t axis_idx)
-{
-  if ( axis_idx == X_AXIS ) { return((1<<X_STEP_BIT)); }
-  if ( axis_idx == Y_AXIS ) { return((1<<Y_STEP_BIT)); }
-  return((1<<Z_STEP_BIT));
-}
-
-
-// Returns direction pin mask according to Grbl internal axis indexing.
-uint8_t get_direction_pin_mask(uint8_t axis_idx)
-{
-  if ( axis_idx == X_AXIS ) { return((1<<X_DIRECTION_BIT)); }
-  if ( axis_idx == Y_AXIS ) { return((1<<Y_DIRECTION_BIT)); }
-  return((1<<Z_DIRECTION_BIT));
-}
-
-
-// Returns limit pin mask according to Grbl internal axis indexing.
-uint8_t get_limit_pin_mask(uint8_t axis_idx)
-{
-  if ( axis_idx == X_AXIS ) { return((1<<X_LIMIT_BIT)); }
-  if ( axis_idx == Y_AXIS ) { return((1<<Y_LIMIT_BIT)); }
-  return((1<<Z_LIMIT_BIT));
-}

@@ -24,14 +24,15 @@
 
 // Homing axis search distance multiplier. Computed by this value times the cycle travel.
 #ifndef HOMING_AXIS_SEARCH_SCALAR
-  #define HOMING_AXIS_SEARCH_SCALAR  1.5 // Must be > 1 to ensure limit switch will be engaged.
+  #define HOMING_AXIS_SEARCH_SCALAR  1.5f // Must be > 1 to ensure limit switch will be engaged.
 #endif
 #ifndef HOMING_AXIS_LOCATE_SCALAR
-  #define HOMING_AXIS_LOCATE_SCALAR  5.0 // Must be > 1 to ensure limit switch is cleared.
+  #define HOMING_AXIS_LOCATE_SCALAR  5.0f // Must be > 1 to ensure limit switch is cleared.
 #endif
 
 void limits_init()
 {
+#ifdef AVRTARGET
   LIMIT_DDR &= ~(LIMIT_MASK); // Set as input pins
 
   #ifdef DISABLE_LIMIT_PIN_PULL_UP
@@ -52,14 +53,53 @@ void limits_init()
     WDTCSR |= (1<<WDCE) | (1<<WDE);
     WDTCSR = (1<<WDP0); // Set time-out at ~32msec.
   #endif
+#endif
+#ifdef STM32F103C8
+	GPIO_InitTypeDef GPIO_InitStructure;
+	RCC_APB2PeriphClockCmd(RCC_LIMIT_PORT | RCC_APB2Periph_AFIO, ENABLE);
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_InitStructure.GPIO_Pin = LIMIT_MASK;
+	GPIO_Init(LIMIT_PORT, &GPIO_InitStructure);
+
+	if (bit_istrue(settings.flags, BITFLAG_HARD_LIMIT_ENABLE))
+	{
+		GPIO_EXTILineConfig(GPIO_LIMIT_PORT, X_LIMIT_BIT);
+		GPIO_EXTILineConfig(GPIO_LIMIT_PORT, Y_LIMIT_BIT);
+		GPIO_EXTILineConfig(GPIO_LIMIT_PORT, Z_LIMIT_BIT);
+
+		EXTI_InitTypeDef EXTI_InitStructure;
+		EXTI_InitStructure.EXTI_Line = LIMIT_MASK;    //
+		EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; //Interrupt mode, optional values for the interrupt EXTI_Mode_Interrupt and event EXTI_Mode_Event.
+		EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; //Trigger mode, can be a falling edge trigger EXTI_Trigger_Falling, the rising edge triggered EXTI_Trigger_Rising, or any level (rising edge and falling edge trigger EXTI_Trigger_Rising_Falling)
+		EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+		EXTI_Init(&EXTI_InitStructure);
+
+		NVIC_InitTypeDef NVIC_InitStructure;
+		NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn; //Enable keypad external interrupt channel
+		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02; //Priority 2,
+		NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02; //Sub priority 2
+		NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //Enable external interrupt channel
+		NVIC_Init(&NVIC_InitStructure);
+	}
+	else
+	{
+		limits_disable();
+	}
+#endif
 }
 
 
 // Disables hard limits.
 void limits_disable()
 {
+#ifdef AVRTARGET
   LIMIT_PCMSK &= ~LIMIT_MASK;  // Disable specific pins of the Pin Change Interrupt
   PCICR &= ~(1 << LIMIT_INT);  // Disable Pin Change Interrupt
+#endif
+#ifdef STM32F103C8
+  NVIC_DisableIRQ(EXTI15_10_IRQn);
+#endif
 }
 
 
@@ -69,7 +109,13 @@ void limits_disable()
 uint8_t limits_get_state()
 {
   uint8_t limit_state = 0;
+#if defined(AVRTARGET) || defined(STM32F103C8)
+#if defined(AVRTARGET)
   uint8_t pin = (LIMIT_PIN & LIMIT_MASK);
+#endif
+#if defined(STM32F103C8)
+  uint16_t pin = GPIO_ReadInputData(LIMIT_PIN);
+#endif
   #ifdef INVERT_LIMIT_PIN_MASK
     pin ^= INVERT_LIMIT_PIN_MASK;
   #endif
@@ -77,9 +123,10 @@ uint8_t limits_get_state()
   if (pin) {
     uint8_t idx;
     for (idx=0; idx<N_AXIS; idx++) {
-      if (pin & get_limit_pin_mask(idx)) { limit_state |= (1 << idx); }
+      if (pin & limit_pin_mask[idx]) { limit_state |= (1 << idx); }
     }
   }
+#endif
   return(limit_state);
 }
 
@@ -95,13 +142,34 @@ uint8_t limits_get_state()
 // homing cycles and will not respond correctly. Upon user request or need, there may be a
 // special pinout for an e-stop, but it is generally recommended to just directly connect
 // your e-stop switch to the Arduino reset pin, since it is the most correct way to do this.
+#if defined(AVRTARGET) || defined (STM32F103C8)
+#if defined(AVRTARGET) 
 ISR(LIMIT_INT_vect) // DEFAULT: Limit pin change interrupt process.
+#else
+void EXTI15_10_IRQHandler(void)
+#endif
 {
   // Ignore limit switches if already in an alarm state or in-process of executing an alarm.
   // When in the alarm state, Grbl should have been reset or will force a reset, so any pending
   // moves in the planner and serial buffers are all cleared and newly sent blocks will be
   // locked out until a homing cycle or a kill lock command. Allows the user to disable the hard
   // limit setting if their limits are constantly triggering after a reset and move their axes.
+#if defined (STM32F103C8)
+	if (EXTI_GetITStatus(1 << X_LIMIT_BIT) != RESET)
+	{
+		EXTI_ClearITPendingBit(1 << X_LIMIT_BIT);
+	}
+	if (EXTI_GetITStatus(1 << Y_LIMIT_BIT) != RESET)
+	{
+		EXTI_ClearITPendingBit(1 << Y_LIMIT_BIT);
+	}
+	if (EXTI_GetITStatus(1 << Z_LIMIT_BIT) != RESET)
+	{
+		EXTI_ClearITPendingBit(1 << Z_LIMIT_BIT);
+	}
+	NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+#endif
+
   if (sys.state != STATE_ALARM) {
     if (!(sys_rt_exec_alarm)) {
       #ifdef HARD_LIMIT_FORCE_STATE_CHECK
@@ -117,6 +185,7 @@ ISR(LIMIT_INT_vect) // DEFAULT: Limit pin change interrupt process.
     }
   }
 }
+#endif
 
 
 // Homes the specified cycle axes, sets the machine position, and performs a pull-off motion after
@@ -143,13 +212,13 @@ void limits_go_home(uint8_t cycle_mask)
   uint8_t n_cycle = (2*N_HOMING_LOCATE_CYCLE+1);
   uint8_t step_pin[N_AXIS];
   float target[N_AXIS];
-  float max_travel = 0.0;
+  float max_travel = 0.0f;
   uint8_t idx;
   for (idx=0; idx<N_AXIS; idx++) {
     // Initialize step pin masks
-    step_pin[idx] = get_step_pin_mask(idx);
+    step_pin[idx] = step_pin_mask[idx];
     #ifdef COREXY
-      if ((idx==A_MOTOR)||(idx==B_MOTOR)) { step_pin[idx] = (get_step_pin_mask(X_AXIS)|get_step_pin_mask(Y_AXIS)); }
+      if ((idx==A_MOTOR)||(idx==B_MOTOR)) { step_pin[idx] = (step_pin_mask[X_AXIS]| step_pin_mask[Y_AXIS]); }
     #endif
 
     if (bit_istrue(cycle_mask,bit(idx))) {
@@ -203,7 +272,7 @@ void limits_go_home(uint8_t cycle_mask)
       }
 
     }
-    homing_rate *= sqrt(n_active_axis); // [sqrt(N_AXIS)] Adjust so individual axes all move at homing rate.
+    homing_rate *= sqrtf(n_active_axis); // [sqrt(N_AXIS)] Adjust so individual axes all move at homing rate.
     sys.homing_axis_lock = axislock;
 
     // Perform homing cycle. Planner buffer should be empty, as required to initiate the homing cycle.

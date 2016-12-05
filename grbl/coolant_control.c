@@ -23,10 +23,26 @@
 
 void coolant_init()
 {
+#ifdef AVRTARGET
   COOLANT_FLOOD_DDR |= (1 << COOLANT_FLOOD_BIT); // Configure as output pin
   #ifdef ENABLE_M7
     COOLANT_MIST_DDR |= (1 << COOLANT_MIST_BIT);
   #endif
+#endif
+#ifdef STM32F103C8
+	GPIO_InitTypeDef GPIO_InitStructure;
+	RCC_APB2PeriphClockCmd(RCC_COOLANT_FLOOD_PORT, ENABLE);
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Pin = 1 << COOLANT_FLOOD_BIT;
+	GPIO_Init(COOLANT_FLOOD_PORT, &GPIO_InitStructure);
+
+	RCC_APB2PeriphClockCmd(RCC_COOLANT_MIST_PORT, ENABLE);
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Pin = 1 << COOLANT_MIST_BIT;
+	GPIO_Init(COOLANT_MIST_PORT, &GPIO_InitStructure);
+#endif
   coolant_stop();
 }
 
@@ -35,22 +51,48 @@ void coolant_init()
 uint8_t coolant_get_state()
 {
   uint8_t cl_state = COOLANT_STATE_DISABLE;
+#if defined(AVRTARGET) || defined(STM32F103C8)
   #ifdef INVERT_COOLANT_FLOOD_PIN
-    if (bit_isfalse(COOLANT_FLOOD_PORT,(1 << COOLANT_FLOOD_BIT))) {
+    if (bit_isfalse(
+#ifdef AVRTARGET
+		COOLANT_FLOOD_PORT
+#else
+		GPIO_ReadOutputData(COOLANT_FLOOD_PORT)
+#endif
+		,(1 << COOLANT_FLOOD_BIT))) {
   #else
-    if (bit_istrue(COOLANT_FLOOD_PORT,(1 << COOLANT_FLOOD_BIT))) {
+    if (bit_istrue(
+#ifdef AVRTARGET
+		COOLANT_FLOOD_PORT
+#else
+		GPIO_ReadOutputData(COOLANT_FLOOD_PORT)
+#endif
+		,(1 << COOLANT_FLOOD_BIT))) {
   #endif
     cl_state |= COOLANT_STATE_FLOOD;
   }
   #ifdef ENABLE_M7
     #ifdef INVERT_COOLANT_MIST_PIN
-      if (bit_isfalse(COOLANT_MIST_PORT,(1 << COOLANT_MIST_BIT))) {
+      if (bit_isfalse(
+#ifdef AVRTARGET
+		  COOLANT_MIST_PORT
+#else
+		  GPIO_ReadOutputData(COOLANT_MIST_PORT)
+#endif
+		  ,(1 << COOLANT_MIST_BIT))) {
     #else
-      if (bit_istrue(COOLANT_MIST_PORT,(1 << COOLANT_MIST_BIT))) {
+      if (bit_istrue(
+#ifdef AVRTARGET
+		  COOLANT_MIST_PORT
+#else
+		  GPIO_ReadOutputData(COOLANT_MIST_PORT)
+#endif
+		  ,(1 << COOLANT_MIST_BIT))) {
     #endif
       cl_state |= COOLANT_STATE_MIST;
     }
   #endif
+#endif
   return(cl_state);
 }
 
@@ -59,18 +101,36 @@ uint8_t coolant_get_state()
 // an interrupt-level. No report flag set, but only called by routines that don't need it.
 void coolant_stop()
 {
+#if defined(AVRTARGET) || defined(STM32F103C8)
   #ifdef INVERT_COOLANT_FLOOD_PIN
+#ifdef AVRTARGET
     COOLANT_FLOOD_PORT |= (1 << COOLANT_FLOOD_BIT);
+#else
+	GPIO_SetBits(COOLANT_FLOOD_PORT,1 << COOLANT_FLOOD_BIT);
+#endif
   #else
-    COOLANT_FLOOD_PORT &= ~(1 << COOLANT_FLOOD_BIT);
+#ifdef AVRTARGET
+	COOLANT_FLOOD_PORT &= ~(1 << COOLANT_FLOOD_BIT);
+#else
+	GPIO_ResetBits(COOLANT_FLOOD_PORT,1 << COOLANT_FLOOD_BIT);
+#endif
   #endif
   #ifdef ENABLE_M7
     #ifdef INVERT_COOLANT_MIST_PIN
+#ifdef AVRTARGET
       COOLANT_MIST_PORT |= (1 << COOLANT_MIST_BIT);
+#else
+	GPIO_SetBits(COOLANT_MIST_PORT, 1 << COOLANT_MIST_BIT);
+#endif
     #else
-      COOLANT_MIST_PORT &= ~(1 << COOLANT_MIST_BIT);
+#ifdef AVRTARGET
+	COOLANT_MIST_PORT &= ~(1 << COOLANT_MIST_BIT);
+#else
+	GPIO_ResetBits(COOLANT_MIST_PORT, 1 << COOLANT_MIST_BIT);
+#endif
     #endif
   #endif
+#endif
 }
 
 
@@ -88,24 +148,41 @@ void coolant_set_state(uint8_t mode)
   
   } else {
   
-    if (mode & COOLANT_FLOOD_ENABLE) {
+#if defined(AVRTARGET) || defined(STM32F103C8)
+	  if (mode & COOLANT_FLOOD_ENABLE) {
       #ifdef INVERT_COOLANT_FLOOD_PIN
+#ifdef AVRTARGET
         COOLANT_FLOOD_PORT &= ~(1 << COOLANT_FLOOD_BIT);
+#else
+		GPIO_ResetBits(COOLANT_FLOOD_PORT,1 << COOLANT_FLOOD_BIT);
+#endif
       #else
-        COOLANT_FLOOD_PORT |= (1 << COOLANT_FLOOD_BIT);
+#ifdef AVRTARGET
+		COOLANT_FLOOD_PORT |= (1 << COOLANT_FLOOD_BIT);
+#else
+		GPIO_SetBits(COOLANT_FLOOD_PORT,1 << COOLANT_FLOOD_BIT);
+#endif
       #endif
     }
   
     #ifdef ENABLE_M7
       if (mode & COOLANT_MIST_ENABLE) {
         #ifdef INVERT_COOLANT_MIST_PIN
-          COOLANT_MIST_PORT &= ~(1 << COOLANT_MIST_BIT);
+#ifdef AVRTARGET
+		  COOLANT_MIST_PORT &= ~(1 << COOLANT_MIST_BIT);
+#else
+	GPIO_ResetBits(COOLANT_MIST_PORT, 1 << COOLANT_MIST_BIT);
+#endif
         #else
-          COOLANT_MIST_PORT |= (1 << COOLANT_MIST_BIT);
+#ifdef AVRTARGET
+		  COOLANT_MIST_PORT |= (1 << COOLANT_MIST_BIT);
+#else
+		  GPIO_SetBits(COOLANT_MIST_PORT, 1 << COOLANT_MIST_BIT);
+#endif
         #endif
       }
     #endif
-  
+#endif  
   }
   sys.report_ovr_counter = 0; // Set to report change immediately
 }

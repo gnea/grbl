@@ -22,7 +22,7 @@
 #ifndef serial_h
 #define serial_h
 
-
+#if !defined(STM32F103C8)
 #ifndef RX_BUFFER_SIZE
   #define RX_BUFFER_SIZE 128
 #endif
@@ -33,9 +33,16 @@
     #define TX_BUFFER_SIZE 104
   #endif
 #endif
+#else
+#define RX_BUFFER_SIZE 254
+#define TX_BUFFER_SIZE 128
+#endif
 
 #define SERIAL_NO_DATA 0xff
 
+#ifdef WIN32
+void winserial_init(char *pPort);
+#endif
 
 void serial_init();
 

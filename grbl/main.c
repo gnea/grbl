@@ -20,23 +20,105 @@
 */
 
 #include "grbl.h"
-
-
 // Declare system global variable structure
 system_t sys;
 
-
-int main(void)
+#if defined (STM32F103C8)
+#include "usb_lib.h"
+#ifdef USEUSB
+#include "usb_desc.h"
+#endif
+#include "hw_config.h"
+#ifdef USEUSB
+#include "usb_pwr.h"
+#endif
+#include "stm32eeprom.h"
+#ifndef USEUSB
+#include "stm32f10x_usart.h"
+void USART1_Configuration(u32 BaudRate)
 {
+	GPIO_InitTypeDef GPIO_InitStructure;
+	USART_InitTypeDef USART_InitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;   //通道设置为串口1中断
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;   //中断占先等级10
+																//	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;          //中断响应优先级0
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;             //打开中断
+	NVIC_Init(&NVIC_InitStructure);                             //初始化
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
+	/* 配置 USART1 Tx (PA9)*/
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;	 		//复用开漏输出模式
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		//输出最大频率为50MHz
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	/* 配置 USART1 Rx (PA10)*/
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;	//浮空输入模式
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+	USART_InitStructure.USART_BaudRate = BaudRate;	  //波特率
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b; //8位数据
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;	 //停止位1位
+	USART_InitStructure.USART_Parity = USART_Parity_No;	 //无
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART1->CR1 |= (USART_CR1_RE | USART_CR1_TE);
+	USART_Init(USART1, &USART_InitStructure);
+	//	USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+	USART_Cmd(USART1, ENABLE);
+}
+#endif
+
+#endif
+
+
+#ifdef WIN32
+int main(int argc, char *argv[])
+#else
+int main(void)
+#endif
+{
+#if defined (STM32F103C8)
+#ifdef LEDBLINK
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+#endif
+	//Set_System();
+#ifndef USEUSB
+	USART1_Configuration(115200);
+#else
+	Set_USBClock();
+	USB_Interrupts_Config();
+	USB_Init();
+#endif
+
+#ifndef NOEEPROMSUPPORT
+	FLASH_Unlock();
+	eeprom_init();
+#endif
+	SysTick->CTRL &= 0xfffffffb;
+#endif
   // Initialize system upon power-up.
   serial_init();   // Setup serial baud rate and interrupts
+#ifdef WIN32
+  winserial_init(argv[1]);
+  eeprom_init();
+#endif
   settings_init(); // Load Grbl settings from EEPROM
   stepper_init();  // Configure stepper pins and interrupt timers
   system_init();   // Configure pinout pins and pin-change interrupt
 
   memset(sys_position,0,sizeof(sys_position)); // Clear machine position.
+#ifdef AVRTARGET
   sei(); // Enable interrupts
-
+#endif
   // Initialize system state.
   #ifdef FORCE_INITIALIZATION_ALARM
     // Force Grbl into an ALARM state upon a power-cycle or hard reset.
@@ -97,3 +179,24 @@ int main(void)
   }
   return 0;   /* Never reached */
 }
+#if defined (STM32F103C8)
+void _delay_ms(uint32_t x)
+{
+	u32 temp;
+	SysTick->LOAD = (u32)72000000 / 8000;                     // Loading time
+	SysTick->VAL = 0x00;                                            // Empty the counter
+	SysTick->CTRL = 0x01;                                           // Start from bottom
+	do
+	{
+		temp = SysTick->CTRL;
+	} while (temp & 0x01 && !(temp&(1 << 16)));                             // Wait time arrive
+	SysTick->CTRL = 0x00;                                            // Close the counter
+	SysTick->VAL = 0X00;                                            // Empty the counter
+}
+void LedBlink(void)
+{
+	static BitAction nOnFlag = Bit_SET;
+	GPIO_WriteBit(GPIOC, GPIO_Pin_13, nOnFlag);
+	nOnFlag = (nOnFlag == Bit_SET) ? Bit_RESET : Bit_SET;
+}
+#endif

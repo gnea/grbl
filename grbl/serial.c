@@ -20,9 +20,35 @@
 */
 
 #include "grbl.h"
+#ifdef WIN32
+#include <stdio.h>
+#include <process.h> 
+#include <conio.h>
+CRITICAL_SECTION CriticalSection; 
+//#define LOCAL_ECHO
 
+HANDLE hSerial = INVALID_HANDLE_VALUE;
+void RecvthreadFunction( void *);
+void SendthreadFunction( void *);
+
+#endif
+#ifdef STM32F103C8
+#include "stm32f10x.h"
+#include "core_cm3.h"
+#ifndef USEUSB
+#include "stm32f10x_usart.h"
+#else
+#include "usb_regs.h"
+#endif
+#endif
+
+#if !defined(STM32F103C8)
 #define RX_RING_BUFFER (RX_BUFFER_SIZE+1)
 #define TX_RING_BUFFER (TX_BUFFER_SIZE+1)
+#else
+#define RX_RING_BUFFER (RX_BUFFER_SIZE)
+#define TX_RING_BUFFER (TX_BUFFER_SIZE)
+#endif
 
 uint8_t serial_rx_buffer[RX_RING_BUFFER];
 uint8_t serial_rx_buffer_head = 0;
@@ -64,7 +90,8 @@ uint8_t serial_get_tx_buffer_count()
 
 void serial_init()
 {
-  // Set baud rate
+#ifdef AVRTARGET 
+    // Set baud rate
   #if BAUD_RATE < 57600
     uint16_t UBRR0_value = ((F_CPU / (8L * BAUD_RATE)) - 1)/2 ;
     UCSR0A &= ~(1 << U2X0); // baud doubler off  - Only needed on Uno XXX
@@ -79,30 +106,103 @@ void serial_init()
   UCSR0B |= (1<<RXEN0 | 1<<TXEN0 | 1<<RXCIE0);
 
   // defaults to 8-bit, no parity, 1 stop bit
+#endif
+#ifdef WIN32
+  InitializeCriticalSectionAndSpinCount(&CriticalSection,0x00000400);
+#endif
 }
+#ifdef WIN32
+#define MAX_DEVPATH_LENGTH 1024
+void winserial_init(char *pPort)
+{
+    DCB dcb;
+    BOOL fSuccess;
+    TCHAR devicePath[MAX_DEVPATH_LENGTH];
+    COMMTIMEOUTS commTimeout;
+
+    if (pPort != NULL)
+    {
+        mbstowcs_s(NULL, devicePath, MAX_DEVPATH_LENGTH, pPort, strlen(pPort));
+        hSerial = CreateFile(devicePath, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                    OPEN_EXISTING, 0, NULL);
+    }
+    if (hSerial != INVALID_HANDLE_VALUE)
+    {
+        //  Initialize the DCB structure.
+        SecureZeroMemory(&dcb, sizeof(DCB));
+        dcb.DCBlength = sizeof(DCB);
+        fSuccess = GetCommState(hSerial, &dcb);
+        if (!fSuccess) 
+        {
+            CloseHandle(hSerial);
+            hSerial = INVALID_HANDLE_VALUE;
+            return;
+        }
+
+        GetCommState(hSerial, &dcb);
+        dcb.BaudRate = CBR_115200;     //  baud rate
+        dcb.ByteSize = 8;             //  data size, xmit and rcv
+        dcb.Parity   = NOPARITY;      //  parity bit
+        dcb.StopBits = ONESTOPBIT;    //  stop bit
+        dcb.fBinary = TRUE;
+        dcb.fParity = TRUE;
+
+        fSuccess = SetCommState(hSerial, &dcb);
+        if (!fSuccess) 
+        {
+            CloseHandle(hSerial);
+            hSerial = INVALID_HANDLE_VALUE;
+            return;
+        }
+
+        GetCommTimeouts(hSerial, &commTimeout);
+        commTimeout.ReadIntervalTimeout     = 1;
+        commTimeout.ReadTotalTimeoutConstant     = 1;
+        commTimeout.ReadTotalTimeoutMultiplier     = 1;
+        commTimeout.WriteTotalTimeoutConstant     = 1;
+        commTimeout.WriteTotalTimeoutMultiplier = 1;
+        SetCommTimeouts(hSerial, &commTimeout);
+    }
+    _beginthread( RecvthreadFunction, 0, NULL );
+    _beginthread( SendthreadFunction, 0, NULL );
+}
+#endif
 
 
 // Writes one byte to the TX serial buffer. Called by main program.
 void serial_write(uint8_t data) {
   // Calculate next head
   uint8_t next_head = serial_tx_buffer_head + 1;
+  #ifdef STM32F103C8
+#ifndef USEUSB
+	USART_SendData(USART1, data);
+	while (!(USART1->SR & USART_FLAG_TXE));		 //等待发送完成
+    return;
+#endif
+#endif
   if (next_head == TX_RING_BUFFER) { next_head = 0; }
 
   // Wait until there is space in the buffer
   while (next_head == serial_tx_buffer_tail) {
     // TODO: Restructure st_prep_buffer() calls to be executed here during a long print.
     if (sys_rt_exec_state & EXEC_RESET) { return; } // Only check for abort to avoid an endless loop.
+#ifdef WIN32
+     Sleep(1);
+#endif
   }
 
   // Store data and advance head
   serial_tx_buffer[serial_tx_buffer_head] = data;
+
   serial_tx_buffer_head = next_head;
 
+#ifdef AVRTARGET
   // Enable Data Register Empty Interrupt to make sure tx-streaming is running
   UCSR0B |=  (1 << UDRIE0);
+#endif
 }
 
-
+#ifdef AVRTARGET
 // Data Register Empty Interrupt handler
 ISR(SERIAL_UDRE)
 {
@@ -120,7 +220,60 @@ ISR(SERIAL_UDRE)
   // Turn off Data Register Empty Interrupt to stop tx-streaming if this concludes the transfer
   if (tail == serial_tx_buffer_head) { UCSR0B &= ~(1 << UDRIE0); }
 }
+#endif
+#ifdef WIN32
+void SendthreadFunction( void *pVoid)
+{
+    unsigned char szBuf[RX_RING_BUFFER + 1];
 
+	DWORD dwBytesWritten;
+	uint8_t nNextTai;
+    for (;;)
+    {
+		while (serial_tx_buffer_head == serial_tx_buffer_tail)
+			Sleep(1);
+	    uint16_t USB_Tx_length;
+
+        if (serial_tx_buffer_head > serial_tx_buffer_tail)
+		    USB_Tx_length = serial_tx_buffer_head - serial_tx_buffer_tail;
+        else
+        {
+		    USB_Tx_length = RX_RING_BUFFER - serial_tx_buffer_tail;
+            if (USB_Tx_length == 0)
+            {
+                USB_Tx_length = serial_tx_buffer_head;
+            }
+        }
+		nNextTai = serial_tx_buffer_tail;
+
+        if (USB_Tx_length != 0)
+        {
+			if (hSerial != INVALID_HANDLE_VALUE)
+			{
+				WriteFile(hSerial, serial_tx_buffer + serial_tx_buffer_tail, USB_Tx_length, &dwBytesWritten, NULL);
+				nNextTai += (uint8_t)dwBytesWritten;
+#ifdef LOCAL_ECHO
+				memcpy(szBuf, &serial_tx_buffer[serial_tx_buffer_tail], dwBytesWritten);
+				szBuf[dwBytesWritten] = 0;
+				printf(szBuf);
+#endif
+			}
+			else
+			{
+			//	fwrite(szBuf, 1, USB_Tx_length, stdout);
+				memcpy(szBuf, &serial_tx_buffer[serial_tx_buffer_tail], USB_Tx_length);
+				szBuf[USB_Tx_length] = 0;
+				printf(szBuf);
+				nNextTai += USB_Tx_length;
+			}
+			if (nNextTai == RX_RING_BUFFER)
+				nNextTai = 0;
+
+			serial_tx_buffer_tail = nNextTai;
+		}
+	}
+}
+#endif
 
 // Fetches the first byte in the serial read buffer. Called by main program.
 uint8_t serial_read()
@@ -139,12 +292,69 @@ uint8_t serial_read()
   }
 }
 
-
+#ifdef AVRTARGET
 ISR(SERIAL_RX)
 {
   uint8_t data = UDR0;
   uint8_t next_head;
+#endif
+#ifdef WIN32
+//#define WINLOG
+void RecvthreadFunction(void *pVoid )
+{
+    DWORD  dwBytesRead;
+    uint8_t data;
+    uint8_t next_head;
+    for (;;)
+    {
+        if (hSerial != INVALID_HANDLE_VALUE)
+        {
+            if (ReadFile(hSerial, &data, 1, &dwBytesRead, NULL) && dwBytesRead == 1)
+            {
+            }
+            else
+            {
+                data = 0;
+            }
+        }
+        else
+        {
+            while (_kbhit() == 0)
+                ;
+            data = _getch();
+        }
+         if (data == 0)
+             continue;
+#endif
+#ifdef STM32F103C8
+#ifdef USEUSB
+void OnUsbDataRx(uint8_t* dataIn, uint8_t length)
+{
+	//lcd_write_char(*dataIn);
+	uint8_t next_head;
+    uint8_t data;
 
+	// Write data to buffer unless it is full.
+	while (length != 0)
+	{
+        data = *dataIn ++;
+#else
+/*----------------------------------------------------------------------------
+  USART1_IRQHandler
+  Handles USART1 global interrupt request.
+ *----------------------------------------------------------------------------*/
+void USART1_IRQHandler (void) 
+{
+    volatile unsigned int IIR;
+    uint8_t data;
+    uint8_t next_head;
+
+    IIR = USART1->SR;
+    if (IIR & USART_FLAG_RXNE) 
+    {                  // read interrupt
+        data = USART1->DR & 0x1FF;
+#endif
+#endif
   // Pick off realtime command characters directly from the serial stream. These characters are
   // not passed into the main buffer, but these set system state flag bits for realtime execution.
   switch (data) {
@@ -195,8 +405,18 @@ ISR(SERIAL_RX)
         }
       }
   }
+#ifdef WIN32
+    }
+#endif
+#ifdef STM32F103C8
+#ifndef USEUSB
+        USART1->SR &= ~USART_FLAG_RXNE;	          // clear interrupt
+#else
+    length--;
+#endif
+   }
+#endif
 }
-
 
 void serial_reset_read_buffer()
 {

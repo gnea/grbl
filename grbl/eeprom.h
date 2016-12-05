@@ -20,7 +20,9 @@
 
 #ifndef eeprom_h
 #define eeprom_h
-
+#if defined(WIN32) || defined (STM32F103C8)
+void eeprom_init();
+#endif
 unsigned char eeprom_get_char(unsigned int addr);
 void eeprom_put_char(unsigned int addr, unsigned char new_value);
 void memcpy_to_eeprom_with_checksum(unsigned int destination, char *source, unsigned int size);

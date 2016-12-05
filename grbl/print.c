@@ -28,7 +28,7 @@ void printString(const char *s)
     serial_write(*s++);
 }
 
-
+#ifdef AVRTARGET
 // Print a string stored in PGM-memory
 void printPgmString(const char *s)
 {
@@ -36,7 +36,7 @@ void printPgmString(const char *s)
   while ((c = pgm_read_byte_near(s++)))
     serial_write(c);
 }
-
+#endif
 
 // void printIntegerInBase(unsigned long n, unsigned long base)
 // {
@@ -81,7 +81,12 @@ void print_uint8_base10(uint8_t n)
 
 // Prints an uint8 variable in base 2 with desired number of desired digits.
 void print_uint8_base2_ndigit(uint8_t n, uint8_t digits) {
-  unsigned char buf[digits];
+#if defined(AVRTARGET) || defined(STM32F103C8)
+	unsigned char buf[digits];
+#endif
+#ifdef WIN32
+	unsigned char buf[20];
+#endif
   uint8_t i = 0;
 
   for (; i < digits; i++) {

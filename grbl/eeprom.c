@@ -21,9 +21,10 @@
 *                         $Revision: 1.6 $
 *                         $Date: Friday, February 11, 2005 07:16:44 UTC $
 ****************************************************************************/
+#include "grbl.h"
+#ifdef AVRTARGET
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
 /* These EEPROM bits have different names on different devices. */
 #ifndef EEPE
 		#define EEPE  EEWE  //!< EEPROM program/write enable.
@@ -36,6 +37,110 @@
 
 /* Define to reduce code size. */
 #define EEPROM_IGNORE_SELFPROG //!< Remove SPM flag polling.
+#endif
+#ifdef WIN32
+#include <stdio.h>
+#include <string.h>
+#endif
+#ifdef STM32F103C8
+#include <string.h>
+#include "stm32eeprom.h"
+#include "settings.h"
+#endif
+#if defined(WIN32) || defined (STM32F103C8)
+unsigned char EE_Buffer[0x400];
+#endif
+#if defined(WIN32)
+#ifndef NOEEPROMSUPPORT
+void eeprom_flush()
+{
+	FILE *out = fopen("eeprom.bin", "wb");
+	fwrite(EE_Buffer, 1, 0x400, out);
+	fclose(out);
+}
+#endif
+void eeprom_init()
+{
+#ifndef NOEEPROMSUPPORT
+	FILE *in = fopen("eeprom.bin", "rb");
+	if (in != NULL)
+	{
+		fread(EE_Buffer, 1, 0x400, in);
+		fclose(in);
+	}
+	else
+	{
+		memset(EE_Buffer, 0xff, 0x400);
+	}
+#else
+	memset(EE_Buffer, 0x0, 0x400);
+#endif
+}
+#endif
+
+#ifdef STM32F103C8
+#ifndef NOEEPROMSUPPORT
+void eeprom_flush()
+{
+	uint32_t nAddress = EEPROM_START_ADDRESS;
+	uint16_t *pBuffer = (uint16_t *)EE_Buffer;
+	uint16_t nSize = PAGE_SIZE;
+
+	FLASH_Status FlashStatus = FLASH_COMPLETE;
+
+	/* Erase Page0 */
+	FlashStatus = FLASH_ErasePage(EEPROM_START_ADDRESS);
+
+	/* If erase operation was failed, a Flash error code is returned */
+	if (FlashStatus != FLASH_COMPLETE)
+	{
+		return;
+	}
+
+	while (nSize > 0)
+	{
+		if (*pBuffer != 0xffff)
+		{
+			FLASH_ProgramHalfWord(nAddress, *pBuffer++);
+		}
+		else
+		{
+			pBuffer++;
+		}
+		if (*pBuffer != 0xffff)
+		{
+			FLASH_ProgramHalfWord(nAddress + 2, *pBuffer++);
+		}
+		else
+		{
+			pBuffer++;
+		}
+		nSize -= 4;
+		nAddress += 4;
+	}
+}
+void eeprom_init()
+{
+	uint16_t VarIdx = 0;
+	uint8_t *pTmp = EE_Buffer;
+
+	for (VarIdx = 0; VarIdx < PAGE_SIZE; VarIdx++)
+	{
+		*pTmp++ = (*(__IO uint8_t*)(EEPROM_START_ADDRESS + VarIdx));
+	}
+
+	if (EE_Buffer[0] != SETTINGS_VERSION)
+	{
+		pTmp = EE_Buffer;
+
+		for (VarIdx = 0; VarIdx < PAGE_SIZE; VarIdx++)
+		{
+			*pTmp++ = 0xFF;
+		}
+	}
+}
+#endif
+#endif
 
 /*! \brief  Read byte from EEPROM.
  *
@@ -48,10 +153,15 @@
  */
 unsigned char eeprom_get_char( unsigned int addr )
 {
+#ifdef AVRTARGET
 	do {} while( EECR & (1<<EEPE) ); // Wait for completion of previous write.
 	EEAR = addr; // Set EEPROM address register.
 	EECR = (1<<EERE); // Start EEPROM read operation.
 	return EEDR; // Return the byte read from EEPROM.
+#endif
+#if defined(WIN32) || defined(STM32F103C8)
+	return EE_Buffer[addr];
+#endif
 }
 
 /*! \brief  Write byte to EEPROM.
@@ -73,6 +183,7 @@ unsigned char eeprom_get_char( unsigned int addr )
  */
 void eeprom_put_char( unsigned int addr, unsigned char new_value )
 {
+#ifdef AVRTARGET
 	char old_value; // Old EEPROM value.
 	char diff_mask; // Difference mask, i.e. old value XOR new value.
 
@@ -122,6 +233,10 @@ void eeprom_put_char( unsigned int addr, unsigned char new_value )
 	}
 	
 	sei(); // Restore interrupt flag state.
+#endif
+#if defined(WIN32) || defined(STM32F103C8)
+	EE_Buffer[addr] = new_value;
+#endif
 }
 
 // Extensions added as part of Grbl 
@@ -135,6 +250,11 @@ void memcpy_to_eeprom_with_checksum(unsigned int destination, char *source, unsi
     eeprom_put_char(destination++, *(source++)); 
   }
   eeprom_put_char(destination, checksum);
+#if defined(WIN32) || defined(STM32F103C8)
+#ifndef NOEEPROMSUPPORT
+  eeprom_flush();
+#endif
+#endif
 }
 
 int memcpy_from_eeprom_with_checksum(char *destination, unsigned int source, unsigned int size) {

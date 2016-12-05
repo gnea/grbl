@@ -21,11 +21,14 @@
 
 #ifndef nuts_bolts_h
 #define nuts_bolts_h
-
+#ifdef STM32F103C8
+#include "stm32f10x_rcc.h"
+#endif
+#include "float.h"
 #define false 0
 #define true 1
 
-#define SOME_LARGE_VALUE 1.0E+38
+#define SOME_LARGE_VALUE FLT_MAX
 
 // Axis array index values. Must start with 0 and be continuous.
 #define N_AXIS 3 // Number of axes
@@ -42,10 +45,15 @@
 #endif
 
 // Conversions
-#define MM_PER_INCH (25.40)
-#define INCH_PER_MM (0.0393701)
+#define MM_PER_INCH (25.40f)
+#define INCH_PER_MM (0.0393701f)
 #define TICKS_PER_MICROSECOND (F_CPU/1000000)
-
+#ifdef WIN32
+#define F_CPU 72000000
+#endif
+#ifdef STM32F103C8
+#define F_CPU SystemCoreClock
+#endif
 #define DELAY_MODE_DWELL       0
 #define DELAY_MODE_SYS_SUSPEND 1
 
@@ -75,8 +83,6 @@ void delay_sec(float seconds, uint8_t mode);
 // Delays variable-defined milliseconds. Compiler compatibility fix for _delay_ms().
 void delay_ms(uint16_t ms);
 
-// Delays variable-defined microseconds. Compiler compatibility fix for _delay_us().
-void delay_us(uint32_t us);
 
 // Computes hypotenuse, avoiding avr-gcc's bloated version and the extra error checking.
 float hypot_f(float x, float y);

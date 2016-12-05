@@ -23,6 +23,7 @@
 
 void system_init()
 {
+#ifdef AVRTARGET
   CONTROL_DDR &= ~(CONTROL_MASK); // Configure as input pins
   #ifdef DISABLE_CONTROL_PIN_PULL_UP
     CONTROL_PORT &= ~(CONTROL_MASK); // Normal low operation. Requires external pull-down.
@@ -31,6 +32,38 @@ void system_init()
   #endif
   CONTROL_PCMSK |= CONTROL_MASK;  // Enable specific pins of the Pin Change Interrupt
   PCICR |= (1 << CONTROL_INT);   // Enable Pin Change Interrupt
+#endif
+#ifdef STM32F103C8
+  GPIO_InitTypeDef GPIO_InitStructure;
+  RCC_APB2PeriphClockCmd(RCC_CONTROL | RCC_APB2Periph_AFIO, ENABLE);
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+#ifdef DISABLE_CONTROL_PIN_PULL_UP
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+#else
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+#endif
+  GPIO_InitStructure.GPIO_Pin = CONTROL_MASK;
+  GPIO_Init(CONTROL_PORT, &GPIO_InitStructure);
+
+  GPIO_EXTILineConfig(GPIO_CONTROLPORT, CONTROL_RESET_BIT);
+  GPIO_EXTILineConfig(GPIO_CONTROLPORT, CONTROL_FEED_HOLD_BIT);
+  GPIO_EXTILineConfig(GPIO_CONTROLPORT, CONTROL_CYCLE_START_BIT);
+  GPIO_EXTILineConfig(GPIO_CONTROLPORT, CONTROL_SAFETY_DOOR_BIT);
+
+  EXTI_InitTypeDef EXTI_InitStructure;
+  EXTI_InitStructure.EXTI_Line = CONTROL_MASK;    //
+  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; //Interrupt mode, optional values for the interrupt EXTI_Mode_Interrupt and event EXTI_Mode_Event.
+  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; //Trigger mode, can be a falling edge trigger EXTI_Trigger_Falling, the rising edge triggered EXTI_Trigger_Rising, or any level (rising edge and falling edge trigger EXTI_Trigger_Rising_Falling)
+  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+  EXTI_Init(&EXTI_InitStructure);
+
+  NVIC_InitTypeDef NVIC_InitStructure;
+  NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn; //Enable keypad external interrupt channel
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02; //Priority 2,
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02; //Sub priority 2
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //Enable external interrupt channel
+  NVIC_Init(&NVIC_InitStructure);
+#endif
 }
 
 
@@ -40,7 +73,15 @@ void system_init()
 uint8_t system_control_get_state()
 {
   uint8_t control_state = 0;
+#ifdef AVRTARGET
   uint8_t pin = (CONTROL_PIN & CONTROL_MASK);
+#endif
+#ifdef WIN32
+  uint8_t pin = 0;
+#endif
+#ifdef STM32F103C8
+  uint16_t pin= GPIO_ReadInputData(CONTROL_PIN);
+#endif
   #ifdef INVERT_CONTROL_PIN_MASK
     pin ^= INVERT_CONTROL_PIN_MASK;
   #endif
@@ -60,6 +101,7 @@ uint8_t system_control_get_state()
 // only the realtime command execute variable to have the main program execute these when
 // its ready. This works exactly like the character-based realtime commands when picked off
 // directly from the incoming serial data stream.
+#ifdef AVRTARGET
 ISR(CONTROL_INT_vect)
 {
   uint8_t pin = system_control_get_state();
@@ -78,7 +120,36 @@ ISR(CONTROL_INT_vect)
     }
   }
 }
-
+#endif
+#if defined (STM32F103C8)
+void EXTI9_5_IRQHandler(void)
+{
+	uint8_t pin = system_control_get_state();
+	if (pin) 
+	{ 
+		if (bit_istrue(pin,CONTROL_PIN_INDEX_RESET)) 
+		{
+			mc_reset();
+		}
+		else if (bit_istrue(pin, CONTROL_PIN_INDEX_CYCLE_START))
+		{
+			bit_true(sys_rt_exec_state, EXEC_CYCLE_START);
+		}
+#ifndef ENABLE_SAFETY_DOOR_INPUT_PIN
+		else if (bit_istrue(pin, CONTROL_PIN_INDEX_FEED_HOLD))
+		{
+			bit_true(sys_rt_exec_state, EXEC_FEED_HOLD);
+		}
+#else
+		else if (bit_istrue(pin, CONTROL_PIN_INDEX_SAFETY_DOOR))
+		{
+			bit_true(sys_rt_exec_state, EXEC_SAFETY_DOOR);
+		}
+#endif
+		NVIC_ClearPendingIRQ(EXTI9_5_IRQn);
+}
+}
+#endif
 
 // Returns if safety door is ajar(T) or closed(F), based on pin state.
 uint8_t system_check_safety_door_ajar()
@@ -348,60 +419,159 @@ uint8_t system_check_travel_limits(float *target)
   return(false);
 }
 
+#ifdef WIN32
+extern CRITICAL_SECTION CriticalSection;
+#endif
 
 // Special handlers for setting and clearing Grbl's real-time execution flags.
 void system_set_exec_state_flag(uint8_t mask) {
+#ifdef AVRTARGET
   uint8_t sreg = SREG;
   cli();
   sys_rt_exec_state |= (mask);
   SREG = sreg;
+#endif
+#ifdef WIN32
+  EnterCriticalSection(&CriticalSection);
+  sys_rt_exec_state |= (mask);
+  LeaveCriticalSection(&CriticalSection);
+#endif
+#ifdef STM32F103C8
+  __disable_irq();
+  sys_rt_exec_state |= (mask);
+  __enable_irq();
+#endif
 }
 
 void system_clear_exec_state_flag(uint8_t mask) {
+#ifdef AVRTARGET
   uint8_t sreg = SREG;
   cli();
   sys_rt_exec_state &= ~(mask);
   SREG = sreg;
+#endif
+#ifdef WIN32
+  EnterCriticalSection(&CriticalSection);
+  sys_rt_exec_state &= ~(mask);
+  LeaveCriticalSection(&CriticalSection);
+#endif
+#ifdef STM32F103C8
+  __disable_irq();
+  sys_rt_exec_state &= ~(mask);
+  __enable_irq();
+#endif
 }
 
 void system_set_exec_alarm(uint8_t code) {
+#ifdef AVRTARGET
   uint8_t sreg = SREG;
   cli();
   sys_rt_exec_alarm = code;
   SREG = sreg;
+#endif
+#ifdef WIN32
+  EnterCriticalSection(&CriticalSection);
+  sys_rt_exec_alarm |= (code);
+  LeaveCriticalSection(&CriticalSection);
+#endif
+#ifdef STM32F103C8
+  __disable_irq();
+  sys_rt_exec_alarm |= (code);
+  __enable_irq();
+#endif
 }
 
 void system_clear_exec_alarm_flag(uint8_t mask) {
+#ifdef AVRTARGET
   uint8_t sreg = SREG;
   cli();
   sys_rt_exec_alarm &= ~(mask);
   SREG = sreg;
+#endif
+#ifdef WIN32
+  EnterCriticalSection(&CriticalSection);
+  sys_rt_exec_alarm &= ~(mask);
+  LeaveCriticalSection(&CriticalSection);
+#endif
+#ifdef STM32F103C8
+  __disable_irq();
+  sys_rt_exec_alarm &= ~(mask);
+  __enable_irq();
+#endif
 }
 
 void system_set_exec_motion_override_flag(uint8_t mask) {
+#ifdef AVRTARGET
   uint8_t sreg = SREG;
   cli();
   sys_rt_exec_motion_override |= (mask);
   SREG = sreg;
+#endif
+#ifdef WIN32
+  EnterCriticalSection(&CriticalSection);
+  sys_rt_exec_motion_override |= (mask);
+  LeaveCriticalSection(&CriticalSection);
+#endif
+#ifdef STM32F103C8
+  __disable_irq();
+  sys_rt_exec_motion_override |= (mask);
+  __enable_irq();
+#endif
 }
 
 void system_set_exec_accessory_override_flag(uint8_t mask) {
-  uint8_t sreg = SREG;
+#ifdef AVRTARGET
+	uint8_t sreg = SREG;
   cli();
   sys_rt_exec_accessory_override |= (mask);
   SREG = sreg;
+#endif
+#ifdef WIN32
+  EnterCriticalSection(&CriticalSection);
+  sys_rt_exec_accessory_override |= (mask);
+  LeaveCriticalSection(&CriticalSection);
+#endif
+#ifdef STM32F103C8
+  __disable_irq();
+  sys_rt_exec_accessory_override |= (mask);
+  __enable_irq();
+#endif
 }
 
 void system_clear_exec_motion_overrides() {
-  uint8_t sreg = SREG;
+#ifdef AVRTARGET
+	uint8_t sreg = SREG;
   cli();
   sys_rt_exec_motion_override = 0;
   SREG = sreg;
+#endif
+#ifdef WIN32
+  EnterCriticalSection(&CriticalSection);
+  sys_rt_exec_motion_override = 0;
+  LeaveCriticalSection(&CriticalSection);
+#endif
+#ifdef STM32F103C8
+  __disable_irq();
+  sys_rt_exec_motion_override = 0;
+  __enable_irq();
+#endif
 }
 
 void system_clear_exec_accessory_overrides() {
+#ifdef AVRTARGET
   uint8_t sreg = SREG;
   cli();
   sys_rt_exec_accessory_override = 0;
   SREG = sreg;
+#endif
+#ifdef WIN32
+  EnterCriticalSection(&CriticalSection);
+  sys_rt_exec_accessory_override = 0;
+  LeaveCriticalSection(&CriticalSection);
+#endif
+#ifdef STM32F103C8
+  __disable_irq();
+  sys_rt_exec_accessory_override = 0;
+  __enable_irq();
+#endif
 }

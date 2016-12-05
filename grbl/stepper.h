@@ -56,4 +56,8 @@ void st_update_plan_block_parameters();
 // Called by realtime status reporting if realtime rate reporting is enabled in config.h.
 float st_get_realtime_rate();
 
+extern const PORTPINDEF step_pin_mask[N_AXIS];
+extern const PORTPINDEF direction_pin_mask[N_AXIS];
+extern const PORTPINDEF limit_pin_mask[N_AXIS];
+
 #endif
