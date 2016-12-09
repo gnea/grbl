@@ -29,7 +29,7 @@ uint8_t jog_execute(plan_line_data_t *pl_data, parser_block_t *gc_block)
   pl_data->feed_rate = gc_block->values.f;
   pl_data->condition |= PL_COND_FLAG_NO_FEED_OVERRIDE;
   #ifdef USE_LINE_NUMBERS
-    pl_data->line_number = gc_block.values.n;
+    pl_data->line_number = gc_block->values.n;
   #endif
 
   if (bit_istrue(settings.flags,BITFLAG_SOFT_LIMIT_ENABLE)) {

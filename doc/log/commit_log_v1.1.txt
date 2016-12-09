@@ -1,4 +1,27 @@
 ----------------
+Date: 2016-12-04
+Author: chamnit
+Subject: Fixed unintended laser mode pausing. Updated documentation. Min SS OVR lowered to 10%.
+
+- [laser] Tested a working version and pushed the wrong one for the
+last! 20161203 was pausing upon every spindle speed change. That’s not
+right. Fixed so nearly all motions are passed through and does not stop.
+
+- Minimum spindle speed override lower from 50% to 10%. Lasers could
+use the lower speeds.
+
+- Fixed a very minor bug related to G80 error checking. Allowed no
+error with non-modal motions with axis words. Not correct and fixed.
+
+- Fixed a compile error when disabling VARIABLE_SPINDLE
+
+- [doc] Updated some obsolete documentation.
+
+- [doc] Started a “Laser Mode” document that summarizes how Grbl’s new
+laser mode works.
+
+
+----------------
 Date: 2016-12-03
 Author: Sonny Jeon
 Subject: v1.1e: New laser features. G-code parser refactoring. CoreXY homing fix.
