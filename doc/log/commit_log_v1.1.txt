@@ -1,4 +1,19 @@
 ----------------
+Date: 2016-12-08
+Author: Sonny Jeon
+Subject: Removed classic GUI interface. Fixed typo with line number support.
+
+- [config] Permanently removed classic GUI interface support. This
+unintentionally created a problem where some users/GUI devs used this
+compatibility mode and did not update to the new interface. So, there
+were two interfaces in use, rather than just one like it was intended.
+This removal should help everyone by forcing all GUIs to update and
+updated GUI not having to support yet another interface.
+
+- Fixed typo with line number support in jog mode.
+
+
+----------------
 Date: 2016-12-04
 Author: chamnit
 Subject: Fixed unintended laser mode pausing. Updated documentation. Min SS OVR lowered to 10%.

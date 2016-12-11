@@ -317,7 +317,6 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 | **`H`** | Homing single axis enabled |
 | **`L`** | Two limit switches on axis enabled |
 | **`A`** | Allow feed rate overrides in probe cycles |
-| **`R`** | Classic compatiblity mode enabled |
 | **`*`** | Restore all EEPROM disabled |
 | **`$`** | Restore EEPROM `$` settings disabled |
 | **`#`** | Restore EEPROM parameter data disabled |
