@@ -1,10 +1,16 @@
 ## Grbl v1.1 Laser Mode
 
-_DISCLAIMER: Lasers are extremely dangerous devices. They can instantly cause fires and permanently damage your vision. Please read and understand all related documentation for your laser prior to using it. The Grbl project is not resposible for any damage or issues the firmware may cause, as defined by its GPL license._
+**_DISCLAIMER: Lasers are extremely dangerous devices. They can instantly cause fires and permanently damage your vision. Please read and understand all related documentation for your laser prior to using it. The Grbl project is not resposible for any damage or issues the firmware may cause, as defined by its GPL license._**
 
-The main difference between traditional Grbl operation and the laser mode is how the spindle/laser output is controlled with motions involved. Every time a spindle state `M3 M4 M5` or spindle speed `Sxxx` is altered, Grbl would normally come to a stop, allow the spindle to change, and then continue. This is the normal operating procedure for a milling machine spindle. It needs time to change speeds. However, if a laser starts and stops like this for every spindle change, this leads to scorching and uneven cutting/engraving.
+----
 
-Outlined in this document is how Grbl alters its running conditions during the laser mode for both improved performance and enforcing some basic user safety precautions.
+Outlined in this document is how Grbl alters its running conditions for the new laser mode to provide both improved performance and enforcing some basic user safety precautions.
+
+The main difference between default Grbl operation and the laser mode is how the spindle/laser output is controlled with motions involved. Every time a spindle state `M3 M4 M5` or spindle speed `Sxxx` is altered, Grbl would come to a stop, allow the spindle to change, and then continue. This is the normal operating procedure for a milling machine spindle. It needs time to change speeds. 
+
+However, if a laser starts and stops like this for every spindle change, this leads to scorching and uneven cutting/engraving! Grbl's new laser mode prevents unnecessary stops whenever possible and adds a new dynamic laser power mode that automagically scales power based on current speed related to programmed rate. So, you can get super clean and crisp results, even on a low-acceleration machine!
+
+## Laser Mode Details
 
 When laser mode is enabled:
 

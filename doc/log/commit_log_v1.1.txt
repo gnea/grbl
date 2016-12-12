@@ -1,4 +1,29 @@
 ----------------
+Date: 2016-12-10
+Author: Sonny Jeon
+Subject: Updated documentation. Cleaned up a bit.
+
+- [doc] Updated the markdown documents for the v1.1 release.
+
+- [doc] Removed references to classic GUI mode.
+
+
+----------------
+Date: 2016-12-09
+Author: Sonny Jeon
+Subject: Update README.md
+
+----------------
+Date: 2016-12-09
+Author: Sonny Jeon
+Subject: Update README.md
+
+----------------
+Date: 2016-12-09
+Author: Sonny Jeon
+Subject: Update README.md
+
+----------------
 Date: 2016-12-08
 Author: Sonny Jeon
 Subject: Removed classic GUI interface. Fixed typo with line number support.
