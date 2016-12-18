@@ -40,19 +40,8 @@
 #define BITFLAG_INVERT_PROBE_PIN   bit(7)
 
 // Define status reporting boolean enable bit flags in settings.status_report_mask
-#ifdef USE_CLASSIC_GRBL_INTERFACE
-  #define BITFLAG_RT_STATUS_MACHINE_POSITION  bit(0)
-  #define BITFLAG_RT_STATUS_WORK_POSITION     bit(1)
-  #define BITFLAG_RT_STATUS_PLANNER_BUFFER    bit(2)
-  #define BITFLAG_RT_STATUS_SERIAL_RX         bit(3)
-  #define BITFLAG_RT_STATUS_LIMIT_PINS        bit(4)
-  #define BITFLAG_RT_STATUS_PROBE_PIN         bit(5)
-  #define BITFLAG_RT_STATUS_CONTROL_PINS      bit(6)
-  #define BITFLAG_RT_STATUS_OVERRIDES         bit(7)
-#else
-  #define BITFLAG_RT_STATUS_POSITION_TYPE     bit(0)
-  #define BITFLAG_RT_STATUS_BUFFER_STATE      bit(1)
-#endif
+#define BITFLAG_RT_STATUS_POSITION_TYPE     bit(0)
+#define BITFLAG_RT_STATUS_BUFFER_STATE      bit(1)
 
 // Define settings restore bitflags.
 #define SETTINGS_RESTORE_DEFAULTS bit(0)

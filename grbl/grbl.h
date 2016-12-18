@@ -23,7 +23,7 @@
 
 // Grbl versioning system
 #define GRBL_VERSION "1.1e"
-#define GRBL_VERSION_BUILD "20161203"
+#define GRBL_VERSION_BUILD "20161208"
 
 #if !defined(STM32F103C8) && !defined(WIN32)
 #define AVRTARGET
@@ -68,6 +68,7 @@ typedef int bool;
 #include "stm32f10x.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_exti.h"
+#include "stm32f10x_tim.h"
 #include "misc.h"
 #define PSTR(x) x
 #define pgm_read_byte_near(x) *(x)

@@ -1,4 +1,51 @@
 ----------------
+Date: 2016-12-03
+Author: Sonny Jeon
+Subject: v1.1e: New laser features. G-code parser refactoring. CoreXY homing fix.
+
+- Increment to v1.1e due to new laser features.
+
+- After several discussions with some prominent laser people, a few
+tweaks to the new laser mode has been installed.
+
+- LASER: M3 behaves in a constant power mode.
+
+- LASER: M4 behaves in a dynamic power mode, where the laser power is
+automatically adjusted based on how fast Grbl is moving relative to the
+programmed feed rate. This is the same as the  CONSTANT_POWER_PER_RATE
+config.h option in the last version. NOTE: When not in motion in M4,
+Grbl automatically turns off the laser. Again, it only operates while
+moving!
+
+- LASER: Only G1, G2, and G3 motion modes will turn on the laser. So,
+this means that G0, G80 motion modes will always keep the laser
+disabled. No matter if M3/M4 are active!
+
+- LASER: A spindle stop override is automatically invoked when a laser
+is put in a feed hold. This behavior may be disabled by a config.h
+option.
+
+- Lots of little tweaks to the g-code parser to help streamline it a
+bit. It should no effect how it operates. Generally just added a parser
+flag to track and execute certain scenarios a little more clearly.
+
+- Jog motions now allow line numbers to be passed to it and will be
+displayed in the status reports.
+
+- Fixed a CoreXY homing bug.
+
+- Fixed an issue when $13 is changed, WCO isn’t sent immediately.
+
+- Altered how spindle PWM is set in the stepper ISR. Updated on a step
+segment basis now. May need to change this back if there are any
+oddities from doing this.
+
+- Updated some documentation. Clarified why M0 no longer showing up in
+$G and why a `1.` floating point values are shown with no decimals,
+like so `1`.
+
+
+----------------
 Date: 2016-11-12
 Author: Sonny Jeon
 Subject: PWM calculation correction.

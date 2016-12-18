@@ -35,7 +35,7 @@ void system_init()
 #endif
 #ifdef STM32F103C8
   GPIO_InitTypeDef GPIO_InitStructure;
-  RCC_APB2PeriphClockCmd(RCC_CONTROL | RCC_APB2Periph_AFIO, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_CONTROL_PORT | RCC_APB2Periph_AFIO, ENABLE);
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 #ifdef DISABLE_CONTROL_PIN_PULL_UP
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
@@ -45,10 +45,10 @@ void system_init()
   GPIO_InitStructure.GPIO_Pin = CONTROL_MASK;
   GPIO_Init(CONTROL_PORT, &GPIO_InitStructure);
 
-  GPIO_EXTILineConfig(GPIO_CONTROLPORT, CONTROL_RESET_BIT);
-  GPIO_EXTILineConfig(GPIO_CONTROLPORT, CONTROL_FEED_HOLD_BIT);
-  GPIO_EXTILineConfig(GPIO_CONTROLPORT, CONTROL_CYCLE_START_BIT);
-  GPIO_EXTILineConfig(GPIO_CONTROLPORT, CONTROL_SAFETY_DOOR_BIT);
+  GPIO_EXTILineConfig(GPIO_CONTROL_PORT, CONTROL_RESET_BIT);
+  GPIO_EXTILineConfig(GPIO_CONTROL_PORT, CONTROL_FEED_HOLD_BIT);
+  GPIO_EXTILineConfig(GPIO_CONTROL_PORT, CONTROL_CYCLE_START_BIT);
+  GPIO_EXTILineConfig(GPIO_CONTROL_PORT, CONTROL_SAFETY_DOOR_BIT);
 
   EXTI_InitTypeDef EXTI_InitStructure;
   EXTI_InitStructure.EXTI_Line = CONTROL_MASK;    //
@@ -80,7 +80,7 @@ uint8_t system_control_get_state()
   uint8_t pin = 0;
 #endif
 #ifdef STM32F103C8
-  uint16_t pin= GPIO_ReadInputData(CONTROL_PIN);
+  uint16_t pin= GPIO_ReadInputData(CONTROL_PIN_PORT);
 #endif
   #ifdef INVERT_CONTROL_PIN_MASK
     pin ^= INVERT_CONTROL_PIN_MASK;

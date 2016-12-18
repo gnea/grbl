@@ -907,7 +907,7 @@ void st_prep_buffer()
         } else {
           prep.current_speed = sqrtf(pl_block->entry_speed_sqr);
         }
-        #ifdef VARIABLE_SPINDLE
+#ifdef VARIABLE_SPINDLE
         // Setup laser mode variables. PWM rate adjusted motions will always complete a motion with the
         // spindle off. 
         st_prep_block->is_pwm_rate_adjusted = false;
@@ -918,7 +918,7 @@ void st_prep_buffer()
             st_prep_block->is_pwm_rate_adjusted = true;
           }
         }
-      #endif
+#endif
       }
 
 			/* ---------------------------------------------------------------------------------

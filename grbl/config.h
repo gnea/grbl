@@ -260,7 +260,7 @@
 
 #define DEFAULT_SPINDLE_SPEED_OVERRIDE    100 // 100%. Don't change this value.
 #define MAX_SPINDLE_SPEED_OVERRIDE        200 // Percent of programmed spindle speed (100-255). Usually 200%.
-#define MIN_SPINDLE_SPEED_OVERRIDE         50 // Percent of programmed spindle speed (1-100). Usually 50%.
+#define MIN_SPINDLE_SPEED_OVERRIDE         10 // Percent of programmed spindle speed (1-100). Usually 10%.
 #define SPINDLE_OVERRIDE_COARSE_INCREMENT  10 // (1-99). Usually 10%.
 #define SPINDLE_OVERRIDE_FINE_INCREMENT     1 // (1-99). Usually 1%.
 
@@ -295,22 +295,6 @@
 #define REPORT_OVR_REFRESH_IDLE_COUNT 10  // (1-255) Must be less than or equal to the busy count
 #define REPORT_WCO_REFRESH_BUSY_COUNT 30  // (2-255)
 #define REPORT_WCO_REFRESH_IDLE_COUNT 10  // (2-255) Must be less than or equal to the busy count
-
-// ----- COMPATIBILITY OPTIONS: ------
-// The following options enabled the old-style v0.9 Grbl interface.
-// WARNING: DO NOT USE these compatibility options unless there is a really good reason to. If you are
-// trying to use Grbl v1.1 with a GUI that supports a v0.9-style interface, it will still not likely work.
-// A few things have been added, like override and accessory data and a new sleep state. These things will
-// still likely require the GUI to be updated to handle these. In other words, IT WILL STILL NOT WORK!
-// IT'S HIGHLY RECOMMENDED FOR GUIs TO UPDATE TO THE NEW INTERFACE FOR v1.1. Don't try to make it 
-// compatible with this old v0.9 style. It will be dropped in the near future. You have been warned.
-// NOTE: The compiled size of Grbl with these options enabled will exceed the flash limit of FTDI-based
-// Arduinos, like the Duemilanove and Nano. This will only fit on an Uno with the Optiboot bootloader.
-//#define USE_CLASSIC_GRBL_INTERFACE // Default disabled. Uncomment to enable.
-// #define REPORT_ALL_PIN_STATES // Default disabled. Uncomment to enable. Option obsolete in v1.1.
-// #define REPORT_REALTIME_RATE // Disabled by default. Uncomment to enable. Option obsolete in v1.1.
-// Enables minimal reporting feedback mode for GUIs, where human-readable strings are not as important.
-// -----------------------------------
 
 // The temporal resolution of the acceleration management subsystem. A higher number gives smoother
 // acceleration, particularly noticeable on machines that run at very high feedrates, but may negatively
@@ -361,7 +345,7 @@
 // enable pin will output 5V for maximum RPM with 256 intermediate levels and 0V when disabled.
 // NOTE: IMPORTANT for Arduino Unos! When enabled, the Z-limit pin D11 and spindle enable pin D12 switch!
 // The hardware PWM output on pin D11 is required for variable spindle output voltages.
-//#define VARIABLE_SPINDLE // Default enabled. Comment to disable.
+#define VARIABLE_SPINDLE // Default enabled. Comment to disable.
 
 // Used by variable spindle output only. This forces the PWM output to a minimum duty cycle when enabled.
 // The PWM pin will still read 0V when the spindle is disabled. Most users will not need this option, but
