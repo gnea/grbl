@@ -1,4 +1,19 @@
 ----------------
+Date: 2016-12-12
+Author: Sonny Jeon
+Subject: Updating steam.py streaming script
+
+- Added push message capability to the stream.py streaming script. It
+prints out as a `Debug:` string in the output.
+
+
+----------------
+Date: 2016-12-11
+Author: Sonny Jeon
+Subject: Updated documentation.
+
+
+----------------
 Date: 2016-12-10
 Author: Sonny Jeon
 Subject: Updated documentation. Cleaned up a bit.

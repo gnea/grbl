@@ -23,7 +23,7 @@
 
 // Grbl versioning system
 #define GRBL_VERSION "1.1e"
-#define GRBL_VERSION_BUILD "20161208"
+#define GRBL_VERSION_BUILD "20161218"
 
 // Define standard libraries used by Grbl.
 #include <avr/io.h>
@@ -82,9 +82,9 @@
   #endif
 #endif
 
-#if defined(SPINDLE_MINIMUM_PWM)
-  #if !(SPINDLE_MINIMUM_PWM > 0)
-    #error "SPINDLE_MINIMUM_PWM must be greater than zero."
+#if defined(SPINDLE_PWM_MIN_VALUE)
+  #if !(SPINDLE_PWM_MIN_VALUE > 0)
+    #error "SPINDLE_PWM_MIN_VALUE must be greater than zero."
   #endif
 #endif
 
