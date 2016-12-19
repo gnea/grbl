@@ -354,9 +354,9 @@
 // and the voltage set by the minimum PWM for minimum rpm. This difference is 0.02V per PWM value. So, when
 // minimum PWM is at 1, only 0.02 volts separate enabled and disabled. At PWM 5, this would be 0.1V. Keep
 // in mind that you will begin to lose PWM resolution with increased minimum PWM values, since you have less
-// and less range over the total 256 PWM levels to signal different spindle speeds.
-// NOTE: Compute duty cycle at the minimum PWM by this equation: (% duty cycle)=(SPINDLE_MINIMUM_PWM/256)*100
-// #define SPINDLE_MINIMUM_PWM_VALUE 5 // Default disabled. Uncomment to enable. Must be greater than zero. Integer (1-255).
+// and less range over the total 255 PWM levels to signal different spindle speeds.
+// NOTE: Compute duty cycle at the minimum PWM by this equation: (% duty cycle)=(SPINDLE_PWM_MIN_VALUE/255)*100
+// #define SPINDLE_PWM_MIN_VALUE 5 // Default disabled. Uncomment to enable. Must be greater than zero. Integer (1-255).
 
 // By default on a 328p(Uno), Grbl combines the variable spindle PWM and the enable into one pin to help
 // preserve I/O pins. For certain setups, these may need to be separate pins. This configure option uses
