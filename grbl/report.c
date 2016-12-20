@@ -109,7 +109,6 @@ static void report_util_float_setting(uint8_t n, float val, uint8_t n_decimal) {
 // operation. Errors events can originate from the g-code parser, settings module, or asynchronously
 // from a critical error, such as a triggered hard limit. Interface should always monitor for these
 // responses.
-// NOTE: In REPORT_GUI_MODE, all error codes are greater than zero.
 void report_status_message(uint8_t status_code)
 {
   switch(status_code) {
@@ -123,7 +122,7 @@ void report_status_message(uint8_t status_code)
 }
 
 // Prints alarm messages.
-void report_alarm_message(int8_t alarm_code)
+void report_alarm_message(uint8_t alarm_code)
 {
   printPgmString(PSTR("ALARM:"));
   print_uint8_base10(alarm_code);

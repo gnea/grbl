@@ -359,8 +359,9 @@ void mc_reset()
     // violated, by which, all bets are off.
     if ((sys.state & (STATE_CYCLE | STATE_HOMING | STATE_JOG)) ||
     		(sys.step_control & (STEP_CONTROL_EXECUTE_HOLD | STEP_CONTROL_EXECUTE_SYS_MOTION))) {
-      if (sys.state == STATE_HOMING) { system_set_exec_alarm(EXEC_ALARM_HOMING_FAIL_RESET); }
-      else { system_set_exec_alarm(EXEC_ALARM_ABORT_CYCLE); }
+      if (sys.state == STATE_HOMING) { 
+        if (!sys_rt_exec_alarm) {system_set_exec_alarm(EXEC_ALARM_HOMING_FAIL_RESET); }
+      } else { system_set_exec_alarm(EXEC_ALARM_ABORT_CYCLE); }
       st_go_idle(); // Force kill steppers. Position has likely been lost.
     }
   }

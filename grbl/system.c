@@ -371,10 +371,10 @@ void system_set_exec_alarm(uint8_t code) {
   SREG = sreg;
 }
 
-void system_clear_exec_alarm_flag(uint8_t mask) {
+void system_clear_exec_alarm() {
   uint8_t sreg = SREG;
   cli();
-  sys_rt_exec_alarm &= ~(mask);
+  sys_rt_exec_alarm = 0;
   SREG = sreg;
 }
 

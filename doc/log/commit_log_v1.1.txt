@@ -1,4 +1,16 @@
 ----------------
+Date: 2016-12-18
+Author: Sonny Jeon
+Subject: Addressed optional PWM min value issue. Updated docs.
+
+- [fix] Spindle PWM minimum value had some typos. Fixed the macros to
+compile correctly. Only effects users that enable SPINDLE_MINIMUM_PWM.
+The name changed to SPINDLE_PWM_MIN_VALUE for consistency sake.
+
+- Updated the laser documentation.
+
+
+----------------
 Date: 2016-12-12
 Author: Sonny Jeon
 Subject: Updating steam.py streaming script

@@ -195,7 +195,7 @@ uint8_t system_check_travel_limits(float *target);
 void system_set_exec_state_flag(uint8_t mask);
 void system_clear_exec_state_flag(uint8_t mask);
 void system_set_exec_alarm(uint8_t code);
-void system_clear_exec_alarm_flag(uint8_t mask);
+void system_clear_exec_alarm();
 void system_set_exec_motion_override_flag(uint8_t mask);
 void system_set_exec_accessory_override_flag(uint8_t mask);
 void system_clear_exec_motion_overrides();
