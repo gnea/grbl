@@ -234,7 +234,7 @@ void protocol_exec_rt_system()
         // lost, continued streaming could cause a serious crash if by chance it gets executed.
       } while (bit_isfalse(sys_rt_exec_state,EXEC_RESET));
     }
-    system_clear_exec_alarm_flag(0xFF); // Clear all alarm flags
+    system_clear_exec_alarm(); // Clear alarm
   }
 
   rt_exec = sys_rt_exec_state; // Copy volatile sys_rt_exec_state.

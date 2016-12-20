@@ -23,7 +23,7 @@
 
 // Grbl versioning system
 #define GRBL_VERSION "1.1e"
-#define GRBL_VERSION_BUILD "20161218"
+#define GRBL_VERSION_BUILD "20161219"
 
 #if !defined(STM32F103C8) && !defined(WIN32)
 #define AVRTARGET

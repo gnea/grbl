@@ -481,21 +481,21 @@ void system_set_exec_alarm(uint8_t code) {
 #endif
 }
 
-void system_clear_exec_alarm_flag(uint8_t mask) {
+void system_clear_exec_alarm() {
 #ifdef AVRTARGET
   uint8_t sreg = SREG;
   cli();
-  sys_rt_exec_alarm &= ~(mask);
+  sys_rt_exec_alarm = 0;
   SREG = sreg;
 #endif
 #ifdef WIN32
   EnterCriticalSection(&CriticalSection);
-  sys_rt_exec_alarm &= ~(mask);
+  sys_rt_exec_alarm = 0;
   LeaveCriticalSection(&CriticalSection);
 #endif
 #ifdef STM32F103C8
   __disable_irq();
-  sys_rt_exec_alarm &= ~(mask);
+  sys_rt_exec_alarm = 0;
   __enable_irq();
 #endif
 }
