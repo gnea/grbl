@@ -1,4 +1,18 @@
 ----------------
+Date: 2016-12-19
+Author: Sonny Jeon
+Subject: Fixed homing fail alarm handling. Re-integrated software debouncing.
+
+- [bug] Fixed a homing fail issue, where the alarm was not being set
+right, not cleared correctly. It would report the wrong code and enter
+an infinite alarm loop. This was due to how alarm codes were altered a
+while back. Now updated and fixed to show the right codes.
+
+- [feature] Re-installed optional software debouncing for hard limit
+switches. By request.
+
+
+----------------
 Date: 2016-12-18
 Author: Sonny Jeon
 Subject: Addressed optional PWM min value issue. Updated docs.
