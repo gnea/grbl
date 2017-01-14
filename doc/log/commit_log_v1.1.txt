@@ -1,4 +1,14 @@
 ----------------
+Date: 2017-01-03
+Author: Sonny Jeon
+Subject: Spindle enable pin with variable spindle option fix.
+
+- [fix] When USE_SPINDLE_DIR_AS_ENABLE_PIN is enabled in config.h, the
+enable pin was not being set when spindle speed is zero. This behavior
+should now be fixed.
+
+
+----------------
 Date: 2016-12-19
 Author: Sonny Jeon
 Subject: Fixed homing fail alarm handling. Re-integrated software debouncing.

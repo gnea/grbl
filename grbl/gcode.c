@@ -25,6 +25,7 @@
 // arbitrary value, and some GUIs may require more. So we increased it based on a max safe
 // value when converting a float (7.2 digit precision)s to an integer.
 #define MAX_LINE_NUMBER 10000000
+#define MAX_TOOL_NUMBER 255 // Limited by max unsigned 8-bit value
 
 #define AXIS_COMMAND_NONE 0
 #define AXIS_COMMAND_NON_MODAL 1
@@ -310,7 +311,10 @@ uint8_t gc_execute_line(char *line)
           // case 'Q': // Not supported
           case 'R': word_bit = WORD_R; gc_block.values.r = value; break;
           case 'S': word_bit = WORD_S; gc_block.values.s = value; break;
-          case 'T': word_bit = WORD_T; break; // gc.values.t = int_value;
+          case 'T': word_bit = WORD_T; 
+					  if (value > MAX_TOOL_NUMBER) { FAIL(STATUS_GCODE_MAX_VALUE_EXCEEDED); }
+            gc_block.values.t = int_value;
+						break;
           case 'X': word_bit = WORD_X; gc_block.values.xyz[X_AXIS] = value; axis_words |= (1<<X_AXIS); break;
           case 'Y': word_bit = WORD_Y; gc_block.values.xyz[Y_AXIS] = value; axis_words |= (1<<Y_AXIS); break;
           case 'Z': word_bit = WORD_Z; gc_block.values.xyz[Z_AXIS] = value; axis_words |= (1<<Z_AXIS); break;
