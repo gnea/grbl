@@ -20,8 +20,11 @@
 
 /* The cpu_map.h files serve as a central pin mapping selection file for different
    processor types or alternative pin layouts. This version of Grbl officially supports
-   only the Arduino Mega328p. */
-
+   only the Arduino Mega328p. 
+This specific branch is ment to use LaserAxe controler with arduino nano v3
+   #avrdude -b 57600 -B 16 -P /dev/ttyUSB0 -carduino -p m328p -Uflash:w:grbl.hex
+   blower is a must small pc fan does great and conects directly to the board
+*/
 
 #ifndef cpu_map_h
 #define cpu_map_h
@@ -36,23 +39,23 @@
   // Define step pulse output pins. NOTE: All step bit pins must be on the same port.
   #define STEP_DDR        DDRD
   #define STEP_PORT       PORTD
-  #define X_STEP_BIT      2  // Uno Digital Pin 2
-  #define Y_STEP_BIT      3  // Uno Digital Pin 3
-  #define Z_STEP_BIT      4  // Uno Digital Pin 4
+  #define X_STEP_BIT      3  // Uno Digital Pin 2
+  #define Y_STEP_BIT      5  // Uno Digital Pin 3
+  #define Z_STEP_BIT      7  // Uno Digital Pin 4
   #define STEP_MASK       ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)) // All step bits
 
   // Define step direction output pins. NOTE: All direction pins must be on the same port.
   #define DIRECTION_DDR     DDRD
   #define DIRECTION_PORT    PORTD
-  #define X_DIRECTION_BIT   5  // Uno Digital Pin 5
-  #define Y_DIRECTION_BIT   6  // Uno Digital Pin 6
-  #define Z_DIRECTION_BIT   7  // Uno Digital Pin 7
+  #define X_DIRECTION_BIT   2  // Uno Digital Pin 5
+  #define Y_DIRECTION_BIT   4  // Uno Digital Pin 6
+  #define Z_DIRECTION_BIT   6  // Uno Digital Pin 7
   #define DIRECTION_MASK    ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)) // All direction bits
 
   // Define stepper driver enable/disable output pin.
   #define STEPPERS_DISABLE_DDR    DDRB
   #define STEPPERS_DISABLE_PORT   PORTB
-  #define STEPPERS_DISABLE_BIT    0  // Uno Digital Pin 8
+  #define STEPPERS_DISABLE_BIT    8  // Uno Digital Pin 8
   #define STEPPERS_DISABLE_MASK   (1<<STEPPERS_DISABLE_BIT)
 
   // Define homing/hard limit switch input pins and limit interrupt vectors.
@@ -63,11 +66,11 @@
   #define X_LIMIT_BIT      1  // Uno Digital Pin 9
   #define Y_LIMIT_BIT      2  // Uno Digital Pin 10
   #ifdef VARIABLE_SPINDLE // Z Limit pin and spindle enabled swapped to access hardware PWM on Pin 11.
-    #define Z_LIMIT_BIT	   4 // Uno Digital Pin 12
+    #define Z_LIMIT_BIT	    4 // Uno Digital Pin 12
   #else
-    #define Z_LIMIT_BIT    3  // Uno Digital Pin 11
+    #define Z_LIMIT_BIT    4 // Uno Digital Pin 11
   #endif
-  #define LIMIT_MASK       ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)) // All limit bits
+  #define LIMIT_MASK       ((0<<X_LIMIT_BIT)|(0<<Y_LIMIT_BIT)|(0<<Z_LIMIT_BIT)) // All limit bits
   #define LIMIT_INT        PCIE0  // Pin change interrupt enable pin
   #define LIMIT_INT_vect   PCINT0_vect
   #define LIMIT_PCMSK      PCMSK0 // Pin change interrupt register
@@ -79,17 +82,17 @@
   #ifdef VARIABLE_SPINDLE
     #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
       // If enabled, spindle direction pin now used as spindle enable, while PWM remains on D11.
-      #define SPINDLE_ENABLE_BIT    5  // Uno Digital Pin 13 (NOTE: D13 can't be pulled-high input due to LED.)
+      #define SPINDLE_ENABLE_BIT     3 // Uno Digital Pin 13 (NOTE: D13 can't be pulled-high input due to LED.)
     #else
       #define SPINDLE_ENABLE_BIT    3  // Uno Digital Pin 11
     #endif
   #else
-    #define SPINDLE_ENABLE_BIT    4  // Uno Digital Pin 12
+    #define SPINDLE_ENABLE_BIT    3  // Uno Digital Pin 12
   #endif
   #ifndef USE_SPINDLE_DIR_AS_ENABLE_PIN
     #define SPINDLE_DIRECTION_DDR   DDRB
     #define SPINDLE_DIRECTION_PORT  PORTB
-    #define SPINDLE_DIRECTION_BIT   5  // Uno Digital Pin 13 (NOTE: D13 can't be pulled-high input due to LED.)
+    #define SPINDLE_DIRECTION_BIT  3  // Uno Digital Pin 13 (NOTE: D13 can't be pulled-high input due to LED.)
   #endif
 
   // Define flood and mist coolant enable output pins.
@@ -98,7 +101,7 @@
   #define COOLANT_FLOOD_BIT   3  // Uno Analog Pin 3
   #define COOLANT_MIST_DDR   DDRC
   #define COOLANT_MIST_PORT  PORTC
-  #define COOLANT_MIST_BIT   4  // Uno Analog Pin 3
+  #define COOLANT_MIST_BIT   4  // Uno Analog Pin 4
 
   // Define user-control controls (cycle start, reset, feed hold) input pins.
   // NOTE: All CONTROLs pins must be on the same port and not on a port with other input pins (limits).
@@ -120,7 +123,7 @@
   #define PROBE_PIN       PINC
   #define PROBE_PORT      PORTC
   #define PROBE_BIT       5  // Uno Analog Pin 5
-  #define PROBE_MASK      (1<<PROBE_BIT)
+  #define PROBE_MASK      (0<<PROBE_BIT)
 
   // Variable spindle configuration below. Do not change unless you know what you are doing.
   // NOTE: Only used when variable spindle is enabled.
@@ -137,15 +140,15 @@
 
   // Prescaled, 8-bit Fast PWM mode.
   #define SPINDLE_TCCRA_INIT_MASK   ((1<<WGM20) | (1<<WGM21))  // Configures fast PWM mode.
-  // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS20)               // Disable prescaler -> 62.5kHz
-  // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS21)               // 1/8 prescaler -> 7.8kHz (Used in v0.9)
-  // #define SPINDLE_TCCRB_INIT_MASK   ((1<<CS21) | (1<<CS20)) // 1/32 prescaler -> 1.96kHz
+ // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS20)               // Disable prescaler -> 62.5kHz
+ // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS21)               // 1/8 prescaler -> 7.8kHz (Used in v0.9)
+ // #define SPINDLE_TCCRB_INIT_MASK   ((1<<CS21) | (1<<CS20)) // 1/32 prescaler -> 1.96kHz
   #define SPINDLE_TCCRB_INIT_MASK      (1<<CS22)               // 1/64 prescaler -> 0.98kHz (J-tech laser)
 
   // NOTE: On the 328p, these must be the same as the SPINDLE_ENABLE settings.
   #define SPINDLE_PWM_DDR	  DDRB
   #define SPINDLE_PWM_PORT  PORTB
-  #define SPINDLE_PWM_BIT	  3    // Uno Digital Pin 11
+  #define SPINDLE_PWM_BIT	 3    // Uno Digital Pin 11
 
 #endif
 
@@ -158,3 +161,5 @@
 */
 
 #endif
+
+
