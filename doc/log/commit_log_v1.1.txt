@@ -1,4 +1,57 @@
 ----------------
+Date: 2017-01-28
+Author: chamnit
+Subject: v1.1f. Parking override control. Spindle enable pin option.
+
+[ver] v1.1f update due to tweaks to interface from new parking override
+control.
+
+[new] Parking motion override control via new `M56 P0` and `M56 P1`
+command, which disables and enables the parking motion, respectively.
+Requires ENABLE_PARKING_OVERRIDE_CONTROL and PARKING_ENABLE enabled in
+config.h. Primarily for OEMs.
+
+[new] `M56` appears in the $G report when enabled.
+
+[new] Five new build info identification letters. Some were missing and
+a couple are new. Updated the CSV and documentation to reflect these
+new items.
+
+[new] Spindle enable pin configuration option to alter its behavior
+based on how certain lasers work. By default, Grbl treats the enable
+pin separately and leaves it on when S is 0. The new option turns the
+enable pin on and off with S>0 and S=0. This only is in effect when a
+user enables the USE_SPINDLE_DIR_AS_ENABLE_PIN option.
+
+[fix] M4 is now allowed to work when USE_SPINDLE_DIR_AS_ENABLE_PIN is
+enabled. Previously this was blocked and was problematic for laser
+folks using M4.
+
+[fix] Properly declared system variables as extern. Not sure how that
+went unnoticed or why it worked up until now but it has.
+
+[fix] EXTREMELY RARE. When AMASS is intentionally disabled and sent a
+motion command that is _one step_ in length, Grbl would not actuate the
+step due to numerical round-off. Applied a fix to prevent the round-off
+issue.
+
+[fix] Added a compile-time check for AMASS settings to make sure that
+the numerical round-off issue doesn’t effect it. This would only happen
+if someone set AMASS max levels to zero. It does not effect AMASS with
+its current defaults.
+
+[fix] Wrapped the mc_parking_motion() function in an ifdef for porting
+purposes.
+
+[fix] Fixed an issue when in inverse time mode and G0’s would require a
+F word. This was not correct.
+
+[fix] Added a note in the defaults.h file that MAX_TRAVEL values must
+be positive. Some users were setting this negative and it was causing
+issues.
+
+
+----------------
 Date: 2017-01-14
 Author: Sonny Jeon
 Subject: Tool number bug fix. Updated documentation.

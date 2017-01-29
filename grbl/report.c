@@ -328,7 +328,7 @@ void report_gcode_modes()
   #endif
 
   #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
-    if (sys.override_ctrl) { 
+    if (sys.override_ctrl == OVERRIDE_PARKING_MOTION) { 
       report_util_gcode_modes_M();
       print_uint8_base10(56);
     }

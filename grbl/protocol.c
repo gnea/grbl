@@ -579,7 +579,7 @@ static void protocol_exec_rt_suspend()
             if ((bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE)) &&
                             (parking_target[PARKING_AXIS] < PARKING_TARGET) &&
                             bit_isfalse(settings.flags,BITFLAG_LASER_MODE) &&
-                            !sys.override_ctrl) {
+                            (sys.override_ctrl == OVERRIDE_PARKING_MOTION)) {
             #else
             if ((bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE)) &&
                             (parking_target[PARKING_AXIS] < PARKING_TARGET) &&
@@ -650,7 +650,7 @@ static void protocol_exec_rt_suspend()
               // NOTE: State is will remain DOOR, until the de-energizing and retract is complete.
               #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
               if (((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE) &&
-                  !sys.override_ctrl) {
+                   (sys.override_ctrl == OVERRIDE_PARKING_MOTION)) {
               #else
               if ((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE) {
               #endif
@@ -689,7 +689,7 @@ static void protocol_exec_rt_suspend()
               // Execute slow plunge motion from pull-out position to resume position.
               #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
               if (((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE) &&
-                  !sys.override_ctrl) {
+                   (sys.override_ctrl == OVERRIDE_PARKING_MOTION)) {
               #else
               if ((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE) {
               #endif

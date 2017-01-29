@@ -124,8 +124,13 @@
 #define TOOL_LENGTH_OFFSET_ENABLE_DYNAMIC 1 // G43.1
 
 // Modal Group M9: Override control
-#define OVERRIDE_DISABLED  0 // None (Default: Must be zero)
-#define OVERRIDE_PARKING_MOTION 1 // G56 (Default: Must be zero)
+#ifdef DEACTIVATE_PARKING_UPON_INIT
+  #define OVERRIDE_DISABLED  0 // (Default: Must be zero)
+  #define OVERRIDE_PARKING_MOTION 1 // M56
+#else
+  #define OVERRIDE_PARKING_MOTION 0 // M56 (Default: Must be zero)
+  #define OVERRIDE_DISABLED  1 // Parking disabled.
+#endif
 
 // Modal Group G12: Active work coordinate system
 // N/A: Stores coordinate system value (54-59) to change to.

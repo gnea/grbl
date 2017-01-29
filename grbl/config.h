@@ -575,8 +575,10 @@
 // These are controlled by `M56`, `M56 P1`, or `M56 Px` to enable and `M56 P0` to disable. 
 // The command is modal and will be set after a planner sync. Since it is g-code, it is 
 // executed in sync with g-code commands. It is not a real-time command.
-// NOTE: PARKING_ENABLE is required.
+// NOTE: PARKING_ENABLE is required. By default, M56 is active upon initialization. Use 
+// DEACTIVATE_PARKING_UPON_INIT to set M56 P0 as the power-up default.
 // #define ENABLE_PARKING_OVERRIDE_CONTROL   // Default disabled. Uncomment to enable
+// #define DEACTIVATE_PARKING_UPON_INIT // Default disabled. Uncomment to enable.
 
 // This option will automatically disable the laser during a feed hold by invoking a spindle stop
 // override immediately after coming to a stop. However, this also means that the laser still may
