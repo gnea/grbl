@@ -44,11 +44,17 @@
 // NOTE: AMASS cutoff frequency multiplied by ISR overdrive factor must not exceed maximum step frequency.
 // NOTE: Current settings are set to overdrive the ISR to no more than 16kHz, balancing CPU overhead
 // and timer accuracy.  Do not alter these settings unless you know what you are doing.
-#define MAX_AMASS_LEVEL 3
-// AMASS_LEVEL0: Normal operation. No AMASS. No upper cutoff frequency. Starts at LEVEL1 cutoff frequency.
-#define AMASS_LEVEL1 (F_CPU/8000) // Over-drives ISR (x2). Defined as F_CPU/(Cutoff frequency in Hz)
-#define AMASS_LEVEL2 (F_CPU/4000) // Over-drives ISR (x4)
-#define AMASS_LEVEL3 (F_CPU/2000) // Over-drives ISR (x8)
+#ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
+	#define MAX_AMASS_LEVEL 3
+	// AMASS_LEVEL0: Normal operation. No AMASS. No upper cutoff frequency. Starts at LEVEL1 cutoff frequency.
+	#define AMASS_LEVEL1 (F_CPU/8000) // Over-drives ISR (x2). Defined as F_CPU/(Cutoff frequency in Hz)
+	#define AMASS_LEVEL2 (F_CPU/4000) // Over-drives ISR (x4)
+	#define AMASS_LEVEL3 (F_CPU/2000) // Over-drives ISR (x8)
+
+  #if MAX_AMASS_LEVEL <= 0
+    error "AMASS must have 1 or more levels to operate correctly."
+  #endif
+#endif
 
 
 // Stores the planner block Bresenham algorithm execution data for the segments in the segment
@@ -632,8 +638,8 @@ void st_prep_buffer()
         st_prep_block->direction_bits = pl_block->direction_bits;
         uint8_t idx;
         #ifndef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
-          for (idx=0; idx<N_AXIS; idx++) { st_prep_block->steps[idx] = pl_block->steps[idx]; }
-          st_prep_block->step_event_count = pl_block->step_event_count;
+          for (idx=0; idx<N_AXIS; idx++) { st_prep_block->steps[idx] = (pl_block->steps[idx] << 1); }
+          st_prep_block->step_event_count = (pl_block->step_event_count << 1);
         #else
           // With AMASS enabled, simply bit-shift multiply all Bresenham data by the max AMASS
           // level, such that we never divide beyond the original data anywhere in the algorithm.

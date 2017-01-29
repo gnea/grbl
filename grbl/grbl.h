@@ -22,8 +22,8 @@
 #define grbl_h
 
 // Grbl versioning system
-#define GRBL_VERSION "1.1e"
-#define GRBL_VERSION_BUILD "20170114"
+#define GRBL_VERSION "1.1f"
+#define GRBL_VERSION_BUILD "20170128"
 
 // Define standard libraries used by Grbl.
 #include <avr/io.h>
@@ -76,9 +76,19 @@
   #error "USE_SPINDLE_DIR_AS_ENABLE_PIN may only be used with a 328p processor"
 #endif
 
+#if !defined(USE_SPINDLE_DIR_AS_ENABLE_PIN) && defined(SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED)
+  #error "SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED may only be used with USE_SPINDLE_DIR_AS_ENABLE_PIN enabled"
+#endif
+
 #if defined(PARKING_ENABLE)
   #if defined(HOMING_FORCE_SET_ORIGIN)
     #error "HOMING_FORCE_SET_ORIGIN is not supported with PARKING_ENABLE at this time."
+  #endif
+#endif
+
+#if defined(ENABLE_PARKING_OVERRIDE_CONTROL)
+  #if !defined(PARKING_ENABLE)
+    #error "ENABLE_PARKING_OVERRIDE_CONTROL must be enabled with PARKING_ENABLE."
   #endif
 #endif
 
@@ -100,6 +110,7 @@
 #if (REPORT_OVR_REFRESH_IDLE_COUNT < 1)
   #error "Override refresh must be greater than zero."
 #endif
+
 // ---------------------------------------------------------------------------------------
 
 #endif

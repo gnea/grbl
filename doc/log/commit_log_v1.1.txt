@@ -1,4 +1,21 @@
 ----------------
+Date: 2017-01-14
+Author: Sonny Jeon
+Subject: Tool number bug fix. Updated documentation.
+
+- [fix] Tool numbers were not being tracked and reported correctly. Now
+shows tool number values in $G when programmed.
+
+- [fix] Added a max tool number value check to the g-code parser.
+
+- [doc] Added a new error code for invalid tool number. Updated CSV and
+interface documents.
+
+- [doc] Added a implementation note for buffer state in status reports.
+Don’t rely on this data for streaming.
+
+
+----------------
 Date: 2017-01-03
 Author: Sonny Jeon
 Subject: Spindle enable pin with variable spindle option fix.

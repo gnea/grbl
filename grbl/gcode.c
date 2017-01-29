@@ -252,16 +252,11 @@ uint8_t gc_execute_line(char *line)
               default: gc_block.modal.program_flow = int_value; // Program end and reset
             }
             break;
-          #ifndef USE_SPINDLE_DIR_AS_ENABLE_PIN
-            case 4:
-          #endif
-          case 3: case 5:
+          case 3: case 4: case 5:
             word_bit = MODAL_GROUP_M7;
             switch(int_value) {
               case 3: gc_block.modal.spindle = SPINDLE_ENABLE_CW; break;
-              #ifndef USE_SPINDLE_DIR_AS_ENABLE_PIN
-                case 4: gc_block.modal.spindle = SPINDLE_ENABLE_CCW; break;
-              #endif
+              case 4: gc_block.modal.spindle = SPINDLE_ENABLE_CCW; break;
               case 5: gc_block.modal.spindle = SPINDLE_DISABLE; break;
             }
             break;
@@ -279,6 +274,12 @@ uint8_t gc_execute_line(char *line)
               case 9: gc_block.modal.coolant = COOLANT_DISABLE; break;
             }
             break;
+          #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
+            case 56:
+              word_bit = MODAL_GROUP_M9;
+              gc_block.modal.override = OVERRIDE_PARKING_MOTION;
+              break;
+          #endif
           default: FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported M command]
         }
 
@@ -395,7 +396,7 @@ uint8_t gc_execute_line(char *line)
     if (gc_block.modal.feed_rate == FEED_RATE_MODE_INVERSE_TIME) { // = G93
       // NOTE: G38 can also operate in inverse time, but is undefined as an error. Missing F word check added here.
       if (axis_command == AXIS_COMMAND_MOTION_MODE) {
-        if ((gc_block.modal.motion != MOTION_MODE_NONE) || (gc_block.modal.motion != MOTION_MODE_SEEK)) {
+        if ((gc_block.modal.motion != MOTION_MODE_NONE) && (gc_block.modal.motion != MOTION_MODE_SEEK)) {
           if (bit_isfalse(value_words,bit(WORD_F))) { FAIL(STATUS_GCODE_UNDEFINED_FEED_RATE); } // [F word missing]
         }
       }
@@ -434,7 +435,15 @@ uint8_t gc_execute_line(char *line)
   // [6. Change tool ]: N/A
   // [7. Spindle control ]: N/A
   // [8. Coolant control ]: N/A
-  // [9. Enable/disable feed rate or spindle overrides ]: NOT SUPPORTED.
+  // [9. Override control ]: Not supported except for a Grbl-only parking motion override control.
+  #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
+    if (gc_block.modal.override == OVERRIDE_PARKING_MOTION) {
+      if (bit_istrue(value_words,bit(WORD_P))) {
+        if (gc_block.values.p == 0.0) { gc_block.modal.override = OVERRIDE_DISABLED; }
+        bit_false(value_words,bit(WORD_P));
+      }
+    }
+  #endif
 
   // [10. Dwell ]: P value missing. P is negative (done.) NOTE: See below.
   if (gc_block.non_modal_command == NON_MODAL_DWELL) {
@@ -949,7 +958,13 @@ uint8_t gc_execute_line(char *line)
   }
   pl_data->condition |= gc_state.modal.coolant; // Set condition flag for planner use.
 
-  // [9. Enable/disable feed rate or spindle overrides ]: NOT SUPPORTED. Always enabled.
+  // [9. Override control ]: NOT SUPPORTED. Always enabled. Except for a Grbl-only parking control.
+  #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
+    if (gc_state.modal.override != gc_block.modal.override) {
+      gc_state.modal.override = gc_block.modal.override;
+      mc_override_ctrl_update(gc_state.modal.override);
+    }
+  #endif
 
   // [10. Dwell ]:
   if (gc_block.non_modal_command == NON_MODAL_DWELL) { mc_dwell(gc_block.values.p); }

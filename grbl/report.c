@@ -327,6 +327,13 @@ void report_gcode_modes()
     else { serial_write('9'); }
   #endif
 
+  #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
+    if (sys.override_ctrl) { 
+      report_util_gcode_modes_M();
+      print_uint8_base10(56);
+    }
+  #endif
+  
   printPgmString(PSTR(" T"));
   print_uint8_base10(gc_state.tool);
 
@@ -393,6 +400,18 @@ void report_build_info(char *line)
   #ifdef ALLOW_FEED_OVERRIDE_DURING_PROBE_CYCLES
     serial_write('A');
   #endif
+  #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
+    serial_write('D');
+  #endif
+  #ifdef SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED
+    serial_write('0');
+  #endif
+  #ifdef ENABLE_SOFTWARE_DEBOUNCE
+    serial_write('S');
+  #endif
+  #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
+    serial_write('R');
+  #endif
   #ifndef ENABLE_RESTORE_EEPROM_WIPE_ALL // NOTE: Shown when disabled.
     serial_write('*');
   #endif
@@ -410,6 +429,9 @@ void report_build_info(char *line)
   #endif
   #ifndef FORCE_BUFFER_SYNC_DURING_WCO_CHANGE // NOTE: Shown when disabled.
     serial_write('W');
+  #endif
+  #ifndef HOMING_INIT_LOCK
+    serial_write('L');
   #endif
   // NOTE: Compiled values, like override increments/max/min values, may be added at some point later.
   // These will likely have a comma delimiter to separate them.   
