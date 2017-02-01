@@ -433,9 +433,13 @@ void report_build_info(char *line)
   #ifndef HOMING_INIT_LOCK
     serial_write('L');
   #endif
+
   // NOTE: Compiled values, like override increments/max/min values, may be added at some point later.
-  // These will likely have a comma delimiter to separate them.   
-    
+  serial_write(',');
+  print_uint8_base10(BLOCK_BUFFER_SIZE-1);
+  serial_write(',');
+  print_uint8_base10(RX_BUFFER_SIZE);
+
   report_util_feedback_line_feed();
 }
 

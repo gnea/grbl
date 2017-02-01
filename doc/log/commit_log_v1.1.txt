@@ -1,4 +1,17 @@
 ----------------
+Date: 2017-01-29
+Author: Sonny Jeon
+Subject: Tidying up parking override control implementation
+
+[new] Added a default configuration for the parking override control
+upon a reset or power-up. By default, parking is enabled, but this may
+be disabled via a config.h option.
+
+[fix] Parking override control should be checking if the command word
+is passed, rather than the value.
+
+
+----------------
 Date: 2017-01-28
 Author: chamnit
 Subject: v1.1f. Parking override control. Spindle enable pin option.
