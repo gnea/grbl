@@ -1,4 +1,17 @@
 ----------------
+Date: 2017-01-31
+Author: Sonny Jeon
+Subject: Additional build info in the $I printout.
+
+- [new] Added total available planner buffer blocks (15 shown, but
+there are 16. one is used by the ring buffer and to execute system
+motions) and serial RX buffer bytes. This information is useful for
+GUIs to setup and optimize their streaming protocols easily.
+
+[doc] Updated the interface document to reflect the change.
+
+
+----------------
 Date: 2017-01-29
 Author: Sonny Jeon
 Subject: Tidying up parking override control implementation

@@ -65,8 +65,12 @@ void mc_line(float *target, plan_line_data_t *pl_data)
   } while (1);
 
   // Plan and queue motion into planner buffer
-  // uint8_t plan_status; // Not used in normal operation.
-  plan_buffer_line(target, pl_data);
+  if (plan_buffer_line(target, pl_data) == PLAN_EMPTY_BLOCK) {
+    if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)) {
+      // Correctly set laser state, if there is a coincident position passed. Forces a buffer sync.
+      spindle_sync((pl_data->condition & (PL_COND_FLAG_SPINDLE_CW|PL_COND_FLAG_SPINDLE_CCW)), pl_data->spindle_speed);
+    }
+  }
 }
 
 
