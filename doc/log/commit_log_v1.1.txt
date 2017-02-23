@@ -1,4 +1,15 @@
 ----------------
+Date: 2017-02-23
+Author: Sonny Jeon
+Subject: Fixed issue with M3 laser state changes and coincident targets.
+
+[fix] When in M3 constant laser power mode, a change from G0 to G1
+would not set the laser on, if G1 was passed with a coincident target.
+Motion controller now checks for a coincident target situation and will
+force a spindle sync when detected.
+
+
+----------------
 Date: 2017-01-31
 Author: Sonny Jeon
 Subject: Additional build info in the $I printout.
