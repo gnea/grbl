@@ -1,106 +1,127 @@
-#  Part of Grbl
-#
-#  Copyright (c) 2009-2011 Simen Svale Skogsrud
-#  Copyright (c) 2012-2016 Sungeun K. Jeon for Gnea Research LLC
-#
-#  Grbl is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 3 of the License, or
-#  (at your option) any later version.
-#
-#  Grbl is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+# detect what shell is used
+ifeq ($(findstring cmd.exe,$(SHELL)),cmd.exe)
+$(info "Info : Running on Windows shell cmd.exe")
+DEVNUL := NUL
+WHICH := where
+else
+$(info "Info : Running on Unix shell")
+DEVNUL := /dev/null
+WHICH := which
+endif
 
 
-# This is a prototype Makefile. Modify it according to your needs.
-# You should at least check the settings for
-# DEVICE ....... The AVR device you compile for
-# CLOCK ........ Target AVR clock rate in Hertz
-# OBJECTS ...... The object files created from your source files. This list is
-#                usually the same as the list of source files with suffix ".o".
-# PROGRAMMER ... Options to avrdude which define the hardware you use for
-#                uploading to the AVR and the interface where this hardware
-#                is connected.
-# FUSES ........ Parameters for avrdude to flash the fuses appropriately.
+# Find first cross compilation tools
+XTOOLS_DIR = $(abspath $(shell dirname `${WHICH} arm-none-eabi-gcc`)/..)
 
-DEVICE     ?= atmega328p
-CLOCK      = 16000000
-PROGRAMMER ?= -c avrisp2 -P usb
-SOURCE    = main.c motion_control.c gcode.c spindle_control.c coolant_control.c serial.c \
-             protocol.c stepper.c eeprom.c settings.c planner.c nuts_bolts.c limits.c jog.c\
-             print.c probe.c report.c system.c
-BUILDDIR = build
-SOURCEDIR = grbl
-# FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
-FUSES      = -U hfuse:w:0xd2:m -U lfuse:w:0xff:m
+# Set tool & Lib paths
+X_LIBC_DIR = $(XTOOLS_DIR)/arm-none-eabi/lib/armv7e-m/fpu
+X_CC = $(XTOOLS_DIR)/bin/arm-none-eabi-gcc
+X_OBJCOPY = $(XTOOLS_DIR)/bin/arm-none-eabi-objcopy
+X_AR = $(XTOOLS_DIR)/bin/arm-none-eabi-ar
+X_LD = $(XTOOLS_DIR)/bin/arm-none-eabi-ld
+X_GDB = $(XTOOLS_DIR)/bin/arm-none-eabi-gdb
 
-# Tune the lines below only if you know what you are doing:
+OUT_DIR = debug
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -B 10 -F
+OUTPUT = grbl-stm32
 
-# Compile flags for avr-gcc v4.8.1. Does not produce -flto warnings.
-# COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -I. -ffunction-sections
+SRC= ./cmsis_boot/startup/startup_stm32f10x_md.c \
+     ./cmsis_boot/system_stm32f10x.c \
+     ./grbl/coolant_control.c \
+     ./grbl/eeprom.c \
+     ./grbl/gcode.c \
+     ./grbl/jog.c \
+     ./grbl/limits.c \
+     ./grbl/main.c \
+     ./grbl/motion_control.c \
+     ./grbl/nuts_bolts.c \
+     ./grbl/planner.c \
+     ./grbl/print.c \
+     ./grbl/probe.c \
+     ./grbl/protocol.c \
+     ./grbl/report.c \
+     ./grbl/serial.c \
+     ./grbl/settings.c \
+     ./grbl/spindle_control.c \
+     ./grbl/stepper.c \
+     ./grbl/system.c \
+     ./stm_lib/src/misc.c \
+     ./stm_lib/src/stm32f10x_exti.c \
+     ./stm_lib/src/stm32f10x_flash.c \
+     ./stm_lib/src/stm32f10x_gpio.c \
+     ./stm_lib/src/stm32f10x_rcc.c \
+     ./stm_lib/src/stm32f10x_tim.c \
+     ./stm_lib/src/stm32f10x_usart.c \
+     ./stm_usb_fs_lib/src/usb_core.c \
+     ./stm_usb_fs_lib/src/usb_init.c \
+     ./stm_usb_fs_lib/src/usb_int.c \
+     ./stm_usb_fs_lib/src/usb_mem.c \
+     ./stm_usb_fs_lib/src/usb_regs.c \
+     ./stm_usb_fs_lib/src/usb_sil.c \
+     ./usb/hw_config.c \
+     ./usb/usb_desc.c \
+     ./usb/usb_endp.c \
+     ./usb/usb_istr.c \
+     ./usb/usb_prop.c \
+     ./usb/usb_pwr.c \
+     ./util/stm32f10x_it.c
 
-# Compile flags for avr-gcc v4.9.2 compatible with the IDE. Or if you don't care about the warnings. 
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -I. -ffunction-sections -flto
+OBJ = $(patsubst %.c, %.o, $(SRC))
+#OBJ += $(BOARD_DIR)/start.o
 
+# include files
+INC = .
+INC += cmsis
+INC += cmsis_boot
+INC += cmsis_boot/startup
+INC += grbl
+INC += stm_lib/inc
+INC += stm_lib/src
+INC += stm_usb_fs_lib/inc
+INC += stm_usb_fs_lib/src
+INC += usb
+INC += util
 
-OBJECTS = $(addprefix $(BUILDDIR)/,$(notdir $(SOURCE:.c=.o)))
+INCLUDE = $(addprefix -I,$(INC))
 
-# symbolic targets:
-all:	grbl.hex
+# compiler flags
+# as in coocox
+# -mcpu=cortex-m3 ; -mthumb ; -g2 ; -Wall ; -Os ; -DUSE_STDPERIPH_DRIVER ; -D__ASSEMBLY__ ; -D_GRBL_ ; -DSTM32F103C8 ; -DSTM32F10X_MD ; -DLEDBLINK ; -DUSEUSB ; -I. ; -Iusb ; -Iutil ; -Iuseusb ; -Igrbl ;
 
-$(BUILDDIR)/%.o: $(SOURCEDIR)/%.c
-	$(COMPILE) -MMD -MP -c $< -o $@
+CFLAGS = -Wall
+CFLAGS += -Os
+CFLAGS += -g2
+CFLAGS += -mthumb 
+CFLAGS += -mcpu=cortex-m3
+
+# linker flags
+LDSCRIPT = STM32F103C8T6.ld
+LDFLAGS = -T$(LDSCRIPT) -Wl,-Map,$(OUT_DIR)/$(OUTPUT).map -Wl,--gc-sections
+
+# defines
+DEFINES = -DUSE_STDPERIPH_DRIVER -D__ASSEMBLY__ -D_GRBL_ -DSTM32F103C8 -DSTM32F10X_MD -DLEDBLINK -DUSEUSB
 
 .S.o:
-	$(COMPILE) -x assembler-with-cpp -c $< -o $(BUILDDIR)/$@
-# "-x assembler-with-cpp" should not be necessary since this is the default
-# file type for the .S (with capital S) extension. However, upper case
-# characters are not always preserved on Windows. To ensure WinAVR
-# compatibility define the file type manually.
+	$(X_CC) $(INCLUDE) $(DEFINES) $(CFLAGS) -c $< -o $@
+.c.o:
+	$(X_CC) $(INCLUDE) $(DEFINES) $(CFLAGS) -c $< -o $@
 
-#.c.s:
-	$(COMPILE) -S $< -o $(BUILDDIR)/$@
+.PHONY: all flash grbl_src clean
 
-flash:	all
-	$(AVRDUDE) -U flash:w:grbl.hex:i
+all:  $(OBJ)
+	$(X_CC) $(CFLAGS) $(LDFLAGS) $(OBJ) -lm -o $(OUT_DIR)/$(OUTPUT)
+	mv $(OUT_DIR)/$(OUTPUT) $(OUT_DIR)/$(OUTPUT).elf
+	$(X_OBJCOPY) -O binary $(OUT_DIR)/$(OUTPUT).elf $(OUT_DIR)/$(OUTPUT).bin
 
-fuse:
-	$(AVRDUDE) $(FUSES)
+flash:
+	make all
+	st-flash write $(OUT_DIR)/$(OUTPUT).bin 0x08000000
 
-# Xcode uses the Makefile targets "", "clean" and "install"
-install: flash fuse
-
-# if you use a bootloader, change the command below appropriately:
-load: all
-	bootloadHID grbl.hex
+grbl_src:
+	make  all
 
 clean:
-	rm -f grbl.hex $(BUILDDIR)/*.o $(BUILDDIR)/*.d $(BUILDDIR)/*.elf
-
-# file targets:
-$(BUILDDIR)/main.elf: $(OBJECTS)
-	$(COMPILE) -o $(BUILDDIR)/main.elf $(OBJECTS) -lm -Wl,--gc-sections
-
-grbl.hex: $(BUILDDIR)/main.elf
-	rm -f grbl.hex
-	avr-objcopy -j .text -j .data -O ihex $(BUILDDIR)/main.elf grbl.hex
-	avr-size --format=berkeley $(BUILDDIR)/main.elf
-# If you have an EEPROM section, you must also create a hex file for the
-# EEPROM and add it to the "flash" target.
-
-# Targets for code debugging and analysis:
-disasm:	main.elf
-	avr-objdump -d $(BUILDDIR)/main.elf
-
-cpp:
-	$(COMPILE) -E $(SOURCEDIR)/main.c
-
-# include generated header dependencies
--include $(BUILDDIR)/$(OBJECTS:.o=.d)
+	-rm $(OBJ)
+	-rm $(OUT_DIR)/$(OUTPUT).map
+	-rm $(OUT_DIR)/$(OUTPUT).bin
+	-rm $(OUT_DIR)/$(OUTPUT).elf
