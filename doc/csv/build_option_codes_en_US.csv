@@ -6,7 +6,7 @@
 "P","Parking motion","Enabled"
 "Z","Homing force origin","Enabled"
 "H","Homing single axis commands","Enabled"
-"L","Two limit switches on axis","Enabled"
+"T","Two limit switches on axis","Enabled"
 "A","Allow feed rate overrides in probe cycles","Enabled"
 "D","Use spindle direction as enable pin","Enabled"
 "0","Spindle enable off when speed is zero","Enabled"

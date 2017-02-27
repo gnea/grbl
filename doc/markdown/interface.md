@@ -426,7 +426,7 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 | **`P`** | Parking motion enabled |
 | **`Z`** | Homing force origin enabled |
 | **`H`** | Homing single axis enabled |
-| **`L`** | Two limit switches on axis enabled |
+| **`T`** | Two limit switches on axis enabled |
 | **`D`** | Spindle direction pin used as enable pin |
 | **`0`** | Spindle enable off when speed is zero enabled |
 | **`S`** | Software limit pin debouncing enabled |

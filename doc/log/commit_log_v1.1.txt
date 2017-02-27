@@ -1,6 +1,18 @@
 ----------------
 Date: 2017-02-23
 Author: Sonny Jeon
+Subject: Restrict coincident target updates to M3 constant laser only.
+
+- Restrict M3 forced updates when there is a motion block with a
+coincident target. Force syncing of the spindle state can lead to some
+pauses during a job that has coincident targets. That’s not
+particularly desirable. This ensures M4 dynamic mode is not effected by
+this force-sync.
+
+
+----------------
+Date: 2017-02-23
+Author: Sonny Jeon
 Subject: Fixed issue with M3 laser state changes and coincident targets.
 
 [fix] When in M3 constant laser power mode, a change from G0 to G1
