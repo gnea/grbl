@@ -1,4 +1,13 @@
 ----------------
+Date: 2017-02-27
+Author: Sonny Jeon
+Subject: Fixed shared build info code.
+
+- The build info options of “two switches on an axis” and “homing init
+lock” shared the same letter ‘L’. The former is now ’T’.
+
+
+----------------
 Date: 2017-02-23
 Author: Sonny Jeon
 Subject: Restrict coincident target updates to M3 constant laser only.
