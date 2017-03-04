@@ -362,11 +362,19 @@
 // preserve I/O pins. For certain setups, these may need to be separate pins. This configure option uses
 // the spindle direction pin(D13) as a separate spindle enable pin along with spindle speed PWM on pin D11.
 // NOTE: This configure option only works with VARIABLE_SPINDLE enabled and a 328p processor (Uno).
-// NOTE: With no direction pin, the spindle clockwise M4 g-code command will be removed. M3 and M5 still work.
+// NOTE: Without a direction pin, M4 will not have a pin output to indicate a difference with M3. 
 // NOTE: BEWARE! The Arduino bootloader toggles the D13 pin when it powers up. If you flash Grbl with
 // a programmer (you can use a spare Arduino as "Arduino as ISP". Search the web on how to wire this.),
 // this D13 LED toggling should go away. We haven't tested this though. Please report how it goes!
 // #define USE_SPINDLE_DIR_AS_ENABLE_PIN // Default disabled. Uncomment to enable.
+
+// Alters the behavior of the spindle enable pin with the USE_SPINDLE_DIR_AS_ENABLE_PIN option . By default,
+// Grbl will not disable the enable pin if spindle speed is zero and M3/4 is active, but still sets the PWM 
+// output to zero. This allows the users to know if the spindle is active and use it as an additional control
+// input. However, in some use cases, user may want the enable pin to disable with a zero spindle speed and 
+// re-enable when spindle speed is greater than zero. This option does that.
+// NOTE: Requires USE_SPINDLE_DIR_AS_ENABLE_PIN to be enabled.
+// #define SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED // Default disabled. Uncomment to enable.
 
 // With this enabled, Grbl sends back an echo of the line it has received, which has been pre-parsed (spaces
 // removed, capitalized letters, no comments) and is to be immediately executed by Grbl. Echoes will not be
@@ -573,7 +581,16 @@
 #define PARKING_PULLOUT_RATE 100.0f // Pull-out/plunge slow feed rate in mm/min.
 #define PARKING_PULLOUT_INCREMENT 5.0f // Spindle pull-out and plunge distance in mm. Incremental distance.
                                       // Must be positive value or equal to zero.
-        
+
+// Enables a special set of M-code commands that enables and disables the parking motion. 
+// These are controlled by `M56`, `M56 P1`, or `M56 Px` to enable and `M56 P0` to disable. 
+// The command is modal and will be set after a planner sync. Since it is g-code, it is 
+// executed in sync with g-code commands. It is not a real-time command.
+// NOTE: PARKING_ENABLE is required. By default, M56 is active upon initialization. Use 
+// DEACTIVATE_PARKING_UPON_INIT to set M56 P0 as the power-up default.
+// #define ENABLE_PARKING_OVERRIDE_CONTROL   // Default disabled. Uncomment to enable
+// #define DEACTIVATE_PARKING_UPON_INIT // Default disabled. Uncomment to enable.
+
 // This option will automatically disable the laser during a feed hold by invoking a spindle stop
 // override immediately after coming to a stop. However, this also means that the laser still may
 // be reenabled by disabling the spindle stop override, if needed. This is purely a safety feature

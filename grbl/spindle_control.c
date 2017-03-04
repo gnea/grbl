@@ -190,25 +190,45 @@ void spindle_stop()
   // and stepper ISR. Keep routine small and efficient.
   void spindle_set_speed(SPINDLE_PWM_TYPE pwm_value)
   {
-    if (pwm_value == SPINDLE_PWM_OFF_VALUE) {
-      spindle_stop();
-    } else {
 #ifdef AVRTARGET
-      SPINDLE_OCR_REGISTER = pwm_value; // Set PWM output level.
-      SPINDLE_TCCRA_REGISTER |= (1<<SPINDLE_COMB_BIT); // Ensure PWM output is enabled.
+		SPINDLE_OCR_REGISTER = pwm_value; // Set PWM output level.
 #endif
 #if defined (STM32F103C8)
-      TIM1->CCR1 = pwm_value;
-      TIM_CtrlPWMOutputs(TIM1, ENABLE);
+		TIM1->CCR1 = pwm_value;
 #endif
-#if defined(USE_SPINDLE_DIR_AS_ENABLE_PIN)
-      #ifdef INVERT_SPINDLE_ENABLE_PIN
-        ResetSpindleEnablebit();
-      #else
-        SetSpindleEnablebit();
-        #endif
-      #endif
-    }
+		#ifdef SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED
+     if (pwm_value == SPINDLE_PWM_OFF_VALUE) {
+        spindle_stop();
+      } else {
+				#ifdef AVRTARGET
+					SPINDLE_TCCRA_REGISTER |= (1<<SPINDLE_COMB_BIT); // Ensure PWM output is enabled.
+				#endif
+				#if defined (STM32F103C8)
+						TIM_CtrlPWMOutputs(TIM1, ENABLE);
+				#endif
+				#ifdef INVERT_SPINDLE_ENABLE_PIN
+					ResetSpindleEnablebit();
+				#else
+					SetSpindleEnablebit();
+				#endif
+		 }
+		#else
+			if (pwm_value == SPINDLE_PWM_OFF_VALUE) {
+			#ifdef AVRTARGET
+				SPINDLE_TCCRA_REGISTER &= ~(1 << SPINDLE_COMB_BIT); // Disable PWM. Output voltage is zero.
+			#endif
+			#if defined (STM32F103C8)
+				TIM_CtrlPWMOutputs(TIM1, DISABLE);
+			#endif
+			} else {
+			#ifdef AVRTARGET
+      SPINDLE_TCCRA_REGISTER |= (1<<SPINDLE_COMB_BIT); // Ensure PWM output is enabled.
+			#endif
+			#if defined (STM32F103C8)
+      TIM_CtrlPWMOutputs(TIM1, ENABLE);
+			#endif
+			}
+		#endif
   }
 
 
@@ -274,7 +294,9 @@ void spindle_stop()
         if (state == SPINDLE_ENABLE_CCW) { rpm = 0.0f; } // TODO: May need to be rpm_min*(100/MAX_SPINDLE_SPEED_OVERRIDE);
       }
     spindle_set_speed(spindle_compute_pwm_value(rpm));
-    #else
+		#endif
+    #if (defined(USE_SPINDLE_DIR_AS_ENABLE_PIN) && \
+        !defined(SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED)) || !defined(VARIABLE_SPINDLE)
       // NOTE: Without variable spindle, the enable bit should just turn on or off, regardless
       // if the spindle speed value is zero, as its ignored anyhow.
       #ifdef INVERT_SPINDLE_ENABLE_PIN

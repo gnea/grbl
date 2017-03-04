@@ -1,4 +1,159 @@
 ----------------
+Date: 2017-02-23
+Author: Sonny Jeon
+Subject: Restrict coincident target updates to M3 constant laser only.
+
+- Restrict M3 forced updates when there is a motion block with a
+coincident target. Force syncing of the spindle state can lead to some
+pauses during a job that has coincident targets. That’s not
+particularly desirable. This ensures M4 dynamic mode is not effected by
+this force-sync.
+
+
+----------------
+Date: 2017-02-23
+Author: Sonny Jeon
+Subject: Fixed issue with M3 laser state changes and coincident targets.
+
+[fix] When in M3 constant laser power mode, a change from G0 to G1
+would not set the laser on, if G1 was passed with a coincident target.
+Motion controller now checks for a coincident target situation and will
+force a spindle sync when detected.
+
+
+----------------
+Date: 2017-01-31
+Author: Sonny Jeon
+Subject: Additional build info in the $I printout.
+
+- [new] Added total available planner buffer blocks (15 shown, but
+there are 16. one is used by the ring buffer and to execute system
+motions) and serial RX buffer bytes. This information is useful for
+GUIs to setup and optimize their streaming protocols easily.
+
+[doc] Updated the interface document to reflect the change.
+
+
+----------------
+Date: 2017-01-29
+Author: Sonny Jeon
+Subject: Tidying up parking override control implementation
+
+[new] Added a default configuration for the parking override control
+upon a reset or power-up. By default, parking is enabled, but this may
+be disabled via a config.h option.
+
+[fix] Parking override control should be checking if the command word
+is passed, rather than the value.
+
+
+----------------
+Date: 2017-01-28
+Author: chamnit
+Subject: v1.1f. Parking override control. Spindle enable pin option.
+
+[ver] v1.1f update due to tweaks to interface from new parking override
+control.
+
+[new] Parking motion override control via new `M56 P0` and `M56 P1`
+command, which disables and enables the parking motion, respectively.
+Requires ENABLE_PARKING_OVERRIDE_CONTROL and PARKING_ENABLE enabled in
+config.h. Primarily for OEMs.
+
+[new] `M56` appears in the $G report when enabled.
+
+[new] Five new build info identification letters. Some were missing and
+a couple are new. Updated the CSV and documentation to reflect these
+new items.
+
+[new] Spindle enable pin configuration option to alter its behavior
+based on how certain lasers work. By default, Grbl treats the enable
+pin separately and leaves it on when S is 0. The new option turns the
+enable pin on and off with S>0 and S=0. This only is in effect when a
+user enables the USE_SPINDLE_DIR_AS_ENABLE_PIN option.
+
+[fix] M4 is now allowed to work when USE_SPINDLE_DIR_AS_ENABLE_PIN is
+enabled. Previously this was blocked and was problematic for laser
+folks using M4.
+
+[fix] Properly declared system variables as extern. Not sure how that
+went unnoticed or why it worked up until now but it has.
+
+[fix] EXTREMELY RARE. When AMASS is intentionally disabled and sent a
+motion command that is _one step_ in length, Grbl would not actuate the
+step due to numerical round-off. Applied a fix to prevent the round-off
+issue.
+
+[fix] Added a compile-time check for AMASS settings to make sure that
+the numerical round-off issue doesn’t effect it. This would only happen
+if someone set AMASS max levels to zero. It does not effect AMASS with
+its current defaults.
+
+[fix] Wrapped the mc_parking_motion() function in an ifdef for porting
+purposes.
+
+[fix] Fixed an issue when in inverse time mode and G0’s would require a
+F word. This was not correct.
+
+[fix] Added a note in the defaults.h file that MAX_TRAVEL values must
+be positive. Some users were setting this negative and it was causing
+issues.
+
+
+----------------
+Date: 2017-01-14
+Author: Sonny Jeon
+Subject: Tool number bug fix. Updated documentation.
+
+- [fix] Tool numbers were not being tracked and reported correctly. Now
+shows tool number values in $G when programmed.
+
+- [fix] Added a max tool number value check to the g-code parser.
+
+- [doc] Added a new error code for invalid tool number. Updated CSV and
+interface documents.
+
+- [doc] Added a implementation note for buffer state in status reports.
+Don’t rely on this data for streaming.
+
+
+----------------
+Date: 2017-01-03
+Author: Sonny Jeon
+Subject: Spindle enable pin with variable spindle option fix.
+
+- [fix] When USE_SPINDLE_DIR_AS_ENABLE_PIN is enabled in config.h, the
+enable pin was not being set when spindle speed is zero. This behavior
+should now be fixed.
+
+
+----------------
+Date: 2016-12-19
+Author: Sonny Jeon
+Subject: Fixed homing fail alarm handling. Re-integrated software debouncing.
+
+- [bug] Fixed a homing fail issue, where the alarm was not being set
+right, not cleared correctly. It would report the wrong code and enter
+an infinite alarm loop. This was due to how alarm codes were altered a
+while back. Now updated and fixed to show the right codes.
+
+- [feature] Re-installed optional software debouncing for hard limit
+switches. By request.
+
+
+----------------
+Date: 2016-12-18
+Author: Sonny Jeon
+Subject: Addressed optional PWM min value issue. Updated docs.
+
+- [fix] Spindle PWM minimum value had some typos. Fixed the macros to
+compile correctly. Only effects users that enable SPINDLE_MINIMUM_PWM.
+The name changed to SPINDLE_PWM_MIN_VALUE for consistency sake.
+
+- Updated the laser documentation.
+
+
+----------------
 Date: 2016-12-12
 Author: Sonny Jeon
 Subject: Updating steam.py streaming script

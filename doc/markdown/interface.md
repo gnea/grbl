@@ -62,11 +62,9 @@ The real-time control commands, `~` cycle start/resume, `!` feed hold,  `^X` sof
 One important note are the override command characters. These are defined in the extended-ASCII character space and are generally not type-able on a keyboard. A GUI must be able to send these 8-bit values to support overrides. 
 
 #### EEPROM Issues
-EEPROM access on the Arduino AVR CPUs turns off all of the interrupts while the CPU reads and writes to EEPROM. This poses a problem for certain features in Grbl, particularly if a user is streaming and running a g-code program, since it can pause the main step generator interrupt from executing on time. Most of the EEPROM access is restricted by Grbl when it's in certain states, but there are some things that developers need to know.
+EEPROM access on the Arduino AVR CPUs turns off all of the interrupts while the CPU _writes_ to EEPROM. This poses a problem for certain features in Grbl, particularly if a user is streaming and running a g-code program, since it can pause the main step generator interrupt from executing on time. Most of the EEPROM access is restricted by Grbl when it's in certain states, but there are some things that developers need to know.
 
-* Settings should not be streamed with the character-counting streaming protocols. Only the simple send-response protocol works. This is because during the EEPROM write, the AVR CPU also shuts-down the serial RX interrupt, which means data can get corrupted or lost.
-
-* When changing work coordinates or accessing the `G28`/`G30` predefined positions, Grbl has to fetch them from EEPROM. There is a small chance this access can pause the stepper or serial receive interrupt long enough to cause motion issues, but since it only fetches 12 bytes at a time at 2 cycles per fetch, the chances are very small that this will do anything to how Grbl runs. We just suggest keeping an eye on this and report to us any issues you might think are related to this.
+* Settings should not be streamed with the character-counting streaming protocols. Only the simple send-response protocol works. This is because during the EEPROM write, the AVR CPU also shuts-down the serial RX interrupt, which means data can get corrupted or lost. This is safe with the send-response protocol, because it's not sending data after commanding Grbl to save data.
 
 For reference:
 * Grbl's EEPROM write commands: `G10 L2`, `G10 L20`, `G28.1`, `G30.1`, `$x=`, `$I=`, `$Nx=`, `$RST=`
@@ -174,6 +172,7 @@ Every G-code block sent to Grbl and Grbl `$` system command that is terminated w
 | **`35`** | A `G2` or `G3` arc, traced with the offset definition, is missing the `IJK` offset word in the selected plane to trace the arc.|
 | **`36`** | There are unused, leftover G-code words that aren't used by any command in the block.|
 | **`37`** | The `G43.1` dynamic tool length offset command cannot apply an offset to an axis other than its configured axis. The Grbl default axis is the Z-axis.|
+| **`38`** | Tool number greater than max supported value.|
 
 
 ----------------------
@@ -409,16 +408,16 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
   - `[VER:]` and `[OPT:]`: Indicates build info data from a `$I` user query. These build info messages are followed by an `ok` to confirm the `$I` was executed, like so:
  
       ```
-      [VER:v1.1d.20161014:Some string]
-      [OPT:VL]
+      [VER:v1.1f.20170131:Some string]
+      [OPT:VL,16,128]
       ok
       ```
       
   		- The first line `[VER:]` contains the build version and date.
       - A string may appear after the second `:` colon. It is a stored EEPROM string a user via a `$I=line` command or OEM can place there for personal use or tracking purposes.
-  		- The `[OPT:]` line follows immediately after and contains character codes for compile-time options that were either enabled or disabled. The codes are defined below and a CSV file is also provided for quick parsing. This is generally only used for quickly diagnosing firmware bugs or compatibility issues.
+  		- The `[OPT:]` line follows immediately after and contains character codes for compile-time options that were either enabled or disabled and two values separated by commas, which indicates the total usable planner blocks and serial RX buffer bytes, respectively. The codes are defined below and a CSV file is also provided for quick parsing. This is generally only used for quickly diagnosing firmware bugs or compatibility issues. 
 
-		| `OPT` Code | Setting Description, Units |
+			| `OPT` Code | Setting Description, Units |
 |:-------------:|----|
 | **`V`** | Variable spindle enabled |
 | **`N`** | Line numbers enabled |
@@ -427,7 +426,11 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 | **`P`** | Parking motion enabled |
 | **`Z`** | Homing force origin enabled |
 | **`H`** | Homing single axis enabled |
-| **`L`** | Two limit switches on axis enabled |
+| **`T`** | Two limit switches on axis enabled |
+| **`D`** | Spindle direction pin used as enable pin |
+| **`0`** | Spindle enable off when speed is zero enabled |
+| **`S`** | Software limit pin debouncing enabled |
+| **`R`** | Parking override control enabled |
 | **`A`** | Allow feed rate overrides in probe cycles |
 | **`*`** | Restore all EEPROM disabled |
 | **`$`** | Restore EEPROM `$` settings disabled |
@@ -435,7 +438,8 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 | **`I`** | Build info write user string disabled |
 | **`E`** | Force sync upon EEPROM write disabled |
 | **`W`** | Force sync upon work coordinate offset change disabled |
-
+| **`L`** | Homing initialization auto-lock disabled |
+    
   - `[echo:]` : Indicates an automated line echo from a command just prior to being parsed and executed. May be enabled only by a config.h option. Often used for debugging communication issues. A typical line echo message is shown below. A separate `ok` will eventually appear to confirm the line has been parsed and executed, but may not be immediate as with any line command containing motions.
       ```
       [echo:G1X0.540Y10.4F100]
@@ -567,6 +571,8 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
         
         - The usage of this data is generally for debugging an interface, but is known to be used to control some GUI-specific tasks. While this is disabled by default, GUIs should expect this data field to appear, but they may ignore it, if desired.
         
+        	- IMPORTANT: Do not use this buffer data to control streaming. During a stream, the reported buffer will often be out-dated and may be incorrect by the time it has been received by the GUI. Instead, please use the streaming protocols outlined. They use Grbl's responses as a direct way to accurately determine the buffer state.
+        	        
         - NOTE: The buffer state values changed from showing "in-use" blocks or bytes to "available". This change does not require the GUI knowing how many block/bytes Grbl has been compiled with.
 
         - This data field appears:

@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<Project version="2G - 1.7.8" name="stm32grbl">
+<Project version="2G - 2.0.6" name="stm32grbl">
   <Target name="stm32grbl" isCurrent="1">
-    <Device manufacturerId="9" manufacturerName="ST" chipId="305" chipName="STM32F103C8" boardId="" boardName=""/>
+    <Device manufacturerId="9" manufacturerName="ST" chipId="599" chipName="STM32F103C8T6" boardId="" boardName="" boardUrl="" coreId="" coreName=""/>
     <BuildOption>
       <Compile>
         <Option name="OptimizationLevel" value="4"/>
         <Option name="UseFPU" value="0"/>
-        <Option name="UserEditCompiler" value=""/>
+        <Option name="UserEditCompiler" value="-ffunction-sections;"/>
         <Option name="SupportCPlusplus" value="0"/>
+        <Option name="DEBUG" value="0"/>
+        <Option name="WARNING" value="0"/>
         <Includepaths>
           <Includepath path="."/>
           <Includepath path="usb"/>
@@ -19,10 +21,11 @@
           <Define name="USE_STDPERIPH_DRIVER"/>
           <Define name="__ASSEMBLY__"/>
           <Define name="_GRBL_"/>
-          <Define name="STM32F103C8"/>
+          <Define name="STM32F103C8T6"/>
           <Define name="STM32F10X_MD"/>
           <Define name="LEDBLINK"/>
           <Define name="USEUSB"/>
+          <Define name="STM32F103C8"/>
         </DefinedSymbols>
       </Compile>
       <Link useDefault="0">
@@ -43,11 +46,11 @@
           <Memory name="IROM2" type="ReadOnly" size="" startValue=""/>
           <Memory name="IRAM2" type="ReadWrite" size="" startValue=""/>
         </MemoryAreas>
-        <LocateLinkFile path="d:/coocox/coide/configuration/programdata/stm32grbl/arm-gcc-link.ld" type="0"/>
+        <LocateLinkFile path="c:/users/li shao/appdata/roaming/coocox/coide/configuration/programdata/stm32grbl/arm-gcc-link.ld" type="0"/>
       </Link>
       <Output>
         <Option name="OutputFileType" value="0"/>
-        <Option name="Path" value="j:/buildoutput/grbl11e/"/>
+        <Option name="Path" value="../../buildoutput/grbl11e/"/>
         <Option name="Name" value="stm32grbl"/>
         <Option name="HEX" value="1"/>
         <Option name="BIN" value="1"/>
@@ -74,17 +77,18 @@
       <Option name="org.coocox.codebugger.gdbjtag.core.autoDownload" value="1"/>
       <Option name="org.coocox.codebugger.gdbjtag.core.verify" value="1"/>
       <Option name="org.coocox.codebugger.gdbjtag.core.downloadFuction" value="Erase Effected"/>
-      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="./stm32f10x_md_64.elf"/>
-      <Option name="org.coocox.codebugger.gdbjtag.coredebugInRamInitCommands" value="cd j:/buildoutput/stm3211d/stm32grbl/Debug/bin restore stm32grbl.elf set {unsigned int*}0xE000ED08 = 0x20000000 set $sp = {unsigned int*}0x20000000 set $pc = {unsigned int*}0x20000004 "/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="d:/coocox/coide/flash/stm32f10x_md_64.elf;"/>
+      <Option name="org.coocox.codebugger.gdbjtag.coredebugInRamInitCommands" value="cd j:/buildoutput/stm3211/stm32grbl/Debug/bin restore stm32grbl.elf set {unsigned int*}0xE000ED08 = 0x20000000 set $sp = {unsigned int*}0x20000000 set $pc = {unsigned int*}0x20000004 "/>
     </DebugOption>
     <ExcludeFile/>
   </Target>
   <Components path="./"/>
+  <LocalComponents/>
   <Files>
     <File name="grbl/inc/probe.h" path="grbl/probe.h" type="1"/>
-    <File name="grbl" path="" type="2"/>
-    <File name="stm_usb_fs_lib/inc/usb_init.h" path="stm_usb_fs_lib/inc/usb_init.h" type="1"/>
     <File name="stm_usb_fs_lib/src" path="" type="2"/>
+    <File name="stm_usb_fs_lib/inc/usb_init.h" path="stm_usb_fs_lib/inc/usb_init.h" type="1"/>
+    <File name="grbl" path="" type="2"/>
     <File name="usb/usb_desc.c" path="usb/usb_desc.c" type="1"/>
     <File name="grbl/src/stepper.c" path="grbl/stepper.c" type="1"/>
     <File name="stm_usb_fs_lib/inc/usb_core.h" path="stm_usb_fs_lib/inc/usb_core.h" type="1"/>
@@ -92,13 +96,13 @@
     <File name="usb/hw_config.c" path="usb/hw_config.c" type="1"/>
     <File name="grbl/inc/eeprom.h" path="grbl/eeprom.h" type="1"/>
     <File name="stm_usb_fs_lib/inc/usb_mem.h" path="stm_usb_fs_lib/inc/usb_mem.h" type="1"/>
-    <File name="stm_lib/src/stm32f10x_tim.c" path="stm_lib/src/stm32f10x_tim.c" type="1"/>
     <File name="grbl/inc/print.h" path="grbl/print.h" type="1"/>
+    <File name="stm_lib/src/stm32f10x_tim.c" path="stm_lib/src/stm32f10x_tim.c" type="1"/>
     <File name="cmsis_boot/startup" path="" type="2"/>
     <File name="stm_usb_fs_lib/inc/usb_regs.h" path="stm_usb_fs_lib/inc/usb_regs.h" type="1"/>
     <File name="grbl/inc/system.h" path="grbl/system.h" type="1"/>
-    <File name="cmsis/core_cmFunc.h" path="cmsis/core_cmFunc.h" type="1"/>
     <File name="stm_usb_fs_lib/inc/usb_int.h" path="stm_usb_fs_lib/inc/usb_int.h" type="1"/>
+    <File name="cmsis/core_cmFunc.h" path="cmsis/core_cmFunc.h" type="1"/>
     <File name="stm_lib/src/misc.c" path="stm_lib/src/misc.c" type="1"/>
     <File name="grbl/src/jog.c" path="grbl/jog.c" type="1"/>
     <File name="cmsis_boot/stm32f10x.h" path="cmsis_boot/stm32f10x.h" type="1"/>
@@ -128,9 +132,9 @@
     <File name="stm_usb_fs_lib/src/usb_int.c" path="stm_usb_fs_lib/src/usb_int.c" type="1"/>
     <File name="stm_lib/inc/misc.h" path="stm_lib/inc/misc.h" type="1"/>
     <File name="cmsis/core_cmInstr.h" path="cmsis/core_cmInstr.h" type="1"/>
+    <File name="grbl/src/spindle_control.c" path="grbl/spindle_control.c" type="1"/>
     <File name="grbl/inc/gcode.h" path="grbl/gcode.h" type="1"/>
     <File name="util" path="" type="2"/>
-    <File name="grbl/src/spindle_control.c" path="grbl/spindle_control.c" type="1"/>
     <File name="stm_usb_fs_lib" path="" type="2"/>
     <File name="cmsis/core_cm3.h" path="cmsis/core_cm3.h" type="1"/>
     <File name="stm_usb_fs_lib/inc" path="" type="2"/>
@@ -178,4 +182,5 @@
     <File name="grbl/inc/grbl.h" path="grbl/grbl.h" type="1"/>
     <File name="main.c" path="grbl/main.c" type="1"/>
   </Files>
+  <Bookmarks/>
 </Project>

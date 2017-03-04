@@ -106,7 +106,7 @@
   #define COOLANT_FLOOD_BIT   3  // Uno Analog Pin 3
   #define COOLANT_MIST_DDR   DDRC
   #define COOLANT_MIST_PORT  PORTC
-  #define COOLANT_MIST_BIT   4  // Uno Analog Pin 3
+  #define COOLANT_MIST_BIT   4  // Uno Analog Pin 4
 
   // Define user-control controls (cycle start, reset, feed hold) input pins.
   // NOTE: All CONTROLs pins must be on the same port and not on a port with other input pins (limits).
