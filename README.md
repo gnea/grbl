@@ -1,6 +1,6 @@
 ![GitHub Logo](/doc/media/Grbl Logo 250px.png)
 ***
-_Click the `Release` tab to download pre-compiled `.hex` files or just [click here](https://github.com/gnea/grbl/releases)_
+_This is a special version with servo support instead of spindle/laser PWM_
 ***
 Grbl is a no-compromise, high performance, low cost alternative to parallel-port-based motion control for CNC milling. This version of Grbl runs on an Arduino with a 328p processor (Uno, Duemilanove, Nano, Micro, etc).
 

@@ -59,28 +59,28 @@ void spindle_init()
 uint8_t spindle_get_state()
 {
 	#ifdef VARIABLE_SPINDLE
-    #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
-		  // No spindle direction output pin. 
-			#ifdef INVERT_SPINDLE_ENABLE_PIN
-			  if (bit_isfalse(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { return(SPINDLE_STATE_CW); }
-	    #else
-	 			if (bit_istrue(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { return(SPINDLE_STATE_CW); }
-	    #endif
-    #else
-      if (SPINDLE_TCCRA_REGISTER & (1<<SPINDLE_COMB_BIT)) { // Check if PWM is enabled.
-        if (SPINDLE_DIRECTION_PORT & (1<<SPINDLE_DIRECTION_BIT)) { return(SPINDLE_STATE_CCW); }
-        else { return(SPINDLE_STATE_CW); }
-      }
-    #endif
+        #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
+              // No spindle direction output pin. 
+            #ifdef INVERT_SPINDLE_ENABLE_PIN
+                if (bit_isfalse(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { return(SPINDLE_STATE_CW); }
+            #else
+                if (bit_istrue(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { return(SPINDLE_STATE_CW); }
+            #endif
+        #else
+            if (SPINDLE_TCCRA_REGISTER & (1<<SPINDLE_COMB_BIT)) { // Check if PWM is enabled.
+                if (SPINDLE_DIRECTION_PORT & (1<<SPINDLE_DIRECTION_BIT)) { return(SPINDLE_STATE_CCW); }
+                else { return(SPINDLE_STATE_CW); }
+            }
+        #endif
 	#else
 		#ifdef INVERT_SPINDLE_ENABLE_PIN
-		  if (bit_isfalse(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { 
+            if (bit_isfalse(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { 
 		#else
-		  if (bit_istrue(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) {
+            if (bit_istrue(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) {
 		#endif
-      if (SPINDLE_DIRECTION_PORT & (1<<SPINDLE_DIRECTION_BIT)) { return(SPINDLE_STATE_CCW); }
-      else { return(SPINDLE_STATE_CW); }
-    }
+                if (SPINDLE_DIRECTION_PORT & (1<<SPINDLE_DIRECTION_BIT)) { return(SPINDLE_STATE_CCW); }
+                else { return(SPINDLE_STATE_CW); }
+            }
 	#endif
 	return(SPINDLE_STATE_DISABLE);
 }
@@ -91,22 +91,22 @@ uint8_t spindle_get_state()
 // Called by spindle_init(), spindle_set_speed(), spindle_set_state(), and mc_reset().
 void spindle_stop()
 {
-  #ifdef VARIABLE_SPINDLE
-    SPINDLE_TCCRA_REGISTER &= ~(1<<SPINDLE_COMB_BIT); // Disable PWM. Output voltage is zero.
-    #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
-      #ifdef INVERT_SPINDLE_ENABLE_PIN
-        SPINDLE_ENABLE_PORT |= (1<<SPINDLE_ENABLE_BIT);  // Set pin to high
-      #else
-        SPINDLE_ENABLE_PORT &= ~(1<<SPINDLE_ENABLE_BIT); // Set pin to low
-      #endif
-    #endif
-  #else
-    #ifdef INVERT_SPINDLE_ENABLE_PIN
-      SPINDLE_ENABLE_PORT |= (1<<SPINDLE_ENABLE_BIT);  // Set pin to high
+    #ifdef VARIABLE_SPINDLE
+        SPINDLE_TCCRA_REGISTER &= ~(1<<SPINDLE_COMB_BIT); // Disable PWM. Output voltage is zero.
+        #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
+            #ifdef INVERT_SPINDLE_ENABLE_PIN
+                SPINDLE_ENABLE_PORT |= (1<<SPINDLE_ENABLE_BIT);  // Set pin to high
+            #else
+                SPINDLE_ENABLE_PORT &= ~(1<<SPINDLE_ENABLE_BIT); // Set pin to low
+            #endif
+        #endif
     #else
-      SPINDLE_ENABLE_PORT &= ~(1<<SPINDLE_ENABLE_BIT); // Set pin to low
+        #ifdef INVERT_SPINDLE_ENABLE_PIN
+            SPINDLE_ENABLE_PORT |= (1<<SPINDLE_ENABLE_BIT);  // Set pin to high
+        #else
+            SPINDLE_ENABLE_PORT &= ~(1<<SPINDLE_ENABLE_BIT); // Set pin to low
+        #endif
     #endif
-  #endif
 }
 
 
@@ -148,13 +148,13 @@ void spindle_stop()
       sys.spindle_speed = settings.rpm_max;
       pwm_value = SPINDLE_PWM_MAX_VALUE;
     } else if (rpm <= settings.rpm_min) {
-      if (rpm == 0.0) { // S0 disables spindle
-        sys.spindle_speed = 0.0;
-        pwm_value = SPINDLE_PWM_OFF_VALUE;
-      } else { // Set minimum PWM output
+//      if (rpm == 0.0) { // S0 disables spindle
+//        sys.spindle_speed = 0.0;
+//        pwm_value = SPINDLE_PWM_OFF_VALUE;
+//      } else { // Set minimum PWM output
         sys.spindle_speed = settings.rpm_min;
         pwm_value = SPINDLE_PWM_MIN_VALUE;
-      }
+//      }
     } else { 
       // Compute intermediate PWM value with linear spindle speed model.
       // NOTE: A nonlinear model could be installed here, if required, but keep it VERY light-weight.
