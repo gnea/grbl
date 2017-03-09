@@ -6,7 +6,8 @@ _This is a special version with servo support instead of spindle/laser PWM_
 - The pulse width range is 0.63ms to 2.2ms
 - S0 does not deactivate the PWM, but instead send min pulse width
 - Set the max. S-value to `$30=255` to get a S-value range of 0-255
-- You should have a M3S0 at the start of your gcode to activate the servo and M5 at end to deactivate it  
+- You should have a M3S0 at the start of your gcode to activate the servo and M5 at end to deactivate it
+
 ***
 
 Grbl is a no-compromise, high performance, low cost alternative to parallel-port-based motion control for CNC milling. This version of Grbl runs on an Arduino with a 328p processor (Uno, Duemilanove, Nano, Micro, etc).
