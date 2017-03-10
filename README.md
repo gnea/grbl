@@ -1,12 +1,12 @@
 ![GitHub Logo](/doc/media/Grbl Logo 250px.png)
 ***
-_This is a special version with servo support instead of spindle/laser PWM_
+_This is a special version with servo support (swichable in config.h)_
 
-- The PWM frequency is set to 62.5Hz (prescaler 1/1024)
-- The pulse width range is 0.63ms to 2.2ms
-- S0 does not deactivate the PWM, but instead send min pulse width
-- Set the max. S-value to `$30=255` to get a S-value range of 0-255
-- You should have a M3S0 at the start of your gcode to activate the servo and M5 at end to deactivate it
+- The PWM frequency is set to 61Hz (prescaler 1/1024).
+- The pulse width range is 0.5 - 2.5ms.
+- S0 does not deactivate the PWM, but instead send min pulse width.
+- Set the max. S-value to `$30=255` to get a S-value range of 0-255.
+- You should have a M3S0 at the start of your gcode to activate the servo and M5 at end to deactivate it.
 
 ***
 
