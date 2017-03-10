@@ -367,6 +367,11 @@
 // NOTE: Requires USE_SPINDLE_DIR_AS_ENABLE_PIN to be enabled.
 // #define SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED // Default disabled. Uncomment to enable.
 
+// If you use a servo instead of a spindle (like on EggBot or pen plotter), you need to uncomment this option. 
+// This will set the PWM frequency to 61Hz and limit the PWM range to 0.5 - 2.5ms, as used by most servos.
+// See cpu_map.h, if you need to change the PWM range.
+#define SPINDLE_IS_SERVO // Default disabled. Uncomment to enable.
+
 // With this enabled, Grbl sends back an echo of the line it has received, which has been pre-parsed (spaces
 // removed, capitalized letters, no comments) and is to be immediately executed by Grbl. Echoes will not be
 // sent upon a line buffer overflow, but should for all normal lines sent to Grbl. For example, if a user
