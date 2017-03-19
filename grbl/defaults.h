@@ -107,6 +107,44 @@
   #define DEFAULT_HOMING_PULLOFF 1.0 // mm
 #endif
 
+#ifdef DEFAULTS_POCKETNC_FR4
+  // Description: Pocket NC FR4 CNC mill.
+  #define DEFAULT_X_STEPS_PER_MM 800.0
+  #define DEFAULT_Y_STEPS_PER_MM 800.0
+  #define DEFAULT_Z_STEPS_PER_MM 800.0
+  #define DEFAULT_X_MAX_RATE 300.0 // mm/min
+  #define DEFAULT_Y_MAX_RATE 300.0 // mm/min
+  #define DEFAULT_Z_MAX_RATE 300.0 // mm/min
+  #define DEFAULT_X_ACCELERATION (30.0*60*60) // 15*60*60 mm/min^2 = 15 mm/sec^2
+  #define DEFAULT_Y_ACCELERATION (30.0*60*60) // 15*60*60 mm/min^2 = 15 mm/sec^2
+  #define DEFAULT_Z_ACCELERATION (30.0*60*60) // 15*60*60 mm/min^2 = 15 mm/sec^2
+  #define DEFAULT_X_MAX_TRAVEL 225.0 // mm NOTE: Must be a positive value.
+  #define DEFAULT_Y_MAX_TRAVEL 125.0 // mm NOTE: Must be a positive value.
+  #define DEFAULT_Z_MAX_TRAVEL 170.0 // mm NOTE: Must be a positive value.
+  #define DEFAULT_SPINDLE_RPM_MAX 7000.0 // rpm
+  #define DEFAULT_SPINDLE_RPM_MIN 0.0 // rpm
+  #define DEFAULT_STEP_PULSE_MICROSECONDS 10
+  #define DEFAULT_STEPPING_INVERT_MASK 0
+  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<Y_AXIS)|(1<<Z_AXIS))
+  #define DEFAULT_STEPPER_IDLE_LOCK_TIME 250 // msec (0-254, 255 keeps steppers enabled)
+  #define DEFAULT_STATUS_REPORT_MASK 3 // WPos enabled
+  #define DEFAULT_JUNCTION_DEVIATION 0.01 // mm
+  #define DEFAULT_ARC_TOLERANCE 0.002 // mm
+  #define DEFAULT_REPORT_INCHES 0 // false
+  #define DEFAULT_INVERT_ST_ENABLE 1 // false
+  #define DEFAULT_INVERT_LIMIT_PINS 0 // false
+  #define DEFAULT_SOFT_LIMIT_ENABLE 0 // false
+  #define DEFAULT_HARD_LIMIT_ENABLE 0  // false
+  #define DEFAULT_INVERT_PROBE_PIN 0 // false
+  #define DEFAULT_LASER_MODE 0 // false
+  #define DEFAULT_HOMING_ENABLE 1  // false
+  #define DEFAULT_HOMING_DIR_MASK 1 // move positive dir
+  #define DEFAULT_HOMING_FEED_RATE 100.0 // mm/min
+  #define DEFAULT_HOMING_SEEK_RATE 300.0 // mm/min
+  #define DEFAULT_HOMING_DEBOUNCE_DELAY 250 // msec (0-65k)
+  #define DEFAULT_HOMING_PULLOFF 3.0 // mm
+#endif
+
 #ifdef DEFAULTS_SHAPEOKO
   // Description: Shapeoko CNC mill with three NEMA 17 stepper motors, driven by Synthetos
   // grblShield with a 24V, 4.2A power supply.
