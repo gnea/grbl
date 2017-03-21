@@ -25,9 +25,12 @@
 #define LINE_FLAG_OVERFLOW bit(0)
 #define LINE_FLAG_COMMENT_PARENTHESES bit(1)
 #define LINE_FLAG_COMMENT_SEMICOLON bit(2)
+#define LINE_FLAG_CHECKSUMMED bit(3)
 
 
 static char line[LINE_BUFFER_SIZE]; // Line to be executed. Zero-terminated.
+static unsigned char checksum_computed;
+static unsigned char checksum_provided;
 
 static void protocol_exec_rt_suspend();
 
@@ -93,6 +96,8 @@ void protocol_main_loop()
         } else if (line[0] == 0) {
           // Empty or comment line. For syncing purposes.
           report_status_message(STATUS_OK);
+        } else if (bit_istrue(line_flags,LINE_FLAG_CHECKSUMMED) && (checksum_computed != checksum_provided)) {
+          report_status_message(STATUS_INVALID_CHECKSUM);
         } else if (line[0] == '$') {
           // Grbl '$' system command
           report_status_message(system_execute_line(line));
@@ -107,16 +112,33 @@ void protocol_main_loop()
         // Reset tracking data for next line.
         line_flags = 0;
         char_counter = 0;
+        checksum_computed = 0;
 
       } else {
 
         if (line_flags) {
+          if (bit_istrue(line_flags, LINE_FLAG_CHECKSUMMED)) {
+            if (c >= '0' && c <= '9') {
+              checksum_provided = checksum_provided * 10 + (c - '0');
+            }
+            else {
+              line_flags |= LINE_FLAG_OVERFLOW;
+            }
+          }
           // Throw away all (except EOL) comment characters and overflow characters.
           if (c == ')') {
             // End of '()' comment. Resume line allowed.
             if (line_flags & LINE_FLAG_COMMENT_PARENTHESES) { line_flags &= ~(LINE_FLAG_COMMENT_PARENTHESES); }
           }
         } else {
+          if (c == '*') {
+            line_flags |= LINE_FLAG_CHECKSUMMED;
+            checksum_provided = 0;
+            continue;
+          }
+          else {
+            checksum_computed ^= c;
+          }
           if (c <= ' ') {
             // Throw away whitepace and control characters
           } else if (c == '/') {
