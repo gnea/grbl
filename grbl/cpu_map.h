@@ -128,11 +128,11 @@
   #ifdef SPINDLE_IS_ESC
   	
   	///////////////////////////////////////// Esc Values ////////////////////
-  	#define SPINDLE_PWM_MAX_VALUE     28  // We get around 2.0ms of duty time with this value
+  	#define SPINDLE_PWM_MAX_VALUE     36  // We get around 2.5ms of duty time with this value, you must calibrate your esc to work with this values
 	  #ifndef SPINDLE_PWM_MIN_VALUE
-	    #define SPINDLE_PWM_MIN_VALUE   18  // Must be greater than PWM off value.
+	    #define SPINDLE_PWM_MIN_VALUE   17  // Must be greater than PWM off value.
 	  #endif
-	  #define SPINDLE_PWM_OFF_VALUE     15  // We get around 1.0ms of duty time with this value
+	  #define SPINDLE_PWM_OFF_VALUE     14 // We get around 1.0ms of duty time with this value
 	  #define SPINDLE_PWM_RANGE         (SPINDLE_PWM_MAX_VALUE-SPINDLE_PWM_MIN_VALUE)
 	  
 	  ////////////////////////// Laser Values /////////////////////////////////
