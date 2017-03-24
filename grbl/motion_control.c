@@ -370,7 +370,17 @@ void mc_reset()
     system_set_exec_state_flag(EXEC_RESET);
 
     // Kill spindle and coolant.
-    spindle_stop();
+    #ifdef SPINDLE_IS_ESC
+		if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)) { // Check if laser mode is active
+  		spindle_stop();
+	  }
+	  else{  	
+	  	SPINDLE_OCR_REGISTER = SPINDLE_PWM_OFF_VALUE; // Set PWM to off value
+	  	SPINDLE_TCCRA_REGISTER |= (1<<SPINDLE_COMB_BIT); // Ensure PWM output is enabled.
+	  }
+	  #else
+	  	spindle_stop();
+	  #endif
     coolant_stop();
 
     // Kill steppers only if in any motion state, i.e. cycle, actively holding, or homing.

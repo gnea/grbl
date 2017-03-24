@@ -293,6 +293,7 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
         #ifdef VARIABLE_SPINDLE
           if (int_value) { settings.flags |= BITFLAG_LASER_MODE; }
           else { settings.flags &= ~BITFLAG_LASER_MODE; }
+          spindle_init();
         #else
           return(STATUS_SETTING_DISABLED);
         #endif
