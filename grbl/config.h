@@ -586,6 +586,11 @@
 // to ensure the laser doesn't inadvertently remain powered while at a stop and cause a fire.
 #define DISABLE_LASER_DURING_HOLD // Default enabled. Comment to disable.
 
+
+// Enable this option to use a ESC with brushless motor as spindle 
+
+#define SPINDLE_IS_ESC
+
 /* ---------------------------------------------------------------------------------------
    OEM Single File Configuration Option
 

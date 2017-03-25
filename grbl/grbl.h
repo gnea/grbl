@@ -68,6 +68,10 @@
   #error "Required HOMING_CYCLE_0 not defined."
 #endif
 
+#if defined(SPINDLE_IS_ESC) && !defined(VARIABLE_SPINDLE)
+  #error "SPINDLE_IS_ESC may only be used with VARIABLE_SPINDLE enabled"
+#endif
+
 #if defined(USE_SPINDLE_DIR_AS_ENABLE_PIN) && !defined(VARIABLE_SPINDLE)
   #error "USE_SPINDLE_DIR_AS_ENABLE_PIN may only be used with VARIABLE_SPINDLE enabled"
 #endif
