@@ -294,7 +294,7 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
           if (int_value) { settings.flags |= BITFLAG_LASER_MODE; }
           else { settings.flags &= ~BITFLAG_LASER_MODE; }
         #else
-          return(STATUS_SETTING_DISABLED);
+          return(STATUS_SETTING_DISABLED_LASER);
         #endif
         break;
       default:

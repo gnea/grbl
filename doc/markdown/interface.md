@@ -154,6 +154,7 @@ Every G-code block sent to Grbl and Grbl `$` system command that is terminated w
 | **`14`** | (Grbl-Mega Only) Build info or startup line exceeded EEPROM line length limit. |
 | **`15`** | Jog target exceeds machine travel. Command ignored. |
 | **`16`** | Jog command with no '=' or contains prohibited g-code. |
+| **`17`** | Laser mode disabled. Requires PWM output. |
 | **`20`** | Unsupported or invalid g-code command found in block. |
 | **`21`** | More than one g-code command from same modal group found in block.|
 | **`22`** | Feed rate has not yet been set or is undefined. |

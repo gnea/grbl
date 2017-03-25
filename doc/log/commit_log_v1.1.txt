@@ -1,4 +1,32 @@
 ----------------
+Date: 2017-03-19
+Author: Sonny Jeon
+Subject: Housekeeping.
+
+- Moved Grbl logo files to a separate repo.
+
+- Added PocketNC FR4 defaults. Needs some additional work though to be
+compatible.
+
+- Updated README image links.
+
+
+----------------
+Date: 2017-03-19
+Author: Sonny Jeon
+Subject: Update README.md
+
+----------------
+Date: 2017-03-02
+Author: Sonny Jeon
+Subject: Fixed $G report issue with M7 and M8 both enabled.
+
+[fix] When M7 and M8 are both enabled, $G report would show `M78`,
+rather than `M7 M8`. This only effects systems that enable M7 mist
+coolant in config.h. Not the default build.
+
+
+----------------
 Date: 2017-02-27
 Author: Sonny Jeon
 Subject: Fixed shared build info code.
