@@ -1,8 +1,16 @@
 ![GitHub Logo](https://github.com/gnea/gnea-Media/blob/master/Grbl%20Logo/Grbl%20Logo%20250px.png?raw=true)
 
 ***
-_Click the `Release` tab to download pre-compiled `.hex` files or just [click here](https://github.com/gnea/grbl/releases)_
+_This is a special version with servo support (swichable in config.h)_
+
+- The PWM frequency is set to 61Hz (prescaler 1/1024).
+- The pulse width range is 0.5 - 2.5ms.
+- S0 does not deactivate the PWM, but instead send min pulse width.
+- Set the max. S-value to `$30=255` to get a S-value range of 0-255.
+- You should have a M3S0 at the start of your gcode to activate the servo and M5 at end to deactivate it.
+
 ***
+
 Grbl is a no-compromise, high performance, low cost alternative to parallel-port-based motion control for CNC milling. This version of Grbl runs on an Arduino with a 328p processor (Uno, Duemilanove, Nano, Micro, etc).
 
 The controller is written in highly optimized C utilizing every clever feature of the AVR-chips to achieve precise timing and asynchronous operation. It is able to maintain up to 30kHz of stable, jitter free control pulses.
