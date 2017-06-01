@@ -11,6 +11,8 @@ response from the computer. This effectively adds another
 buffer layer to prevent buffer starvation.
 
 CHANGELOG:
+- 20170531: Status report feedback at 1.0 second intervals.
+    Configurable baudrate and report intervals. Bug fixes.
 - 20161212: Added push message feedback for simple streaming
 - 20140714: Updated baud rate to 115200. Added a settings
   write mode via simple streaming method. MIT-licensed.
@@ -21,7 +23,7 @@ TODO:
 ---------------------
 The MIT License (MIT)
 
-Copyright (c) 2012-2016 Sungeun K. Jeon
+Copyright (c) 2012-2017 Sungeun K. Jeon
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -48,9 +50,14 @@ import re
 import time
 import sys
 import argparse
-# import threading
+import threading
 
 RX_BUFFER_SIZE = 128
+BAUD_RATE = 115200
+ENABLE_STATUS_REPORTS = True
+REPORT_INTERVAL = 1.0 # seconds
+
+is_run = True # Controls query timer
 
 # Define command line argument interface
 parser = argparse.ArgumentParser(description='Stream g-code file to grbl. (pySerial and argparse libraries required)')
@@ -66,13 +73,17 @@ args = parser.parse_args()
 
 # Periodic timer to query for status reports
 # TODO: Need to track down why this doesn't restart consistently before a release.
-# def periodic():
-#     s.write('?')
-#     t = threading.Timer(0.1, periodic) # In seconds
-#     t.start()
+def send_status_query():
+    s.write('?')
+    
+def periodic_timer() :
+    while is_run:
+      send_status_query()
+      time.sleep(REPORT_INTERVAL)
+  
 
 # Initialize
-s = serial.Serial(args.device_file,115200)
+s = serial.Serial(args.device_file,BAUD_RATE)
 f = args.gcode_file
 verbose = True
 if args.quiet : verbose = False
@@ -86,6 +97,13 @@ s.write("\r\n\r\n")
 # Wait for grbl to initialize and flush startup text in serial input
 time.sleep(2)
 s.flushInput()
+start_time = time.time();
+
+# Start status report periodic timer
+if ENABLE_STATUS_REPORTS :
+    timerThread = threading.Thread(target=periodic_timer)
+    timerThread.daemon = True
+    timerThread.start()
 
 # Stream g-code to grbl
 l_count = 0
@@ -114,11 +132,10 @@ else:
     # responses, such that we never overflow Grbl's serial read buffer. 
     g_count = 0
     c_line = []
-    # periodic() # Start status report periodic timer
     for line in f:
         l_count += 1 # Iterate line counter
-        # l_block = re.sub('\s|\(.*?\)','',line).upper() # Strip comments/spaces/new line and capitalize
-        l_block = line.strip()
+        l_block = re.sub('\s|\(.*?\)','',line).upper() # Strip comments/spaces/new line and capitalize
+        # l_block = line.strip()
         c_line.append(len(l_block)+1) # Track number of characters in grbl serial read buffer
         grbl_out = '' 
         while sum(c_line) >= RX_BUFFER_SIZE-1 | s.inWaiting() :
@@ -130,12 +147,14 @@ else:
                 g_count += 1 # Iterate g-code counter
                 grbl_out += str(g_count); # Add line finished indicator
                 del c_line[0] # Delete the block character count corresponding to the last 'ok'
-        if verbose: print "SND: " + str(l_count) + " : " + l_block,
         s.write(l_block + '\n') # Send g-code block to grbl
-        if verbose : print "BUF:",str(sum(c_line)),"REC:",grbl_out
+        if verbose: print "BUF: " + str(sum(c_line)) + " SND: " + str(l_count) + " [" + l_block + "] REC: " + grbl_out
 
 # Wait for user input after streaming is completed
-print "G-code streaming finished!\n"
+print "G-code streaming finished!"
+end_time = time.time();
+is_run = False;
+print " Time elapsed: ",end_time-start_time,"\n"
 print "WARNING: Wait until grbl completes buffered g-code blocks before exiting."
 raw_input("  Press <Enter> to exit and disable grbl.") 
 

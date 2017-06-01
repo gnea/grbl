@@ -1,4 +1,15 @@
 ----------------
+Date: 2017-03-24
+Author: Sonny Jeon
+Subject: Added an error code for laser mode when VARIABLE_SPINDLE is disabled.
+
+- When trying to enable laser mode with $32=1 and VARIABLE_SPINDLE is
+disabled, the error code shown was improperly stating it was a homing
+failure. Added an new error code specifically for the laser mode being
+disabled without VARIABLE_SPINDLE.
+
+
+----------------
 Date: 2017-03-19
 Author: Sonny Jeon
 Subject: Housekeeping.
