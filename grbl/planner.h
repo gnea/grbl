@@ -25,11 +25,15 @@
 
 // The number of linear motions that can be in the plan at any give time
 #ifndef BLOCK_BUFFER_SIZE
+#ifdef AVRTARGET
   #ifdef USE_LINE_NUMBERS
     #define BLOCK_BUFFER_SIZE 15
   #else
     #define BLOCK_BUFFER_SIZE 16
   #endif
+#else
+#define BLOCK_BUFFER_SIZE 36
+#endif
 #endif
 
 // Returned status message from planner.

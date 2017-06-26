@@ -325,11 +325,11 @@
   // Define spindle enable and spindle direction output pins.
 #define SPINDLE_ENABLE_PORT   GPIOB
 #define RCC_SPINDLE_ENABLE_PORT RCC_APB2Periph_GPIOB
-#define SPINDLE_ENABLE_BIT    0  // 
+#define SPINDLE_ENABLE_BIT    13  // 
 #ifndef USE_SPINDLE_DIR_AS_ENABLE_PIN
 #define SPINDLE_DIRECTION_DDR   GPIOB
 #define SPINDLE_DIRECTION_PORT  GPIOB
-#define SPINDLE_DIRECTION_BIT   1  // 
+#define SPINDLE_DIRECTION_BIT   14  // 
 #endif
 #define SetSpindleEnablebit()       GPIO_WriteBit(SPINDLE_ENABLE_PORT, 1 << SPINDLE_ENABLE_BIT, Bit_SET)
 #define ResetSpindleEnablebit()     GPIO_WriteBit(SPINDLE_ENABLE_PORT, 1 << SPINDLE_ENABLE_BIT, Bit_RESET)
@@ -341,10 +341,10 @@
   // a later date if flash and memory space allows.
 #define COOLANT_FLOOD_PORT            GPIOB
 #define RCC_COOLANT_FLOOD_PORT        RCC_APB2Periph_GPIOB
-#define COOLANT_FLOOD_BIT             2  
+#define COOLANT_FLOOD_BIT             3  
 #define COOLANT_MIST_PORT             GPIOB
 #define RCC_COOLANT_MIST_PORT         RCC_APB2Periph_GPIOB
-#define COOLANT_MIST_BIT              3 
+#define COOLANT_MIST_BIT              4 
 
   // Define user-control controls (cycle start, reset, feed hold) input pins.
   // NOTE: All CONTROLs pins must be on the same port and not on a port with other input pins (limits).
@@ -382,11 +382,11 @@
 #define SPINDLE_PWM_RANGE         (SPINDLE_PWM_MAX_VALUE-SPINDLE_PWM_MIN_VALUE)
 
   //  Port A                                         Port B
-  //   0      X_STEP_BIT                            SPINDLE_ENABLE_BIT 
-  //   1      Y_STEP_BIT                            SPINDLE_DIRECTION_BIT
-  //   2      Z_STEP_BIT                            COOLANT_FLOOD_BIT   
-  //   3      X_DIRECTION_BIT                       COOLANT_MIST_BIT
-  //   4      Y_DIRECTION_BIT                       
+  //   0      X_STEP_BIT                             
+  //   1      Y_STEP_BIT                            
+  //   2      Z_STEP_BIT                               
+  //   3      X_DIRECTION_BIT                       COOLANT_FLOOD_BIT
+  //   4      Y_DIRECTION_BIT                       COOLANT_MIST_BIT
   //   5      Z_DIRECTION_BIT                       CONTROL_RESET_BIT
   //   6      STEPPERS_DISABLE_BIT                  CONTROL_FEED_HOLD_BIT    
   //   7                                            CONTROL_CYCLE_START_BIT
@@ -395,8 +395,9 @@
   //   10                                            X_LIMIT_BIT
   //   11                                            Y_LIMIT_BIT
   //   12                                            Z_LIMIT_BIT
-  //   13 14 SWD
-  //   15     PROBE_BIT
+  //   13 14 SWD																		SPINDLE_ENABLE_BIT
+//     14																						SPINDLE_DIRECTION_BIT
+  //   15     PROBE_BIT					
 
 #endif
 /*

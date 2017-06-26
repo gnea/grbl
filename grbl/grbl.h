@@ -23,7 +23,7 @@
 
 // Grbl versioning system
 #define GRBL_VERSION "1.1f"
-#define GRBL_VERSION_BUILD "20170227"
+#define GRBL_VERSION_BUILD "20170324"
 
 #if !defined(STM32F103C8) && !defined(WIN32)
 #define AVRTARGET
@@ -54,7 +54,7 @@ typedef unsigned long long uint64_t;
 typedef int bool;
 #define false 0
 #define true 1
-#define trunc(x) (int32_t)x
+#define truncf(x) (int32_t)x
 #define PSTR(x) x
 #define pgm_read_byte_near(x) *(x)
 #define _delay_ms(x) Sleep(x)

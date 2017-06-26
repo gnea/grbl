@@ -330,7 +330,7 @@ uint8_t system_execute_line(char *line)
             helper_var = gc_execute_line(line); // Set helper_var to returned status code.
             if (helper_var) { return(helper_var); }
             else {
-              helper_var = trunc(parameter); // Set helper_var to int value of parameter
+              helper_var = truncf(parameter); // Set helper_var to int value of parameter
               settings_store_startup_line(helper_var,line);
             }
           } else { // Store global setting.

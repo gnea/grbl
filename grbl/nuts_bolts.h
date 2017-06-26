@@ -50,7 +50,7 @@
 #define TICKS_PER_MICROSECOND (F_CPU/1000000)
 #ifdef WIN32
 extern LARGE_INTEGER Win32Frequency;
-#define F_CPU Win32Frequency.QuadPart
+#define F_CPU  Win32Frequency.QuadPart
 #endif
 #ifdef STM32F103C8
 #define F_CPU SystemCoreClock

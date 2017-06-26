@@ -247,7 +247,13 @@ void mc_homing_cycle(uint8_t cycle_mask)
   plan_sync_position();
 
   // If hard limits feature enabled, re-enable hard limits pin change register after homing cycle.
-  limits_init();
+#ifdef STM32F103C8
+	EXTI_ClearITPendingBit((1 << X_LIMIT_BIT) | (1 << Y_LIMIT_BIT) | (1 << Z_LIMIT_BIT));
+	NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+	NVIC_EnableIRQ(EXTI15_10_IRQn);
+#else
+	limits_init();
+#endif
 }
 
 

@@ -355,8 +355,8 @@ uint8_t plan_buffer_line(float *target, plan_line_data_t *pl_data)
     // NOTE: Computes true distance from converted step values.
     #ifdef COREXY
       if ( !(idx == A_MOTOR) && !(idx == B_MOTOR) ) {
-        target_steps[idx] = lround(target[idx]*settings.steps_per_mm[idx]);
-        block->steps[idx] = labs(target_steps[idx]-position_steps[idx]);
+        target_steps[idx] = lroundf(target[idx]*settings.steps_per_mm[idx]);
+        block->steps[idx] = fabsf(target_steps[idx]-position_steps[idx]);
       }
       block->step_event_count = max(block->step_event_count, block->steps[idx]);
       if (idx == A_MOTOR) {
@@ -367,8 +367,8 @@ uint8_t plan_buffer_line(float *target, plan_line_data_t *pl_data)
         delta_mm = (target_steps[idx] - position_steps[idx])/settings.steps_per_mm[idx];
       }
     #else
-      target_steps[idx] = lround(target[idx]*settings.steps_per_mm[idx]);
-      block->steps[idx] = labs(target_steps[idx]-position_steps[idx]);
+      target_steps[idx] = lroundf(target[idx]*settings.steps_per_mm[idx]);
+      block->steps[idx] = fabsf(target_steps[idx]-position_steps[idx]);
       block->step_event_count = max(block->step_event_count, block->steps[idx]);
       delta_mm = (target_steps[idx] - position_steps[idx])/settings.steps_per_mm[idx];
 	  #endif

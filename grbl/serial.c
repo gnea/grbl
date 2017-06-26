@@ -314,6 +314,10 @@ void RecvthreadFunction(void *pVoid )
             }
             else
             {
+#ifdef WIN32
+								Sleep(1);
+#endif
+
                 data = 0;
             }
         }

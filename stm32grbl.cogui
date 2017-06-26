@@ -22,12 +22,13 @@
 </folder>
 </info>
 </editorArea>
-<editor id="org.eclipse.cdt.ui.editor.CEditor" name="spindle_control.c" partName="spindle_control.c" path="E:/usbjtagproj/Code/grbl1.1/grbl-edgestm32/grbl/spindle_control.c" title="spindle_control.c" tooltip="E:/usbjtagproj/Code/grbl1.1/grbl-edgestm32/grbl/spindle_control.c" workbook="DefaultEditorWorkbook">
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="spindle_control.c" partName="spindle_control.c" path="J:/github/grbl/grbl/spindle_control.c" title="spindle_control.c" tooltip="J:/github/grbl/grbl/spindle_control.c" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/stm32grbl/grbl/src/spindle_control.c"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="6198" selectionTopPixel="3094"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="6198" selectionTopPixel="1924"/>
 </editor>
-<editor id="org.coocox.builder.ui.editors.ConfigEditor" name="" partName="Configuration" title="Configuration" tooltip="" workbook="DefaultEditorWorkbook">
-<input factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory">&#x0A;<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="3" verticalPosition="0"/>
+<editor activePart="true" focus="true" id="org.coocox.builder.ui.editors.ConfigEditor" name="" partName="Configuration" title="Configuration" tooltip="" workbook="DefaultEditorWorkbook">
+<input factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory">
+<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="0" verticalPosition="0"/>
 </input>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="cpu_map.h" partName="cpu_map.h" title="cpu_map.h" tooltip="E:\usbjtagproj\Code\grbl1.1\grbl-edgestm32\grbl\cpu_map.h" workbook="DefaultEditorWorkbook">
@@ -40,7 +41,7 @@
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="config.h" partName="config.h" path="J:/github/grbl/grbl/config.h" title="config.h" tooltip="J:/github/grbl/grbl/config.h" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/stm32grbl/grbl/inc/config.h"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
+<editorState selectionHorizontalPixel="0" selectionLength="8" selectionOffset="19768" selectionTopPixel="5032"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="cpu_map.h" partName="cpu_map.h" title="cpu_map.h" tooltip="J:\github\grbl\grbl\cpu_map.h" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.ide.FileStoreEditorInputFactory" uri="file:/J:/github/grbl/grbl/cpu_map.h"/>
@@ -50,17 +51,18 @@
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/stm32grbl/stm_lib/inc/stm32f10x_exti.h"/>
 <editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
 </editor>
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="spindle_control.h" partName="spindle_control.h" path="J:/github/grbl/grbl/spindle_control.h" title="spindle_control.h" tooltip="J:/github/grbl/grbl/spindle_control.h" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/stm32grbl/grbl/inc/spindle_control.h"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
+</editor>
 </editors>
 <views>
 <view id="org.coocox.builder.ui.views.ProjectView" partName="Project">
-<viewState CommonNavigator.LINKING_ENABLED="0" horizontalPosition="0" org.eclipse.ui.navigator.resources.workingSets.showTopLevelWorkingSets="0" verticalPosition="7">
+<viewState CommonNavigator.LINKING_ENABLED="0" horizontalPosition="0" org.eclipse.ui.navigator.resources.workingSets.showTopLevelWorkingSets="0" verticalPosition="0">
 <expanded>
 <element path="/stm32grbl"/>
 <element path="/stm32grbl/grbl"/>
 <element path="/stm32grbl/grbl/inc"/>
-<element path="/stm32grbl/stm_lib"/>
-<element path="/stm32grbl/stm_lib/inc"/>
-<element path="/stm32grbl/stm_lib/src"/>
 <element path="/stm32grbl/util"/>
 </expanded>
 <selection>
@@ -77,7 +79,7 @@
 </view>
 <view id="org.eclipse.debug.ui.VariableView" partName="Variables"/>
 </views>
-<perspectives activePart="org.view.ConfigureEditor" activePerspective="org.coocox.builder.perspective.CoBuilder">
+<perspectives activePart="org.coocox.builder.ui.editors.ConfigEditor" activePerspective="org.coocox.builder.perspective.CoBuilder">
 <perspective editorAreaTrimState="2" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.coocox.builder.ui.PerspectiveCoBuilder" id="org.coocox.builder.perspective.CoBuilder" label="CooCox CoBuilder"/>
 <alwaysOnActionSet id="org.coocox.welcome.ui.actionSet"/>
@@ -88,6 +90,8 @@
 <alwaysOnActionSet id="org.eclipse.ui.actionSet.keyBindings"/>
 <alwaysOnActionSet id="org.eclipse.ui.actionSet.openFiles"/>
 <alwaysOnActionSet id="org.eclipse.debug.ui.breakpointActionSet"/>
+<alwaysOnActionSet id="org.coocox.userspace.actionSet"/>
+<alwaysOnActionSet id="org.coocox.component.ui.actionSet"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showMemoryAction"/>
 <hide_menu_item_id id="org.eclipse.jdt.ui.refactoring.menu"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.ShowDisassemblyAction"/>
@@ -99,8 +103,8 @@
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showMemoryBrowserAction"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showVariablesAction"/>
 <hide_menu_item_id id="org.coocox.builder.ui.openProjectExplorerAction"/>
-<hide_menu_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
 <hide_menu_item_id id="org.coocox.codebugger.trace.actions.ShowTraceControlAction"/>
+<hide_menu_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showRegistersAction"/>
 <hide_toolbar_item_id id="org.eclipse.cdt.debug.internal.ui.actions.ToggleInstructionStepModeAction"/>
 <hide_toolbar_item_id id="org.eclipse.ui.edit.text.toggleShowSelectedElementOnly"/>
@@ -124,7 +128,7 @@
 <page content="org.eclipse.ui.internal.introview" label="LabelNotFound"/>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.ui.internal.ViewStack@66a7f5" ratio="0.7230624" ratioLeft="765" ratioRight="293" relationship="4" relative="org.eclipse.ui.internal.ViewStack@d8749">
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@66a7f5" ratio="0.771855" ratioLeft="724" ratioRight="214" relationship="4" relative="org.eclipse.ui.internal.ViewStack@d8749">
 <folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
 <page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
@@ -132,7 +136,7 @@
 </presentation>
 </folder>
 </info>
-<info part="org.coocox.builder.ui.exampleView" ratio="0.08957569" ratioLeft="171" ratioRight="1738" relationship="2" relative="org.eclipse.ui.internal.ViewStack@d8749"/>
+<info part="org.coocox.builder.ui.exampleView" ratio="0.19591409" ratioLeft="374" ratioRight="1535" relationship="2" relative="org.eclipse.ui.internal.ViewStack@d8749"/>
 <info folder="true" part="org.eclipse.ui.internal.ViewStack@f0921d" ratio="0.71983916" ratioLeft="1074" ratioRight="418" relationship="2" relative="org.coocox.builder.ui.exampleView">
 <folder activePageID="org.coocox.component.ui.Help" appearance="2" expanded="2">
 <page content="org.coocox.component.ui.Help" label="LabelNotFound"/>
@@ -248,54 +252,87 @@
 </perspective>
 </perspectives>
 <workingSets/>
-<navigationHistory/>
+<navigationHistory>
+<editors>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/stm32grbl/grbl/src/spindle_control.c"/>
+<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
+<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="0" verticalPosition="0"/>
+</editor>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/stm32grbl/stm_lib/inc/stm32f10x_exti.h"/>
+<editor factoryID="org.eclipse.ui.ide.FileStoreEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" uri="file:/J:/github/grbl/grbl/cpu_map.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/stm32grbl/grbl/inc/config.h"/>
+</editors>
+<item historyLabel="spindle_control.c" index="0">
+<position info="not_deleted" x="6198" y="0"/>
+</item>
+<item historyLabel="Configuration" index="1"/>
+<item historyLabel="stm32f10x_exti.h" index="2">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="Configuration" index="1"/>
+<item historyLabel="cpu_map.h" index="3">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="config.h" index="4">
+<position info="not_deleted" x="19768" y="8"/>
+</item>
+<item historyLabel="spindle_control.c" index="0">
+<position info="not_deleted" x="6198" y="0"/>
+</item>
+<item active="true" historyLabel="Configuration" index="1"/>
+</navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
 </page>
 <workbenchWindowAdvisor/>
 <actionBarAdvisor/>
 </window>
 <mruList>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f10x_exti.h" tooltip="stm32grbl/stm_lib/inc/stm32f10x_exti.h">
-<persistable path="/stm32grbl/stm_lib/inc/stm32f10x_exti.h"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="protocol.c" tooltip="stm32grbl/grbl/src/protocol.c">
+<persistable path="/stm32grbl/grbl/src/protocol.c"/>
 </file>
-<file factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.welcome.ui.WelcomePage" name="" tooltip="">
-<persistable>
-<org.coocox.welcome.ui.WelcomePage/>
-</persistable>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_endp.c" tooltip="stm32grbl/usb/usb_endp.c">
+<persistable path="/stm32grbl/usb/usb_endp.c"/>
 </file>
-<file factoryID="org.eclipse.ui.ide.FileStoreEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="cpu_map.h" tooltip="J:\github\grbl\grbl\cpu_map.h">
-<persistable uri="file:/J:/github/grbl/grbl/cpu_map.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="config.h" tooltip="stm32grbl/grbl/inc/config.h">
-<persistable path="/stm32grbl/grbl/inc/config.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="grbl.h" tooltip="stm32grbl/grbl/inc/grbl.h">
-<persistable path="/stm32grbl/grbl/inc/grbl.h"/>
-</file>
-<file factoryID="org.eclipse.ui.ide.FileStoreEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="cpu_map.h" tooltip="E:\usbjtagproj\Code\grbl1.1\grbl-edgestm32\grbl\cpu_map.h">
-<persistable uri="file:/E:/usbjtagproj/Code/grbl1.1/grbl-edgestm32/grbl/cpu_map.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="nuts_bolts.h" tooltip="stm32grbl/grbl/inc/nuts_bolts.h">
-<persistable path="/stm32grbl/grbl/inc/nuts_bolts.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="system.c" tooltip="stm32grbl/grbl/src/system.c">
-<persistable path="/stm32grbl/grbl/src/system.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="coolant_control.h" tooltip="stm32grbl/grbl/inc/coolant_control.h">
+<persistable path="/stm32grbl/grbl/inc/coolant_control.h"/>
 </file>
 <file factoryID="org.coocox.component.ui.editors.repository.RepositoryElementFactory" id="org.coocox.builder.ui.editors.repository.RepositoryBrowser" name="Repository" tooltip="Repository">
 <persistable>&#x0A;<subPage/>
 </persistable>
 </file>
-<file factoryID="org.eclipse.cdt.ui.ExternalEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_desc.h" tooltip="E:\usbjtagproj\Code\grbl1.1\grbl-edgestm32\usb\usb_desc.h">
-<persistable path="E:\usbjtagproj\Code\grbl1.1\grbl-edgestm32\usb\usb_desc.h" project="stm32grbl"/>
+<file factoryID="org.coocox.component.ui.editors.repository.RepositoryElementFactory" id="org.coocox.builder.ui.editors.repository.RepositoryBrowser" name="Repository" tooltip="Repository">
+<persistable>&#x0A;<subPage/>
+</persistable>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="system_stm32f10x.c" tooltip="stm32grbl/cmsis_boot/system_stm32f10x.c">
-<persistable path="/stm32grbl/cmsis_boot/system_stm32f10x.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="motion_control.h" tooltip="stm32grbl/grbl/inc/motion_control.h">
+<persistable path="/stm32grbl/grbl/inc/motion_control.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="hw_config.c" tooltip="stm32grbl/usb/hw_config.c">
-<persistable path="/stm32grbl/usb/hw_config.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="config.h" tooltip="stm32grbl/grbl/inc/config.h">
+<persistable path="/stm32grbl/grbl/inc/config.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="serial.c" tooltip="stm32grbl/grbl/src/serial.c">
-<persistable path="/stm32grbl/grbl/src/serial.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="motion_control.c" tooltip="stm32grbl/grbl/src/motion_control.c">
+<persistable path="/stm32grbl/grbl/src/motion_control.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stepper.c" tooltip="stm32grbl/grbl/src/stepper.c">
+<persistable path="/stm32grbl/grbl/src/stepper.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="stm32grbl/main.c">
+<persistable path="/stm32grbl/main.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="eeprom.c" tooltip="stmf4grbl/grbl/eeprom.c">
+<persistable path="/stmf4grbl/grbl/eeprom.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="nuts_bolts.h" tooltip="stmf4grbl/grbl/nuts_bolts.h">
+<persistable path="/stmf4grbl/grbl/nuts_bolts.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usbd_def.h" tooltip="stmf4grbl/Drivers/STM32_USB_Device_Library/Core/inc/usbd_def.h">
+<persistable path="/stmf4grbl/Drivers/STM32_USB_Device_Library/Core/inc/usbd_def.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_core.h" tooltip="stmf4grbl/Drivers/STM32_USB_OTG_Driver/inc/usb_core.h">
+<persistable path="/stmf4grbl/Drivers/STM32_USB_OTG_Driver/inc/usb_core.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_endp.c" tooltip="stm32grbl/usb/usb_endp.c">
+<persistable path="/stm32grbl/usb/usb_endp.c"/>
 </file>
 </mruList>
 </workbench>

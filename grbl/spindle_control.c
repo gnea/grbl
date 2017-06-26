@@ -74,7 +74,7 @@ void spindle_init()
   TIM_OCInitTypeDef outputChannelInit = { 0 };
   TIM_TimeBaseStructInit(&timerInitStructure);
 
-  timerInitStructure.TIM_Prescaler = F_CPU / 1000000 - 1; // 1000K
+  timerInitStructure.TIM_Prescaler = F_CPU / 1000000 - 1; // 1000
   timerInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
   timerInitStructure.TIM_Period = SPINDLE_PWM_MAX_VALUE - 1;
   timerInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
@@ -229,7 +229,7 @@ void spindle_stop()
 			#endif
 			}
 		#endif
-  }
+	}
 
 
   // Called by spindle_set_state() and step segment generator. Keep routine small and efficient.

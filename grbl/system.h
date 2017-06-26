@@ -158,7 +158,7 @@ extern volatile uint8_t sys_rt_exec_accessory_override; // Global realtime execu
 
 #ifdef DEBUG
   #define EXEC_DEBUG_REPORT  bit(0)
-	extern volatile uint8_t sys_rt_exec_debug; 
+	extern volatile uint8_t sys_rt_exec_debug;
 #endif
 
 // Initialize the serial protocol

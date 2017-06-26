@@ -49,15 +49,15 @@ void USART1_Configuration(u32 BaudRate)
 	NVIC_InitTypeDef NVIC_InitStructure;
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;   
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;  
 
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;             
-	NVIC_Init(&NVIC_InitStructure);                    
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; 
+	NVIC_Init(&NVIC_InitStructure);                 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;	 	
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;	
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;	

@@ -318,10 +318,11 @@ void report_gcode_modes()
   report_util_gcode_modes_M();
   #ifdef ENABLE_M7
     if (gc_state.modal.coolant) { // Note: Multiple coolant states may be active at the same time.
-      if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_MIST) { serial_write('7'); }
-      if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_FLOOD) { serial_write('8'); }
-    } else { serial_write('9'); }
+      if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_MIST) { report_util_gcode_modes_M(); serial_write('7'); }
+      if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_FLOOD) { report_util_gcode_modes_M(); serial_write('8'); }
+    } else { report_util_gcode_modes_M(); serial_write('9'); }
   #else
+    report_util_gcode_modes_M();
     if (gc_state.modal.coolant) { serial_write('8'); }
     else { serial_write('9'); }
   #endif

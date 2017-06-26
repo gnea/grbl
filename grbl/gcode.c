@@ -129,8 +129,8 @@ uint8_t gc_execute_line(char *line)
     // a good enough comprimise and catch most all non-integer errors. To make it compliant,
     // we would simply need to change the mantissa to int16, but this add compiled flash space.
     // Maybe update this later.
-    int_value = trunc(value);
-	mantissa = (uint16_t)roundf(100 * (value - int_value)); // Compute mantissa for Gxx.x commands.
+    int_value = truncf(value);
+	mantissa = (uint16_t)lroundf(100 * (value - int_value)); // Compute mantissa for Gxx.x commands.
     // NOTE: Rounding must be used to catch small floating point errors.
 
     // Check if the g-code word is supported or errors due to modal group violations or has
@@ -306,17 +306,17 @@ uint8_t gc_execute_line(char *line)
           case 'J': word_bit = WORD_J; gc_block.values.ijk[Y_AXIS] = value; ijk_words |= (1<<Y_AXIS); break;
           case 'K': word_bit = WORD_K; gc_block.values.ijk[Z_AXIS] = value; ijk_words |= (1<<Z_AXIS); break;
           case 'L': word_bit = WORD_L; gc_block.values.l = int_value; break;
-          case 'N': word_bit = WORD_N; gc_block.values.n = trunc(value); break;
+          case 'N': word_bit = WORD_N; gc_block.values.n = truncf(value); break;
           case 'P': word_bit = WORD_P; gc_block.values.p = value; break;
           // NOTE: For certain commands, P value must be an integer, but none of these commands are supported.
           // case 'Q': // Not supported
           case 'R': word_bit = WORD_R; gc_block.values.r = value; break;
           case 'S': word_bit = WORD_S; gc_block.values.s = value; break;
-          case 'T': word_bit = WORD_T; 
-					  if (value > MAX_TOOL_NUMBER) { FAIL(STATUS_GCODE_MAX_VALUE_EXCEEDED); }
-            gc_block.values.t = int_value;
-						break;
-          case 'X': word_bit = WORD_X; gc_block.values.xyz[X_AXIS] = value; axis_words |= (1<<X_AXIS); break;
+		  case 'T': word_bit = WORD_T;
+				if (value > MAX_TOOL_NUMBER) { FAIL(STATUS_GCODE_MAX_VALUE_EXCEEDED); }
+					gc_block.values.t = int_value;
+				break;
+		  case 'X': word_bit = WORD_X; gc_block.values.xyz[X_AXIS] = value; axis_words |= (1<<X_AXIS); break;
           case 'Y': word_bit = WORD_Y; gc_block.values.xyz[Y_AXIS] = value; axis_words |= (1<<Y_AXIS); break;
           case 'Z': word_bit = WORD_Z; gc_block.values.xyz[Z_AXIS] = value; axis_words |= (1<<Z_AXIS); break;
           default: FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND);
@@ -396,8 +396,8 @@ uint8_t gc_execute_line(char *line)
     if (gc_block.modal.feed_rate == FEED_RATE_MODE_INVERSE_TIME) { // = G93
       // NOTE: G38 can also operate in inverse time, but is undefined as an error. Missing F word check added here.
       if (axis_command == AXIS_COMMAND_MOTION_MODE) {
-				if ((gc_block.modal.motion != MOTION_MODE_NONE) && (gc_block.modal.motion != MOTION_MODE_SEEK)) {
-					if (bit_isfalse(value_words,bit(WORD_F))) { FAIL(STATUS_GCODE_UNDEFINED_FEED_RATE); } // [F word missing]
+		if ((gc_block.modal.motion != MOTION_MODE_NONE) && (gc_block.modal.motion != MOTION_MODE_SEEK)) {
+          if (bit_isfalse(value_words,bit(WORD_F))) { FAIL(STATUS_GCODE_UNDEFINED_FEED_RATE); } // [F word missing]
         }
       }
       // NOTE: It seems redundant to check for an F word to be passed after switching from G94 to G93. We would
@@ -436,15 +436,15 @@ uint8_t gc_execute_line(char *line)
   // [7. Spindle control ]: N/A
   // [8. Coolant control ]: N/A
 	// [9. Override control ]: Not supported except for a Grbl-only parking motion override control.
-	#ifdef ENABLE_PARKING_OVERRIDE_CONTROL
-		if (bit_istrue(command_words, bit(MODAL_GROUP_M9))) { // Already set as enabled in parser.
-			if (bit_istrue(value_words, bit(WORD_P))) {
-				if (gc_block.values.p == 0.0) { gc_block.modal.override = OVERRIDE_DISABLED; }
-				bit_false(value_words, bit(WORD_P));
-			}
+#ifdef ENABLE_PARKING_OVERRIDE_CONTROL
+	if (bit_istrue(command_words, bit(MODAL_GROUP_M9))) { // Already set as enabled in parser.
+		if (bit_istrue(value_words, bit(WORD_P))) {
+			if (gc_block.values.p == 0.0f) { gc_block.modal.override = OVERRIDE_DISABLED; }
+			bit_false(value_words, bit(WORD_P));
 		}
-	#endif
-
+	}
+#endif
+	
   // [10. Dwell ]: P value missing. P is negative (done.) NOTE: See below.
   if (gc_block.non_modal_command == NON_MODAL_DWELL) {
     if (bit_isfalse(value_words,bit(WORD_P))) { FAIL(STATUS_GCODE_VALUE_WORD_MISSING); } // [P word missing]
@@ -526,7 +526,7 @@ uint8_t gc_execute_line(char *line)
       // [G10 L20 Errors]: P must be 0 to nCoordSys(max 9). Axis words missing.
       if (!axis_words) { FAIL(STATUS_GCODE_NO_AXIS_WORDS) }; // [No axis words]
       if (bit_isfalse(value_words,((1<<WORD_P)|(1<<WORD_L)))) { FAIL(STATUS_GCODE_VALUE_WORD_MISSING); } // [P/L word missing]
-      coord_select = trunc(gc_block.values.p); // Convert p value to int.
+      coord_select = truncf(gc_block.values.p); // Convert p value to int.
       if (coord_select > N_COORDINATE_SYSTEM) { FAIL(STATUS_GCODE_UNSUPPORTED_COORD_SYS); } // [Greater than N sys]
       if (gc_block.values.l != 20) {
         if (gc_block.values.l == 2) {
@@ -962,14 +962,14 @@ uint8_t gc_execute_line(char *line)
   }
   pl_data->condition |= gc_state.modal.coolant; // Set condition flag for planner use.
 
-																								// [9. Override control ]: NOT SUPPORTED. Always enabled. Except for a Grbl-only parking control.
-	#ifdef ENABLE_PARKING_OVERRIDE_CONTROL
-		if (gc_state.modal.override != gc_block.modal.override) {
-			gc_state.modal.override = gc_block.modal.override;
-			mc_override_ctrl_update(gc_state.modal.override);
-		}
-	#endif
-	
+	// [9. Override control ]: NOT SUPPORTED. Always enabled. Except for a Grbl-only parking control.
+#ifdef ENABLE_PARKING_OVERRIDE_CONTROL
+	if (gc_state.modal.override != gc_block.modal.override) {
+		gc_state.modal.override = gc_block.modal.override;
+		mc_override_ctrl_update(gc_state.modal.override);
+	}
+#endif
+
   // [10. Dwell ]:
   if (gc_block.non_modal_command == NON_MODAL_DWELL) { mc_dwell(gc_block.values.p); }
 
@@ -1114,7 +1114,7 @@ uint8_t gc_execute_line(char *line)
 					gc_state.modal.override = OVERRIDE_PARKING_MOTION;
 				#endif
 			#endif
-			
+
       #ifdef RESTORE_OVERRIDES_AFTER_PROGRAM_END
         sys.f_override = DEFAULT_FEED_OVERRIDE;
         sys.r_override = DEFAULT_RAPID_OVERRIDE;
