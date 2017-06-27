@@ -176,6 +176,7 @@
     <File name="stm_lib/inc" path="" type="2"/>
     <File name="grbl/src/motion_control.c" path="grbl/motion_control.c" type="1"/>
     <File name="grbl/inc/grbl.h" path="grbl/grbl.h" type="1"/>
+    <File name="grbl/inc/cpu_map.h" path="grbl/cpu_map.h" type="1"/>
     <File name="main.c" path="grbl/main.c" type="1"/>
   </Files>
 </Project>
