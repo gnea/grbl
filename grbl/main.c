@@ -87,6 +87,7 @@ int main(void)
 #endif
 {
 #if defined (STM32F103C8)
+    GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable, ENABLE);
 #ifdef LEDBLINK
 	GPIO_InitTypeDef GPIO_InitStructure;
 
