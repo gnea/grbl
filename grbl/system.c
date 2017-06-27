@@ -124,6 +124,7 @@ ISR(CONTROL_INT_vect)
 #if defined (STM32F103C8)
 void EXTI9_5_IRQHandler(void)
 {
+    EXTI_ClearITPendingBit((1 << CONTROL_RESET_BIT) | (1 << CONTROL_FEED_HOLD_BIT) | (1 << CONTROL_CYCLE_START_BIT) | (1 << CONTROL_SAFETY_DOOR_BIT));
 	uint8_t pin = system_control_get_state();
 	if (pin) 
 	{ 
