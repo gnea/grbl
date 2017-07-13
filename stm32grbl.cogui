@@ -28,7 +28,7 @@
 </editor>
 <editor activePart="true" focus="true" id="org.coocox.builder.ui.editors.ConfigEditor" name="" partName="Configuration" title="Configuration" tooltip="" workbook="DefaultEditorWorkbook">
 <input factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="0" verticalPosition="0"/>
+<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="3" verticalPosition="0"/>
 </input>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="cpu_map.h" partName="cpu_map.h" title="cpu_map.h" tooltip="E:\usbjtagproj\Code\grbl1.1\grbl-edgestm32\grbl\cpu_map.h" workbook="DefaultEditorWorkbook">
@@ -256,11 +256,14 @@
 <editors>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/stm32grbl/grbl/src/spindle_control.c"/>
 <editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="0" verticalPosition="0"/>
+<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="3" verticalPosition="0"/>
 </editor>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/stm32grbl/stm_lib/inc/stm32f10x_exti.h"/>
 <editor factoryID="org.eclipse.ui.ide.FileStoreEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" uri="file:/J:/github/grbl/grbl/cpu_map.h"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/stm32grbl/grbl/inc/config.h"/>
+<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
+<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="3" verticalPosition="0"/>
+</editor>
 </editors>
 <item historyLabel="spindle_control.c" index="0">
 <position info="not_deleted" x="6198" y="0"/>
@@ -279,7 +282,8 @@
 <item historyLabel="spindle_control.c" index="0">
 <position info="not_deleted" x="6198" y="0"/>
 </item>
-<item active="true" historyLabel="Configuration" index="1"/>
+<item historyLabel="Configuration" index="1"/>
+<item active="true" historyLabel="Configuration" index="5"/>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
 </page>
@@ -287,49 +291,47 @@
 <actionBarAdvisor/>
 </window>
 <mruList>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="protocol.c" tooltip="stm32grbl/grbl/src/protocol.c">
-<persistable path="/stm32grbl/grbl/src/protocol.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="cpu_map.h" tooltip="stm32grbl/grbl/inc/cpu_map.h">
+<persistable path="/stm32grbl/grbl/inc/cpu_map.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_endp.c" tooltip="stm32grbl/usb/usb_endp.c">
-<persistable path="/stm32grbl/usb/usb_endp.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="coolant_control.c" tooltip="stm32grbl/grbl/src/coolant_control.c">
+<persistable path="/stm32grbl/grbl/src/coolant_control.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="coolant_control.h" tooltip="stm32grbl/grbl/inc/coolant_control.h">
-<persistable path="/stm32grbl/grbl/inc/coolant_control.h"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_prop.c" tooltip="LCSFATUSB/usb/usb_prop.c">
+<persistable path="/LCSFATUSB/usb/usb_prop.c"/>
 </file>
-<file factoryID="org.coocox.component.ui.editors.repository.RepositoryElementFactory" id="org.coocox.builder.ui.editors.repository.RepositoryBrowser" name="Repository" tooltip="Repository">
-<persistable>&#x0A;<subPage/>
-</persistable>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_init.c" tooltip="LCSFATUSB/stm_usb_fs_lib/usb_init.c">
+<persistable path="/LCSFATUSB/stm_usb_fs_lib/usb_init.c"/>
 </file>
-<file factoryID="org.coocox.component.ui.editors.repository.RepositoryElementFactory" id="org.coocox.builder.ui.editors.repository.RepositoryBrowser" name="Repository" tooltip="Repository">
-<persistable>&#x0A;<subPage/>
-</persistable>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="hw_config.c" tooltip="LCSFATUSB/usb/hw_config.c">
+<persistable path="/LCSFATUSB/usb/hw_config.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="motion_control.h" tooltip="stm32grbl/grbl/inc/motion_control.h">
-<persistable path="/stm32grbl/grbl/inc/motion_control.h"/>
+<file factoryID="org.eclipse.cdt.ui.ExternalEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_regs.h" tooltip="J:\Projects\STM32\LCDSDFATUSB\stm_usb_fs_lib\inc\usb_regs.h">
+<persistable path="J:\Projects\STM32\LCDSDFATUSB\stm_usb_fs_lib\inc\usb_regs.h" project="LCSFATUSB"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="config.h" tooltip="stm32grbl/grbl/inc/config.h">
-<persistable path="/stm32grbl/grbl/inc/config.h"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="serial.h" tooltip="LCSFATUSB/util/serial.h">
+<persistable path="/LCSFATUSB/util/serial.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="motion_control.c" tooltip="stm32grbl/grbl/src/motion_control.c">
-<persistable path="/stm32grbl/grbl/src/motion_control.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f10x_it.c" tooltip="LCSFATUSB/util/stm32f10x_it.c">
+<persistable path="/LCSFATUSB/util/stm32f10x_it.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stepper.c" tooltip="stm32grbl/grbl/src/stepper.c">
-<persistable path="/stm32grbl/grbl/src/stepper.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_endp.c" tooltip="LCSFATUSB/usb/usb_endp.c">
+<persistable path="/LCSFATUSB/usb/usb_endp.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="stm32grbl/main.c">
-<persistable path="/stm32grbl/main.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_desc.c" tooltip="LCSFATUSB/usb/usb_desc.c">
+<persistable path="/LCSFATUSB/usb/usb_desc.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="eeprom.c" tooltip="stmf4grbl/grbl/eeprom.c">
-<persistable path="/stmf4grbl/grbl/eeprom.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_core.c" tooltip="LCSFATUSB/stm_usb_fs_lib/usb_core.c">
+<persistable path="/LCSFATUSB/stm_usb_fs_lib/usb_core.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="nuts_bolts.h" tooltip="stmf4grbl/grbl/nuts_bolts.h">
-<persistable path="/stmf4grbl/grbl/nuts_bolts.h"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="SDCard.c" tooltip="LCSFATUSB/util/SDCard.c">
+<persistable path="/LCSFATUSB/util/SDCard.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usbd_def.h" tooltip="stmf4grbl/Drivers/STM32_USB_Device_Library/Core/inc/usbd_def.h">
-<persistable path="/stmf4grbl/Drivers/STM32_USB_Device_Library/Core/inc/usbd_def.h"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f10x.h" tooltip="LCSFATUSB/cmsis_boot/stm32f10x.h">
+<persistable path="/LCSFATUSB/cmsis_boot/stm32f10x.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_core.h" tooltip="stmf4grbl/Drivers/STM32_USB_OTG_Driver/inc/usb_core.h">
-<persistable path="/stmf4grbl/Drivers/STM32_USB_OTG_Driver/inc/usb_core.h"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f10x_it.c" tooltip="LCSFATUSB/util/stm32f10x_it.c">
+<persistable path="/LCSFATUSB/util/stm32f10x_it.c"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_endp.c" tooltip="stm32grbl/usb/usb_endp.c">
 <persistable path="/stm32grbl/usb/usb_endp.c"/>
