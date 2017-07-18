@@ -1,4 +1,23 @@
 ----------------
+Date: 2017-05-31
+Author: chamnit
+Subject: New nonlinear spindle speed PWM output model and solution. Updated scripts.
+
+[new] A nonlinear spindle speed/PWM output option via a piecewise
+linear fit model. Enabled through config.h and solved by a Python
+script in /doc/script
+
+[new] fit_nonlinear_spindle.py. A solver script that can be run on
+http://repl.it for free. No Python install necessary. All instructions
+are available in the script file comments.
+
+[new] stream.py has been updated to include status reports feedback at
+1 second interval.
+
+[fix] stream.py bug fix with verbose mode disabled.
+
+
+----------------
 Date: 2017-03-24
 Author: Sonny Jeon
 Subject: Added an error code for laser mode when VARIABLE_SPINDLE is disabled.
