@@ -1,4 +1,16 @@
 ----------------
+Date: 2017-07-17
+Author: Sonny Jeon
+Subject: Clean up and new streaming script check-mode feature.
+
+[new] The stream.py streaming script now has a check-mode option, where it will place Grbl in $C check mode automatically and then stream the g-code program. It's a very fast way to check if the g-code program has any errors.
+
+[fix] The debug variable was not initialized if the debug option was enabled in config.h
+
+[fix] Updated error_codes CSV file to the same format as the others.
+
+
+----------------
 Date: 2017-05-31
 Author: chamnit
 Subject: New nonlinear spindle speed PWM output model and solution. Updated scripts.
