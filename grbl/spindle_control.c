@@ -45,8 +45,12 @@ void spindle_init()
     #else
       SPINDLE_DIRECTION_DDR |= (1<<SPINDLE_DIRECTION_BIT); // Configure as output pin.
     #endif
-
-    pwm_gradient = SPINDLE_PWM_RANGE/(settings.rpm_max-settings.rpm_min);
+	if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)){ // laser full range mode
+		pwm_gradient = SPINDLE_PWM_RANGE/(settings.rpm_max-settings.rpm_min);	
+	} else { // servo limited range mode
+		pwm_gradient = SERVO_PWM_RANGE/(settings.rpm_max-settings.rpm_min);
+	};
+    
 
   #else
 
@@ -188,32 +192,42 @@ void spindle_stop()
   
     // Called by spindle_set_state() and step segment generator. Keep routine small and efficient.
     uint8_t spindle_compute_pwm_value(float rpm) // 328p PWM register is 8-bit.
-    {
-	  if (!bit_istrue(settings.flags,BITFLAG_LASER_MODE)){ // servo
-		sys.spindle_speed = rpm;
-		return(map(constrain(rpm,settings.rpm_min,settings.rpm_max),settings.rpm_min,settings.rpm_max,8,39)); // min 8 (512us), max 39 (2496us)
-	  }
-      
+    {     
 	  uint8_t pwm_value;
-      rpm *= (0.010*sys.spindle_speed_ovr); // Scale by spindle speed override value.
+	  if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)){
+		rpm *= (0.010*sys.spindle_speed_ovr); // Scale by spindle speed override value.
+	  }
       // Calculate PWM register value based on rpm max/min settings and programmed rpm.
       if ((settings.rpm_min >= settings.rpm_max) || (rpm >= settings.rpm_max)) {
         // No PWM range possible. Set simple on/off spindle control pin state.
         sys.spindle_speed = settings.rpm_max;
-        pwm_value = SPINDLE_PWM_MAX_VALUE;
+		if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)){
+			pwm_value = SPINDLE_PWM_MAX_VALUE;
+		} else {
+			pwm_value = SERVO_PWM_MAX_VALUE;
+		}
       } else if (rpm <= settings.rpm_min) {
-        if (rpm == 0.0) { // S0 disables spindle
-          sys.spindle_speed = 0.0;
-          pwm_value = SPINDLE_PWM_OFF_VALUE;
-        } else { // Set minimum PWM output
-          sys.spindle_speed = settings.rpm_min;
-          pwm_value = SPINDLE_PWM_MIN_VALUE;
-        }
+		if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)){ // laser
+			if (rpm == 0.0) { // S0 disables spindle
+			  sys.spindle_speed = 0.0;
+			  pwm_value = SPINDLE_PWM_OFF_VALUE;
+			} else { // Set minimum PWM output
+			  sys.spindle_speed = settings.rpm_min;
+			  pwm_value = SPINDLE_PWM_MIN_VALUE;
+			}
+		} else { // servo
+			pwm_value = SERVO_PWM_MIN_VALUE;
+		}
+        
       } else { 
         // Compute intermediate PWM value with linear spindle speed model.
         // NOTE: A nonlinear model could be installed here, if required, but keep it VERY light-weight.
         sys.spindle_speed = rpm;
-        pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SPINDLE_PWM_MIN_VALUE;
+		if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)){
+			pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SPINDLE_PWM_MIN_VALUE;
+		} else {
+			pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SERVO_PWM_MIN_VALUE;
+		}
       }
       return(pwm_value);
     }

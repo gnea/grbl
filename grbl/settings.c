@@ -291,13 +291,9 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
       case 31: settings.rpm_min = value; spindle_init(); break; // Re-initialize spindle rpm calibration
       case 32:
         #ifdef VARIABLE_SPINDLE
-        if (int_value) { 
-		        settings.flags |= BITFLAG_LASER_MODE; 
-		        SPINDLE_TCCRB_REGISTER |= ((1<<CS22)| (1<<CS20)| (1<<CS20)); // 1/1024 prescaler -> 62.5kHz/1024=61hz .. 16ms
-	      } else { 
-		        settings.flags &= ~BITFLAG_LASER_MODE;
-		        SPINDLE_TCCRB_REGISTER = SPINDLE_TCCRB_INIT_MASK; 
-	      }
+        if (int_value) { settings.flags |= BITFLAG_LASER_MODE; } 
+		else { settings.flags &= ~BITFLAG_LASER_MODE; }
+		spindle_init(); // re-run init to adjust timing
         #else
           return(STATUS_SETTING_DISABLED_LASER);
         #endif
