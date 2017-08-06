@@ -185,7 +185,12 @@ void spindle_stop()
     // Called by spindle_set_state() and step segment generator. Keep routine small and efficient.
     uint8_t spindle_compute_pwm_value(float rpm) // 328p PWM register is 8-bit.
     {
-      uint8_t pwm_value;
+	  if (!bit_istrue(settings.flags,BITFLAG_LASER_MODE)){ // servo
+		sys.spindle_speed = rpm;
+		return(map(constrain(rpm,settings.rpm_min,settings.rpm_max),settings.rpm_min,settings.rpm_max,8,39)); // min 8 (512us), max 39 (2496us)
+	  }
+      
+	  uint8_t pwm_value;
       rpm *= (0.010*sys.spindle_speed_ovr); // Scale by spindle speed override value.
       // Calculate PWM register value based on rpm max/min settings and programmed rpm.
       if ((settings.rpm_min >= settings.rpm_max) || (rpm >= settings.rpm_max)) {
