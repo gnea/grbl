@@ -36,7 +36,7 @@ void spindle_init()
     SPINDLE_PWM_DDR |= (1<<SPINDLE_PWM_BIT); // Configure as PWM output pin.
     SPINDLE_TCCRA_REGISTER = SPINDLE_TCCRA_INIT_MASK; // Configure PWM output compare timer
     if (!bit_istrue(settings.flags,BITFLAG_LASER_MODE)){ // servo
-	    SPINDLE_TCCRB_REGISTER |= ((1<<CS22)| (1<<CS20)| (1<<CS20)); // 1/1024 prescaler -> 62.5kHz/1024=61hz .. 16ms
+	    SPINDLE_TCCRB_REGISTER |= SERVO_TCCRB_INIT_MASK;
 	} else { 
 	    SPINDLE_TCCRB_REGISTER = SPINDLE_TCCRB_INIT_MASK; 
 	}
