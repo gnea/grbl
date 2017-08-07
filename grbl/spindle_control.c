@@ -36,9 +36,9 @@ void spindle_init()
     SPINDLE_PWM_DDR |= (1<<SPINDLE_PWM_BIT); // Configure as PWM output pin.
     SPINDLE_TCCRA_REGISTER = SPINDLE_TCCRA_INIT_MASK; // Configure PWM output compare timer
     if (bit_istrue(settings.flags,BITFLAG_SERVO_MODE)){ // servo
-	    SPINDLE_TCCRB_REGISTER |= SERVO_TCCRB_INIT_MASK;
+	  SPINDLE_TCCRB_REGISTER |= SERVO_TCCRB_INIT_MASK;
 	} else { 
-	    SPINDLE_TCCRB_REGISTER = SPINDLE_TCCRB_INIT_MASK; 
+	  SPINDLE_TCCRB_REGISTER = SPINDLE_TCCRB_INIT_MASK; 
 	}
     #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
       SPINDLE_ENABLE_DDR |= (1<<SPINDLE_ENABLE_BIT); // Configure as output pin.
@@ -46,9 +46,9 @@ void spindle_init()
       SPINDLE_DIRECTION_DDR |= (1<<SPINDLE_DIRECTION_BIT); // Configure as output pin.
     #endif
 	if (bit_istrue(settings.flags,BITFLAG_SERVO_MODE)){ // servo
-		pwm_gradient = SERVO_PWM_RANGE/(settings.rpm_max-settings.rpm_min);
+	  pwm_gradient = SERVO_PWM_RANGE/(settings.rpm_max-settings.rpm_min);
 	} else { // spindle range mode
-		pwm_gradient = SPINDLE_PWM_RANGE/(settings.rpm_max-settings.rpm_min);		
+	  pwm_gradient = SPINDLE_PWM_RANGE/(settings.rpm_max-settings.rpm_min);		
 	};
     
 
@@ -193,7 +193,7 @@ void spindle_stop()
     // Called by spindle_set_state() and step segment generator. Keep routine small and efficient.
     uint8_t spindle_compute_pwm_value(float rpm) // 328p PWM register is 8-bit.
     {     
-	  uint8_t pwm_value;
+      uint8_t pwm_value;
 	  if (bit_isfalse(settings.flags,BITFLAG_SERVO_MODE)){ // only scale if not a servo
 		rpm *= (0.010*sys.spindle_speed_ovr); // Scale by spindle speed override value.
 	  }
@@ -202,32 +202,32 @@ void spindle_stop()
         // No PWM range possible. Set simple on/off spindle control pin state.
         sys.spindle_speed = settings.rpm_max;
 		if (bit_istrue(settings.flags,BITFLAG_SERVO_MODE)){ // servo
-			pwm_value = SERVO_PWM_MAX_VALUE;
+		  pwm_value = SERVO_PWM_MAX_VALUE;
 		} else {
-			pwm_value = SPINDLE_PWM_MAX_VALUE;
+		  pwm_value = SPINDLE_PWM_MAX_VALUE;
 		}
       } else if (rpm <= settings.rpm_min) {
-		if (bit_istrue(settings.flags,BITFLAG_SERVO_MODE)){ // servo
-			pwm_value = SERVO_PWM_MIN_VALUE;
+        if (bit_istrue(settings.flags,BITFLAG_SERVO_MODE)){ // servo
+		  pwm_value = SERVO_PWM_MIN_VALUE;
 		} else { 
-			if (rpm == 0.0) { // S0 disables spindle
-			  sys.spindle_speed = 0.0;
-			  pwm_value = SPINDLE_PWM_OFF_VALUE;
-			} else { // Set minimum PWM output
-			  sys.spindle_speed = settings.rpm_min;
-			  pwm_value = SPINDLE_PWM_MIN_VALUE;
-			}
+		  if (rpm == 0.0) { // S0 disables spindle
+		    sys.spindle_speed = 0.0;
+		    pwm_value = SPINDLE_PWM_OFF_VALUE;
+		  } else { // Set minimum PWM output
+		    sys.spindle_speed = settings.rpm_min;
+		    pwm_value = SPINDLE_PWM_MIN_VALUE;
+		  }
 		}
         
       } else { 
         // Compute intermediate PWM value with linear spindle speed model.
         // NOTE: A nonlinear model could be installed here, if required, but keep it VERY light-weight.
         sys.spindle_speed = rpm;
-		if (bit_istrue(settings.flags,BITFLAG_SERVO_MODE)){ // servo
-			pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SERVO_PWM_MIN_VALUE;
-		} else {
-			pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SPINDLE_PWM_MIN_VALUE;
-		}
+        if (bit_istrue(settings.flags,BITFLAG_SERVO_MODE)){ // servo
+	        pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SERVO_PWM_MIN_VALUE;
+        } else {
+	        pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SPINDLE_PWM_MIN_VALUE;
+        }
       }
       return(pwm_value);
     }
