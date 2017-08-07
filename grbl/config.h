@@ -348,6 +348,9 @@
 // and less range over the total 255 PWM levels to signal different spindle speeds.
 // NOTE: Compute duty cycle at the minimum PWM by this equation: (% duty cycle)=(SPINDLE_PWM_MIN_VALUE/255)*100
 // #define SPINDLE_PWM_MIN_VALUE 5 // Default disabled. Uncomment to enable. Must be greater than zero. Integer (1-255).
+
+
+// Servo min and max timing values. Multiply by 64us -> 0.5ms to 2.5ms
 #define SERVO_PWM_MIN_VALUE 8
 #define SERVO_PWM_MAX_VALUE 39
 

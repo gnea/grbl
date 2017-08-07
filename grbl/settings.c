@@ -292,16 +292,14 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
       case 31: settings.rpm_min = value; spindle_init(); break; // Re-initialize spindle rpm calibration
       case 32:
         #ifdef VARIABLE_SPINDLE
-        if (int_value) { settings.flags |= BITFLAG_LASER_MODE; } 
-		else { settings.flags &= ~BITFLAG_LASER_MODE; }
+		settings.flags &= ~BITFLAG_LASER_MODE; // unset all flags 
+		settings.flags &= ~BITFLAG_SERVO_MODE;
+        if (int_value == 1)     { settings.flags |= BITFLAG_LASER_MODE; } // laser
+		else if(int_value == 2) { settings.flags |= BITFLAG_SERVO_MODE; } // servo
+		spindle_init(); // re-run init to adjust timing to servo/spindle mode
         #else
           return(STATUS_SETTING_DISABLED_LASER);
         #endif
-        break;
-	case 33:
-		if (int_value) { settings.flags |= BITFLAG_SERVO_MODE; } 
-		else { settings.flags &= ~BITFLAG_SERVO_MODE; }
-		spindle_init(); // re-run init to adjust timing to servo/spindle mode
         break;
       default:
         return(STATUS_INVALID_STATEMENT);
