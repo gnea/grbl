@@ -38,6 +38,7 @@
 #define BITFLAG_SOFT_LIMIT_ENABLE  bit(5)
 #define BITFLAG_INVERT_LIMIT_PINS  bit(6)
 #define BITFLAG_INVERT_PROBE_PIN   bit(7)
+#define BITFLAG_SERVO_MODE         bit(8)
 
 // Define status reporting boolean enable bit flags in settings.status_report_mask
 #define BITFLAG_RT_STATUS_POSITION_TYPE     bit(0)
@@ -94,7 +95,7 @@ typedef struct {
   float rpm_max;
   float rpm_min;
 
-  uint8_t flags;  // Contains default boolean settings
+  uint16_t flags;  // Contains default boolean settings
 
   uint8_t homing_dir_mask;
   float homing_feed_rate;

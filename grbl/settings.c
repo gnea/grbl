@@ -87,6 +87,7 @@ void settings_restore(uint8_t restore_flag) {
     settings.flags = 0;
     if (DEFAULT_REPORT_INCHES) { settings.flags |= BITFLAG_REPORT_INCHES; }
     if (DEFAULT_LASER_MODE) { settings.flags |= BITFLAG_LASER_MODE; }
+	if (DEFAULT_SERVO_MODE) { settings.flags |= BITFLAG_SERVO_MODE; }
     if (DEFAULT_INVERT_ST_ENABLE) { settings.flags |= BITFLAG_INVERT_ST_ENABLE; }
     if (DEFAULT_HARD_LIMIT_ENABLE) { settings.flags |= BITFLAG_HARD_LIMIT_ENABLE; }
     if (DEFAULT_HOMING_ENABLE) { settings.flags |= BITFLAG_HOMING_ENABLE; }
@@ -293,10 +294,14 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
         #ifdef VARIABLE_SPINDLE
         if (int_value) { settings.flags |= BITFLAG_LASER_MODE; } 
 		else { settings.flags &= ~BITFLAG_LASER_MODE; }
-		spindle_init(); // re-run init to adjust timing
         #else
           return(STATUS_SETTING_DISABLED_LASER);
         #endif
+        break;
+	case 33:
+		if (int_value) { settings.flags |= BITFLAG_SERVO_MODE; } 
+		else { settings.flags &= ~BITFLAG_SERVO_MODE; }
+		spindle_init(); // re-run init to adjust timing to servo/spindle mode
         break;
       default:
         return(STATUS_INVALID_STATEMENT);
