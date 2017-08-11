@@ -67,7 +67,7 @@ uint8_t spindle_get_state()
 	 			if (bit_istrue(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { return(SPINDLE_STATE_CW); }
 	    #endif
     #else
-      if (SPINDLE_TCCRA_REGISTER & (1<<SPINDLE_COMB_BIT)) { // Check if PWM is enabled.
+      if (SPINDLE_TCCRA_REGISTER & (SPINDLE_TCCRA_ENABLE_PWM_MASK)) { // Check if PWM is enabled.
         if (SPINDLE_DIRECTION_PORT & (1<<SPINDLE_DIRECTION_BIT)) { return(SPINDLE_STATE_CCW); }
         else { return(SPINDLE_STATE_CW); }
       }
@@ -92,7 +92,7 @@ uint8_t spindle_get_state()
 void spindle_stop()
 {
   #ifdef VARIABLE_SPINDLE
-    SPINDLE_TCCRA_REGISTER &= ~(1<<SPINDLE_COMB_BIT); // Disable PWM. Output voltage is zero.
+    SPINDLE_TCCRA_REGISTER &= ~(SPINDLE_TCCRA_ENABLE_PWM_MASK); // Disable PWM. Output voltage is zero.
     #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
       #ifdef INVERT_SPINDLE_ENABLE_PIN
         SPINDLE_ENABLE_PORT |= (1<<SPINDLE_ENABLE_BIT);  // Set pin to high
@@ -120,7 +120,7 @@ void spindle_stop()
       if (pwm_value == SPINDLE_PWM_OFF_VALUE) {
         spindle_stop();
       } else {
-        SPINDLE_TCCRA_REGISTER |= (1<<SPINDLE_COMB_BIT); // Ensure PWM output is enabled.
+        SPINDLE_TCCRA_REGISTER |= (SPINDLE_TCCRA_ENABLE_PWM_MASK); // Ensure PWM output is enabled.
         #ifdef INVERT_SPINDLE_ENABLE_PIN
           SPINDLE_ENABLE_PORT &= ~(1<<SPINDLE_ENABLE_BIT);
         #else
@@ -129,9 +129,9 @@ void spindle_stop()
       }
     #else
       if (pwm_value == SPINDLE_PWM_OFF_VALUE) {
-        SPINDLE_TCCRA_REGISTER &= ~(1<<SPINDLE_COMB_BIT); // Disable PWM. Output voltage is zero.
+        SPINDLE_TCCRA_REGISTER &= ~(SPINDLE_TCCRA_ENABLE_PWM_MASK); // Disable PWM. Output voltage is zero.
       } else {
-        SPINDLE_TCCRA_REGISTER |= (1<<SPINDLE_COMB_BIT); // Ensure PWM output is enabled.
+        SPINDLE_TCCRA_REGISTER |= (SPINDLE_TCCRA_ENABLE_PWM_MASK); // Ensure PWM output is enabled.
       }
     #endif
   }

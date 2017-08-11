@@ -137,6 +137,11 @@
 
   // Prescaled, 8-bit Fast PWM mode.
   #define SPINDLE_TCCRA_INIT_MASK   ((1<<WGM20) | (1<<WGM21))  // Configures fast PWM mode.
+  #ifdef INVERT_SPINDLE_PWM
+    #define SPINDLE_TCCRA_ENABLE_PWM_MASK ((1<<COM2A1) | (1<<COM2A0))  // Inverts PWM output signal
+  #else
+     #define SPINDLE_TCCRA_ENABLE_PWM_MASK (1<<COM2A1)
+   #endif
   // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS20)               // Disable prescaler -> 62.5kHz
   // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS21)               // 1/8 prescaler -> 7.8kHz (Used in v0.9)
   // #define SPINDLE_TCCRB_INIT_MASK   ((1<<CS21) | (1<<CS20)) // 1/32 prescaler -> 1.96kHz

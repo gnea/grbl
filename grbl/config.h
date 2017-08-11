@@ -210,6 +210,9 @@
 // uncomment the config option USE_SPINDLE_DIR_AS_ENABLE_PIN below.
 // #define INVERT_SPINDLE_ENABLE_PIN // Default disabled. Uncomment to enable.
 
+// Invert the PWM signal for VARIABLE_SPINDLE
+// #define INVERT_SPINDLE_PWM // Disabled by default. Uncomment to enable.
+
 // Inverts the selected coolant pin from low-disabled/high-enabled to low-enabled/high-disabled. Useful
 // for some pre-built electronic boards.
 // #define INVERT_COOLANT_FLOOD_PIN // Default disabled. Uncomment to enable.
