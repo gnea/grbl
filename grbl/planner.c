@@ -368,7 +368,7 @@ uint8_t plan_buffer_line(float *target, plan_line_data_t *pl_data)
       }
     #else
       target_steps[idx] = lroundf(target[idx]*settings.steps_per_mm[idx]);
-      block->steps[idx] = fabsf(target_steps[idx]-position_steps[idx]);
+      block->steps[idx] = abs(target_steps[idx]-position_steps[idx]);
       block->step_event_count = max(block->step_event_count, block->steps[idx]);
       delta_mm = (target_steps[idx] - position_steps[idx])/settings.steps_per_mm[idx];
 	  #endif

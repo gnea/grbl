@@ -1,4 +1,54 @@
 ----------------
+Date: 2017-07-31
+Author: Sonny Jeon
+Subject: Hot fix for rare lowering feed override bug.
+
+[fix] Squashed a very rare bug when lowering the feedrate (or rapid) override. When in the very strict set of circumstances with acceleration settings, override step size, and current speed, an internal calculation would cause Grbl to crash. The fix was an overlooked equality statement that should have been a less than or equal, not a less than.
+
+
+----------------
+Date: 2017-07-17
+Author: Sonny Jeon
+Subject: Clean up and new streaming script check-mode feature.
+
+[new] The stream.py streaming script now has a check-mode option, where it will place Grbl in $C check mode automatically and then stream the g-code program. It's a very fast way to check if the g-code program has any errors.
+
+[fix] The debug variable was not initialized if the debug option was enabled in config.h
+
+[fix] Updated error_codes CSV file to the same format as the others.
+
+
+----------------
+Date: 2017-05-31
+Author: chamnit
+Subject: New nonlinear spindle speed PWM output model and solution. Updated scripts.
+
+[new] A nonlinear spindle speed/PWM output option via a piecewise
+linear fit model. Enabled through config.h and solved by a Python
+script in /doc/script
+
+[new] fit_nonlinear_spindle.py. A solver script that can be run on
+http://repl.it for free. No Python install necessary. All instructions
+are available in the script file comments.
+
+[new] stream.py has been updated to include status reports feedback at
+1 second interval.
+
+[fix] stream.py bug fix with verbose mode disabled.
+
+
+----------------
+Date: 2017-03-24
+Author: Sonny Jeon
+Subject: Added an error code for laser mode when VARIABLE_SPINDLE is disabled.
+
+- When trying to enable laser mode with $32=1 and VARIABLE_SPINDLE is
+disabled, the error code shown was improperly stating it was a homing
+failure. Added an new error code specifically for the laser mode being
+disabled without VARIABLE_SPINDLE.
+
+
+----------------
 Date: 2017-03-19
 Author: Sonny Jeon
 Subject: Housekeeping.

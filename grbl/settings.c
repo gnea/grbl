@@ -168,8 +168,10 @@ uint8_t settings_read_coord_data(uint8_t coord_select, float *coord_data)
   uint32_t addr = coord_select*(sizeof(float)*N_AXIS+1) + EEPROM_ADDR_PARAMETERS;
   if (!(memcpy_from_eeprom_with_checksum((char*)coord_data, addr, sizeof(float)*N_AXIS))) {
     // Reset with default zero vector
-    clear_vector_float(coord_data);
-    settings_write_coord_data(coord_select,coord_data);
+		coord_data[X_AXIS] = 0.0f;
+		coord_data[Y_AXIS] = 0.0f;
+		coord_data[Z_AXIS] = 0.0f;
+		settings_write_coord_data(coord_select,coord_data);
     return(false);
   }
   return(true);

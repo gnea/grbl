@@ -920,7 +920,7 @@ void st_prep_buffer()
         if (settings.flags & BITFLAG_LASER_MODE) {
           if (pl_block->condition & PL_COND_FLAG_SPINDLE_CCW) {
             // Pre-compute inverse programmed rate to speed up PWM updating per step segment.
-            prep.inv_rate = 1.0 / pl_block->programmed_rate;
+            prep.inv_rate = 1.0f / pl_block->programmed_rate;
             st_prep_block->is_pwm_rate_adjusted = true;
           }
         }
@@ -984,8 +984,8 @@ void st_prep_buffer()
 
           } else {
             // Decelerate to cruise or cruise-decelerate types. Guaranteed to intersect updated plan.
-            prep.decelerate_after = inv_2_accel*(nominal_speed_sqr-exit_speed_sqr);
-            prep.maximum_speed = nominal_speed;
+            prep.decelerate_after = inv_2_accel*(nominal_speed_sqr-exit_speed_sqr); // Should always be >= 0.0 due to planner reinit.
+						prep.maximum_speed = nominal_speed;
             prep.ramp_type = RAMP_DECEL_OVERRIDE;
           }
 				} else if (intersect_distance > 0.0f) {
@@ -1056,15 +1056,14 @@ void st_prep_buffer()
       switch (prep.ramp_type) {
         case RAMP_DECEL_OVERRIDE:
           speed_var = pl_block->acceleration*time_var;
-          mm_var = time_var*(prep.current_speed - 0.5f*speed_var);
-          mm_remaining -= mm_var;
-          if ((mm_remaining < prep.accelerate_until) || (mm_var <= 0)) {
+					if (prep.current_speed-prep.maximum_speed <= speed_var) {
             // Cruise or cruise-deceleration types only for deceleration override.
-            mm_remaining = prep.accelerate_until; // NOTE: 0.0 at EOB
+						mm_remaining = prep.accelerate_until;
             time_var = 2.0f*(pl_block->millimeters-mm_remaining)/(prep.current_speed+prep.maximum_speed);
             prep.ramp_type = RAMP_CRUISE;
             prep.current_speed = prep.maximum_speed;
           } else { // Mid-deceleration override ramp.
+						mm_remaining -= time_var*(prep.current_speed - 0.5f*speed_var);
             prep.current_speed -= speed_var;
           }
           break;
