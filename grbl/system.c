@@ -342,7 +342,11 @@ uint8_t system_check_travel_limits(float *target)
       }
     #else
       // NOTE: max_travel is stored as negative
-      if (target[idx] > 0 || target[idx] < settings.max_travel[idx]) { return(true); }
+      #ifdef HOMING_FORCE_POSITIVE_SPACE
+        if (target[idx] < 0 || target[idx] > -settings.max_travel[idx]) { return(true); }
+      #else
+        if (target[idx] > 0 || target[idx] < settings.max_travel[idx]) { return(true); }
+      #endif
     #endif
   }
   return(false);
