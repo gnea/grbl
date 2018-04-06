@@ -2,7 +2,7 @@
 ---------------------
 The MIT License (MIT)
 
-Copyright (c) 2017 Sungeun K. Jeon for Gnea Research LLC
+Copyright (c) 2017-2018 Sungeun K. Jeon for Gnea Research LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,14 +34,24 @@ REQUIREMENTS:
   - Python 2.7 or 3.x with SciPy, NumPy, and Matplotlib Python Libraries
   
   - For the most people, the easiest way to run this script is on the free cloud service
-    https://repl.it/site/languages/python3. No account necessary. Unlimited runs. To use,
-    go to the website and start the Python REPL. Copy and paste this script into the 
-    browser editor. Click the 'Add New File' icon on the upper left side. This is very
-    important. It places the REPL in multiple file mode and will enable viewing the plot.
-    Click the 'Run' icon. The solution will be presented in the console on the right side,
-    and the data plot will appear as a tab called 'line_fit.png'. You can edit the script
-    directly in the browser and re-run the script as many times as you need. A free 
-    account is only necessary if you want to save files on their servers.
+    https://repl.it/site/languages/python3. No account necessary. Unlimited runs. 
+    
+    - Last checked on 4/5/2018. This site has been regularly evolving and becoming more 
+      powerful. Things may not work exactly as shown. Please report any issues.
+    
+    - To use, go to the website and start the Python REPL. Copy and paste this script into
+      the main.py file in the browser editor. Click 'Run' and a solution should appear in 
+      the text output in the REPL console window. You can edit the script directly in the
+      browser and re-run the script as many times as you need. A free account is only 
+      necessary if you want to save files on their servers.
+      
+    - This script will also automatically generate a png image with the plot of the data 
+      with the piece-wise linear fit over it, but this will not show up by default on this 
+      website. To enable this, just click the 'Add File' icon and create a dummy file. 
+      Name it anything, like dummy.py. Leave this file blank. Doing this places the REPL 
+      in multiple file mode and will enable viewing the plot. Click the 'Run' icon. The
+      solution will be presented again in the console, and the data plot will appear in 
+      the file list called 'line_fit.png'. Click the file to view the plot.
   
   - For offline Python installs, most Mac and Linux computers have Python pre-installed 
     with the required libraries. If not, a quick google search will show you how to 
