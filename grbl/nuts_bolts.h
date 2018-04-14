@@ -22,7 +22,7 @@
 #ifndef nuts_bolts_h
 #define nuts_bolts_h
 
-#if false
+#ifndef false
 	#define false 0
 #endif
 #ifndef true
