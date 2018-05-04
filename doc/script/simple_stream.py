@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 """\
 Simple g-code streaming script for grbl
 
@@ -53,10 +55,10 @@ s.flushInput()  # Flush startup text in serial input
 # Stream g-code to grbl
 for line in f:
     l = line.strip() # Strip all EOL characters for consistency
-    print 'Sending: ' + l,
+    print('Sending: ' + l)
     s.write(l + '\n') # Send g-code block to grbl
     grbl_out = s.readline() # Wait for grbl response with carriage return
-    print ' : ' + grbl_out.strip()
+    print(' : ' + grbl_out.strip())
 
 # Wait here until grbl is finished to close serial port and file.
 raw_input("  Press <Enter> to exit and disable grbl.") 
