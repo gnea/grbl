@@ -680,7 +680,7 @@ static void protocol_exec_rt_suspend()
               // Block if safety door re-opened during prior restore actions.
               if (bit_isfalse(sys.suspend,SUSPEND_RESTART_RETRACT)) {
                 // NOTE: Laser mode will honor this delay. An exhaust system is often controlled by this pin.
-                coolant_set_state((restore_condition & (PL_COND_FLAG_COOLANT_FLOOD | PL_COND_FLAG_COOLANT_FLOOD)));
+                coolant_set_state((restore_condition & (PL_COND_FLAG_COOLANT_FLOOD | PL_COND_FLAG_COOLANT_MIST)));
                 delay_sec(SAFETY_DOOR_COOLANT_DELAY, DELAY_MODE_SYS_SUSPEND);
               }
             }
