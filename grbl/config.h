@@ -349,6 +349,11 @@
 // NOTE: Compute duty cycle at the minimum PWM by this equation: (% duty cycle)=(SPINDLE_PWM_MIN_VALUE/255)*100
 // #define SPINDLE_PWM_MIN_VALUE 5 // Default disabled. Uncomment to enable. Must be greater than zero. Integer (1-255).
 
+
+// Servo min and max timing values. Multiply by 64us -> 0.5ms to 2.5ms
+#define SERVO_PWM_MIN_VALUE 8
+#define SERVO_PWM_MAX_VALUE 39
+
 // By default on a 328p(Uno), Grbl combines the variable spindle PWM and the enable into one pin to help
 // preserve I/O pins. For certain setups, these may need to be separate pins. This configure option uses
 // the spindle direction pin(D13) as a separate spindle enable pin along with spindle speed PWM on pin D11.

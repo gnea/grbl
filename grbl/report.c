@@ -203,11 +203,16 @@ void report_grbl_settings() {
   report_util_float_setting(27,settings.homing_pulloff,N_DECIMAL_SETTINGVALUE);
   report_util_float_setting(30,settings.rpm_max,N_DECIMAL_RPMVALUE);
   report_util_float_setting(31,settings.rpm_min,N_DECIMAL_RPMVALUE);
+  if(bit_isfalse(settings.flags,BITFLAG_SERVO_MODE)){
   #ifdef VARIABLE_SPINDLE
-    report_util_uint8_setting(32,bit_istrue(settings.flags,BITFLAG_LASER_MODE));
+    report_util_uint8_setting(32,bit_istrue(settings.flags,BITFLAG_LASER_MODE)); // 0 = spindle, 1 = laser, 2 = servo
   #else
     report_util_uint8_setting(32,0);
   #endif
+  } else {
+    report_util_uint8_setting(33,2); // servo mode = 2
+  }
+  
   // Print axis settings
   uint8_t idx, set_idx;
   uint8_t val = AXIS_SETTINGS_START_VAL;

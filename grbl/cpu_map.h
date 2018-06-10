@@ -130,6 +130,7 @@
   #endif
   #define SPINDLE_PWM_OFF_VALUE     0
   #define SPINDLE_PWM_RANGE         (SPINDLE_PWM_MAX_VALUE-SPINDLE_PWM_MIN_VALUE)
+  #define SERVO_PWM_RANGE         	(SERVO_PWM_MAX_VALUE-SERVO_PWM_MIN_VALUE)
   #define SPINDLE_TCCRA_REGISTER	  TCCR2A
   #define SPINDLE_TCCRB_REGISTER	  TCCR2B
   #define SPINDLE_OCR_REGISTER      OCR2A
@@ -141,7 +142,8 @@
   // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS21)               // 1/8 prescaler -> 7.8kHz (Used in v0.9)
   // #define SPINDLE_TCCRB_INIT_MASK   ((1<<CS21) | (1<<CS20)) // 1/32 prescaler -> 1.96kHz
   #define SPINDLE_TCCRB_INIT_MASK      (1<<CS22)               // 1/64 prescaler -> 0.98kHz (J-tech laser)
-
+  #define SERVO_TCCRB_INIT_MASK ((1<<CS22)| (1<<CS21)| (1<<CS20)) // 1/1024 prescaler -> 62.5kHz/1024=61hz .. 16ms
+  
   // NOTE: On the 328p, these must be the same as the SPINDLE_ENABLE settings.
   #define SPINDLE_PWM_DDR	  DDRB
   #define SPINDLE_PWM_PORT  PORTB
