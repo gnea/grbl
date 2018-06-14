@@ -412,6 +412,12 @@ void report_build_info(char *line)
   #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
     serial_write('R');
   #endif
+  #ifndef HOMING_INIT_LOCK
+    serial_write('L');
+  #endif
+  #ifdef ENABLE_SAFETY_DOOR_INPUT_PIN
+    serial_write('+');
+  #endif  
   #ifndef ENABLE_RESTORE_EEPROM_WIPE_ALL // NOTE: Shown when disabled.
     serial_write('*');
   #endif
@@ -430,10 +436,6 @@ void report_build_info(char *line)
   #ifndef FORCE_BUFFER_SYNC_DURING_WCO_CHANGE // NOTE: Shown when disabled.
     serial_write('W');
   #endif
-  #ifndef HOMING_INIT_LOCK
-    serial_write('L');
-  #endif
-
   // NOTE: Compiled values, like override increments/max/min values, may be added at some point later.
   serial_write(',');
   print_uint8_base10(BLOCK_BUFFER_SIZE-1);

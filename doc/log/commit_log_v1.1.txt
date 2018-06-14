@@ -1,4 +1,31 @@
 ----------------
+Date: 2018-06-09
+Author: Jon
+Subject: Fix apparent error in restore masking that causes the call to coolant_set_state to not re-enable the mist (M7) output if it was previously enabled. (#469)
+
+
+
+----------------
+Date: 2018-04-06
+Author: Sonny Jeon
+Subject: Updated instructions in fit_nonlinear_spindle.py
+
+- repl.it has changed since the last time fit_nonlinear_spindle.py was tested. Updated instructions.
+
+
+----------------
+Date: 2017-08-01
+Author: Sonny Jeon
+Subject: Improved fix for rare lowering feed/rapid override bug.
+
+[fix] In the previous hot fix, there was still (rarer) potential for
+very small floating point errors incorrectly handle an override
+deceleration and crash Grbl. Re-factored the if-then statement in terms
+of speed changes, rather than distance, to completely eliminate the
+issue.
+
+
+----------------
 Date: 2017-07-31
 Author: Sonny Jeon
 Subject: Hot fix for rare lowering feed override bug.
