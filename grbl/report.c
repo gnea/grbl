@@ -210,7 +210,7 @@ void report_grbl_settings() {
     report_util_uint8_setting(32,0);
   #endif
   } else {
-    report_util_uint8_setting(33,2); // servo mode = 2
+    report_util_uint8_setting(32,2); // servo mode = 2
   }
   
   // Print axis settings

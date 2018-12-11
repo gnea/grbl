@@ -1,0 +1,15 @@
+/usr/share/arduino/hardware/tools/avrdude -C/usr/share/arduino/hardware/tools/avrdude.conf -v -v -v -v -patmega328p -cstk500v2 -Pusb  -Uflash:w:/usr/share/arduino/hardware/arduino/bootloaders/optiboot/optiboot_atmega328.hex -Ulock:w:0x3F:m -Uefuse:w:0x05:m -Uhfuse:w:0xDA:m -Ulfuse:w:0xFF:m
+
+
+/usr/share/arduino/hardware/tools/avrdude -C/usr/share/arduino/hardware/tools/avrdude.conf -v -v -v -v -patmega328p -carduino -P /dev/ttyACM2 -b115200 -D -Uflash:w:grbl.hex:i -e
+
+
+/usr/share/arduino/hardware/tools/avrdude -C/usr/share/arduino/hardware/tools/avrdude.conf -v -v -v -v -patmega328p -cstk500v2 -Pusb -Uflash:w:grbl.hex:i -Ulock:w:0x3F:m -Uefuse:w:0x05:m -Uhfuse:w:0xDB:m -Ulfuse:w:0xFF:m
+
+
+/usr/share/arduino/hardware/tools/avrdude -C/usr/share/arduino/hardware/tools/avrdude.conf -v -v -v -v -patmega328p -cstk500v2 -Pusb -Ulfuse:r:-:i
+
+
+L: CE
+H: DA
+E: FE
