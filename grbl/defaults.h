@@ -243,40 +243,41 @@
   #define MICROSTEPS_Z 8
   #define STEP_REVS_Z 200
   #define MM_PER_REV_Z (2.0*20) // 2mm belt pitch, 20 pulley teeth
-  #define DEFAULT_X_STEPS_PER_MM (MICROSTEPS_XY*STEP_REVS_XY/MM_PER_REV_XY)
-  #define DEFAULT_Y_STEPS_PER_MM (MICROSTEPS_XY*STEP_REVS_XY/MM_PER_REV_XY)
-  #define DEFAULT_Z_STEPS_PER_MM (MICROSTEPS_Z*STEP_REVS_Z/MM_PER_REV_Z)
-  #define DEFAULT_X_MAX_RATE 5000.0 // mm/min
-  #define DEFAULT_Y_MAX_RATE 5000.0 // mm/min
-  #define DEFAULT_Z_MAX_RATE 5000.0 // mm/min
-  #define DEFAULT_X_ACCELERATION (400.0*60*60) // 400*60*60 mm/min^2 = 400 mm/sec^2
-  #define DEFAULT_Y_ACCELERATION (400.0*60*60) // 400*60*60 mm/min^2 = 400 mm/sec^2
-  #define DEFAULT_Z_ACCELERATION (400.0*60*60) // 400*60*60 mm/min^2 = 400 mm/sec^2
-  #define DEFAULT_X_MAX_TRAVEL 425.0 // mm NOTE: Must be a positive value.
-  #define DEFAULT_Y_MAX_TRAVEL 465.0 // mm NOTE: Must be a positive value.
-  #define DEFAULT_Z_MAX_TRAVEL 80.0 // mm NOTE: Must be a positive value.
-  #define DEFAULT_SPINDLE_RPM_MAX 10000.0 // rpm
-  #define DEFAULT_SPINDLE_RPM_MIN 0.0 // rpm
-  #define DEFAULT_STEP_PULSE_MICROSECONDS 10
-  #define DEFAULT_STEPPING_INVERT_MASK 0
-  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<X_AXIS)|(1<<Z_AXIS))
-  #define DEFAULT_STEPPER_IDLE_LOCK_TIME 255 // msec (0-254, 255 keeps steppers enabled)
-  #define DEFAULT_STATUS_REPORT_MASK 1 // MPos enabled
-  #define DEFAULT_JUNCTION_DEVIATION 0.02 // mm
-  #define DEFAULT_ARC_TOLERANCE 0.01 // mm
-  #define DEFAULT_REPORT_INCHES 0 // false
-  #define DEFAULT_INVERT_ST_ENABLE 0 // false
-  #define DEFAULT_INVERT_LIMIT_PINS 0 // false
-  #define DEFAULT_SOFT_LIMIT_ENABLE 0 // false
-  #define DEFAULT_HARD_LIMIT_ENABLE 0  // false
-  #define DEFAULT_INVERT_PROBE_PIN 0 // false
-  #define DEFAULT_LASER_MODE 0 // false
-  #define DEFAULT_HOMING_ENABLE 0  // false
-  #define DEFAULT_HOMING_DIR_MASK 0 // move positive dir
-  #define DEFAULT_HOMING_FEED_RATE 100.0 // mm/min
-  #define DEFAULT_HOMING_SEEK_RATE 1000.0 // mm/min
-  #define DEFAULT_HOMING_DEBOUNCE_DELAY 25 // msec (0-65k)
-  #define DEFAULT_HOMING_PULLOFF 5.0 // mm
+  #define DEFAULT_STEP_PULSE_MICROSECONDS 10       //  $0    :: [Step pulse, microseconds](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#0--step-pulse-microseconds)
+  #define DEFAULT_STEPPER_IDLE_LOCK_TIME  255      //  $1    :: [Step idle delay, milliseconds](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#1---step-idle-delay-milliseconds)
+  #define DEFAULT_STEPPING_INVERT_MASK    0        //  $2    :: [Step port invert, mask](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#2--step-port-invert-mask)
+  #define DEFAULT_DIRECTION_INVERT_MASK   6        //  $3    :: [Direction port invert, mask](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#3--direction-port-invert-mask)
+  #define DEFAULT_INVERT_ST_ENABLE        0        //  $4    :: [Step enable invert, boolean](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#4---step-enable-invert-boolean)
+  #define DEFAULT_INVERT_LIMIT_PINS       0        //  $5    :: [Limit pins invert, boolean](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#5----limit-pins-invert-boolean)
+  #define DEFAULT_INVERT_PROBE_PIN        0        //  $6    :: [Probe pin invert, boolean](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#6----probe-pin-invert-boolean)
+  #define DEFAULT_STATUS_REPORT_MASK      255      //  $10   :: [Status report, mask](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#10---status-report-mask)
+  #define DEFAULT_JUNCTION_DEVIATION      0.02     //  $11   :: [Junction deviation, mm](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#11---junction-deviation-mm)
+  #define DEFAULT_ARC_TOLERANCE           0.01     //  $12   :: [Arc tolerance, mm](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#12--arc-tolerance-mm)
+  #define DEFAULT_REPORT_INCHES           0        //  $13   :: [Report inches, boolean](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#13---report-inches-boolean)
+  #define DEFAULT_SOFT_LIMIT_ENABLE       0        //  $20   :: [Soft limits, boolean](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#20---soft-limits-boolean)
+  #define DEFAULT_HARD_LIMIT_ENABLE       0        //  $21   :: [Hard limits, boolean](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#21---hard-limits-boolean)
+  #define DEFAULT_HOMING_ENABLE           1        //  $22   :: [Homing cycle, boolean](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#22---homing-cycle-boolean)
+  #define DEFAULT_HOMING_DIR_MASK         0        //  $23   :: [Homing dir invert, mask](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#23---homing-dir-invert-mask)
+  #define DEFAULT_HOMING_FEED_RATE        100      //  $24   :: [Homing feed, mm/min](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#24---homing-feed-mmmin)
+  #define DEFAULT_HOMING_SEEK_RATE        2000     //  $25   :: [Homing seek, mm/min](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#25---homing-seek-mmmin)
+  #define DEFAULT_HOMING_DEBOUNCE_DELAY   25       //  $26   :: [Homing debounce, milliseconds](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#26---homing-debounce-milliseconds)
+  #define DEFAULT_HOMING_PULLOFF          5        //  $27   :: [Homing pull-off, mm](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#27---homing-pull-off-mm)
+  #define DEFAULT_SPINDLE_RPM_MAX         30000.0  //  $30   :: [Max spindle speed, RPM](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#30---max-spindle-speed-rpm)
+  #define DEFAULT_SPINDLE_RPM_MIN         0        //  $31   :: [Min spindle speed, RPM](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#31---min-spindle-speed-rpm)
+  #define DEFAULT_LASER_MODE              0        //  $32   :: [Laser mode, boolean](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#32---laser-mode-boolean)
+  #define DEFAULT_X_STEPS_PER_MM          40.000   //  $100  :: [X steps/mm](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#100-101-and-102--xyz-stepsmm)
+  #define DEFAULT_Y_STEPS_PER_MM          40.000   //  $101  :: [Y steps/mmß](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#100-101-and-102--xyz-stepsmm)
+  #define DEFAULT_Z_STEPS_PER_MM          40.000   //  $102  :: [Z steps/mm](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#100-101-and-102--xyz-stepsmm)
+  #define DEFAULT_X_MAX_RATE              5000.000 //  $110  :: [X Max rate, mm/min](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#110-111-and-112--xyz-max-rate-mmmin)
+  #define DEFAULT_Y_MAX_RATE              5000.000 //  $111  :: [Y Max rate, mm/min](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#110-111-and-112--xyz-max-rate-mmmin)
+  #define DEFAULT_Z_MAX_RATE              5000.000 //  $112  :: [Z Max rate, mm/min](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#110-111-and-112--xyz-max-rate-mmmin)
+  #define DEFAULT_X_ACCELERATION          400.000  //  $120  :: [X Acceleration, mm/sec^2](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#120-121-122--xyz-acceleration-mmsec2)
+  #define DEFAULT_Y_ACCELERATION          400.000  //  $121  :: [Y Acceleration, mm/sec^2](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#120-121-122--xyz-acceleration-mmsec2)
+  #define DEFAULT_Z_ACCELERATION          400.000  //  $122  :: [Z Acceleration, mm/sec^2](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#120-121-122--xyz-acceleration-mmsec2)
+  #define DEFAULT_X_MAX_TRAVEL            845.000  //  $130  :: [X Max travel, mm](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#130-131-132--xyz-max-travel-mm)
+  #define DEFAULT_Y_MAX_TRAVEL            850.000  //  $131  :: [Y Max travel, mm](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#130-131-132--xyz-max-travel-mm)
+  #define DEFAULT_Z_MAX_TRAVEL            80.000   //  $132  :: [Z Max travel, mm](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Configuration#130-131-132--xyz-max-travel-mm)
+
 #endif
 
 #ifdef DEFAULTS_X_CARVE_500MM
