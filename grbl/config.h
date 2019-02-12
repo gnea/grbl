@@ -176,8 +176,17 @@
 
 // After the safety door switch has been toggled and restored, this setting sets the power-up delay
 // between restoring the spindle and coolant and resuming the cycle.
-#define SPINDLE_SPOOLUP_DELAY 4.0 // Float (seconds)
+#define SAFETY_DOOR_SPINDLE_DELAY 4.0 // Float (seconds)
 #define SAFETY_DOOR_COOLANT_DELAY 1.0 // Float (seconds)
+
+// During a feed hold, Grbl will leave the spindle alone. If an operator issues
+// a feed hold and subsequently stops the spindle, they may desire the spindle
+// to be restored, though this is the opposite behaviour of many industrial
+// machine controllers, and should be changed in the next minor/major version 
+// of Grbl.
+// Default (v1.1g): enabled. Comment to disable.
+#define FEED_HOLD_RESTORE_SPINDLE
+#define FEED_HOLD_RESTORE_COOLANT
 
 // Enable CoreXY kinematics. Use ONLY with CoreXY machines.
 // IMPORTANT: If homing is enabled, you must reconfigure the homing cycle #defines above to
