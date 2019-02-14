@@ -350,7 +350,6 @@ void protocol_exec_rt_system()
           if (sys.state == STATE_HOLD && sys.spindle_stop_ovr) {
             #ifdef FEED_HOLD_RESTORE_SPINDLE
             sys.spindle_stop_ovr |= SPINDLE_STOP_OVR_RESTORE_CYCLE; // Set to restore in suspend routine and cycle start after.
-            delay_sec(SAFETY_DOOR_SPINDLE_DELAY, DELAY_MODE_SYS_SUSPEND);
             #endif
           } else {
             // Start cycle only if queued motions exist in planner buffer and the motion is not canceled.
@@ -656,10 +655,11 @@ static void protocol_exec_rt_suspend()
               // NOTE: State is will remain DOOR, until the de-energizing and retract is complete.
               #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
               if (((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE) &&
-                   (sys.override_ctrl == OVERRIDE_PARKING_MOTION)) {
+                   (sys.override_ctrl == OVERRIDE_PARKING_MOTION))
               #else
-              if ((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE) {
+              if ((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE)
               #endif
+              {
                 // Check to ensure the motion doesn't move below pull-out position.
                 if (parking_target[PARKING_AXIS] <= PARKING_TARGET) {
                   parking_target[PARKING_AXIS] = retract_waypoint;
@@ -669,6 +669,7 @@ static void protocol_exec_rt_suspend()
               }
             #endif
 
+            #ifdef FEED_HOLD_RESTORE_SPINDLE
             // Delayed Tasks: Restart spindle and coolant, delay to power-up, then resume cycle.
             if (gc_state.modal.spindle != SPINDLE_DISABLE) {
               // Block if safety door re-opened during prior restore actions.
@@ -682,26 +683,28 @@ static void protocol_exec_rt_suspend()
                 }
               }
             }
+            #endif
+
+            #ifdef FEED_HOLD_RESTORE_COOLANT
             if (gc_state.modal.coolant != COOLANT_DISABLE) {
               // Block if safety door re-opened during prior restore actions.
               if (bit_isfalse(sys.suspend,SUSPEND_RESTART_RETRACT)) {
-                #ifdef FEED_HOLD_RESTORE_COOLANT
                 // NOTE: Laser mode will honor this delay. An exhaust system is often controlled by this pin.
                 coolant_set_state((restore_condition & (PL_COND_FLAG_COOLANT_FLOOD | PL_COND_FLAG_COOLANT_MIST)));
                 delay_sec(SAFETY_DOOR_COOLANT_DELAY, DELAY_MODE_SYS_SUSPEND);
-                #endif
               }
-              
             }
+            #endif
 
             #ifdef PARKING_ENABLE
               // Execute slow plunge motion from pull-out position to resume position.
               #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
               if (((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE) &&
-                   (sys.override_ctrl == OVERRIDE_PARKING_MOTION)) {
+                   (sys.override_ctrl == OVERRIDE_PARKING_MOTION))
               #else
-              if ((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE) {
+              if ((settings.flags & (BITFLAG_HOMING_ENABLE|BITFLAG_LASER_MODE)) == BITFLAG_HOMING_ENABLE)
               #endif
+              {
                 // Block if safety door re-opened during prior restore actions.
                 if (bit_isfalse(sys.suspend,SUSPEND_RESTART_RETRACT)) {
                   // Regardless if the retract parking motion was a valid/safe motion or not, the
@@ -720,7 +723,6 @@ static void protocol_exec_rt_suspend()
               system_set_exec_state_flag(EXEC_CYCLE_START); // Set to resume program.
             }
           }
-
         }
 
 
