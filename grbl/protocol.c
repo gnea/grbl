@@ -751,6 +751,7 @@ static void protocol_exec_rt_suspend()
               }
             }
             if (sys.spindle_stop_ovr & SPINDLE_STOP_OVR_RESTORE_CYCLE) {
+              delay_sec(SAFETY_DOOR_SPINDLE_DELAY, DELAY_MODE_SYS_SUSPEND);
               system_set_exec_state_flag(EXEC_CYCLE_START);  // Set to resume program.
             }
             sys.spindle_stop_ovr = SPINDLE_STOP_OVR_DISABLED; // Clear stop override state
