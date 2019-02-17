@@ -750,18 +750,20 @@ static void protocol_exec_rt_suspend()
                 spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
               }
             }
+            #ifdef FEED_HOLD_RESTORE_SPINDLE
             if (sys.spindle_stop_ovr & SPINDLE_STOP_OVR_RESTORE_CYCLE) {
               delay_sec(SAFETY_DOOR_SPINDLE_DELAY, DELAY_MODE_SYS_SUSPEND);
               system_set_exec_state_flag(EXEC_CYCLE_START);  // Set to resume program.
             }
+            #endif
             sys.spindle_stop_ovr = SPINDLE_STOP_OVR_DISABLED; // Clear stop override state
           }
         } else {
           // Handles spindle state during hold. NOTE: Spindle speed overrides may be altered during hold state.
           // NOTE: STEP_CONTROL_UPDATE_SPINDLE_PWM is automatically reset upon resume in step generator.
           if (bit_istrue(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM)) {
-            spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
-            bit_false(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM);
+              spindle_set_state((restore_condition & (PL_COND_FLAG_SPINDLE_CW | PL_COND_FLAG_SPINDLE_CCW)), restore_spindle_speed);
+              bit_false(sys.step_control, STEP_CONTROL_UPDATE_SPINDLE_PWM);
           }
         }
 
