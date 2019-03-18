@@ -224,7 +224,7 @@ typedef struct {
                                  // position in mm. Loaded from EEPROM when called.
   float coord_offset[N_AXIS];    // Retains the G92 coordinate offset (work coordinates) relative to
                                  // machine zero in mm. Non-persistent. Cleared upon reset and boot.
-  float tool_length_offset;      // Tracks tool length offset value when enabled.
+  float tool_length_offset[N_AXIS];// Tracks tool length offset value when enabled.
 } parser_state_t;
 extern parser_state_t gc_state;
 

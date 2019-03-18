@@ -251,22 +251,21 @@ void report_ngc_parameters()
       report_status_message(STATUS_SETTING_READ_FAIL);
       return;
     }
-    printPgmString(PSTR("[G"));
-    switch (coord_select) {
-      case 6: printPgmString(PSTR("28")); break;
-      case 7: printPgmString(PSTR("30")); break;
-      default: print_uint8_base10(coord_select+54); break; // G54-G59
+    if(coord_select < N_COORDINATE_SYSTEM) {
+      printPgmString(PSTR("[G"));
+      print_uint8_base10(coord_select+54);
+    } else {
+      static const char prefixes[] PROGMEM = "[G28\0[G30\0[G92\0[TLO\0"; //4 additional offset names packed into one string
+      printPgmString(prefixes + (coord_select - N_COORDINATE_SYSTEM) * 5);
     }
     serial_write(':');
-    report_util_axis_values(coord_data);
+    if(coord_select == SETTING_INDEX_G43) { //TLO is reported only for one axis
+      printFloat_CoordValue(coord_data[TOOL_LENGTH_OFFSET_AXIS]);
+    } else {
+      report_util_axis_values(coord_data);
+    }
     report_util_feedback_line_feed();
   }
-  printPgmString(PSTR("[G92:")); // Print G92,G92.1 which are not persistent in memory
-  report_util_axis_values(gc_state.coord_offset);
-  report_util_feedback_line_feed();
-  printPgmString(PSTR("[TLO:")); // Print tool length offset value
-  printFloat_CoordValue(gc_state.tool_length_offset);
-  report_util_feedback_line_feed();
   report_probe_parameters(); // Print probe parameters. Not persistent in memory.
 }
 
@@ -508,8 +507,7 @@ void report_realtime_status()
       (sys.report_wco_counter == 0) ) {
     for (idx=0; idx< N_AXIS; idx++) {
       // Apply work coordinate offsets and tool length offset to current position.
-      wco[idx] = gc_state.coord_system[idx]+gc_state.coord_offset[idx];
-      if (idx == TOOL_LENGTH_OFFSET_AXIS) { wco[idx] += gc_state.tool_length_offset; }
+      wco[idx] = gc_state.coord_system[idx]+gc_state.coord_offset[idx]+gc_state.tool_length_offset[idx];
       if (bit_isfalse(settings.status_report_mask,BITFLAG_RT_STATUS_POSITION_TYPE)) {
         print_position[idx] -= wco[idx];
       }
