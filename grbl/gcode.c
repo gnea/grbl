@@ -40,13 +40,17 @@ parser_block_t gc_block;
 
 
 void gc_init()
-{
+{ static char init; init&=0x80;
+ if(!init) { init--; 
   memset(&gc_state, 0, sizeof(parser_state_t));
-
-  // Load default G54 coordinate system.
-  if (!(settings_read_coord_data(gc_state.modal.coord_select,gc_state.coord_system))) {
-    report_status_message(STATUS_SETTING_READ_FAIL);
-  }
+  if (!(settings_read_coord_data(gc_state.modal.coord_select,gc_state.coord_system))) 
+   	report_status_message(STATUS_SETTING_READ_FAIL);
+ } else { 
+  uint8_t tmp = gc_state.modal.coord_select; // in case more then 64 offsets are used.
+  if(gc_state.modal.tool_length) init&=0x40; 
+  memset(&gc_state, 0, sizeof(parser_state_t)-sizeof(float)*(N_AXIS*2+1));
+  gc_state.modal.coord_select=tmp; if(init&0x40) gc_state.modal.tool_length++;
+ }
 }
 
 
