@@ -222,6 +222,8 @@ typedef struct {
 
   float coord_system[N_AXIS];    // Current work coordinate system (G54+). Stores offset from absolute machine
                                  // position in mm. Loaded from EEPROM when called.
+
+  // coord_offset and all following members retain their values during soft-resets
   float coord_offset[N_AXIS];    // Retains the G92 coordinate offset (work coordinates) relative to
                                  // machine zero in mm. Non-persistent. Cleared upon reset and boot.
   float tool_length_offset;      // Tracks tool length offset value when enabled.
