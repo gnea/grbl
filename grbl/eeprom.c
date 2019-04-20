@@ -69,59 +69,25 @@ unsigned char eeprom_get_char( unsigned int addr )
  *  \note  The EEPROM_GetChar() function checks the EEPE bit automatically.
  *
  *  \param  addr  EEPROM address to write to.
- *  \param  new_value  New EEPROM value.
+ *  \param  value  New EEPROM value.
  */
-void eeprom_put_char( unsigned int addr, unsigned char new_value )
+void eeprom_put_char( unsigned int addr, unsigned char value )
 {
-	char old_value; // Old EEPROM value.
-	char diff_mask; // Difference mask, i.e. old value XOR new value.
-
-	cli(); // Ensure atomic operation for the write operation.
+	char val; // Old EEPROM value.
 	
 	do {} while( EECR & (1<<EEPE) ); // Wait for completion of previous write.
 	#ifndef EEPROM_IGNORE_SELFPROG
 	do {} while( SPMCSR & (1<<SELFPRGEN) ); // Wait for completion of SPM.
 	#endif
 	
-	EEAR = addr; // Set EEPROM address register.
-	EECR = (1<<EERE); // Start EEPROM read operation.
-	old_value = EEDR; // Get old EEPROM value.
-	diff_mask = old_value ^ new_value; // Get bit differences.
-	
-	// Check if any bits are changed to '1' in the new value.
-	if( diff_mask & new_value ) {
-		// Now we know that _some_ bits need to be erased to '1'.
-		
-		// Check if any bits in the new value are '0'.
-		if( new_value != 0xff ) {
-			// Now we know that some bits need to be programmed to '0' also.
-			
-			EEDR = new_value; // Set EEPROM data register.
-			EECR = (1<<EEMPE) | // Set Master Write Enable bit...
-			       (0<<EEPM1) | (0<<EEPM0); // ...and Erase+Write mode.
-			EECR |= (1<<EEPE);  // Start Erase+Write operation.
-		} else {
-			// Now we know that all bits should be erased.
-
-			EECR = (1<<EEMPE) | // Set Master Write Enable bit...
-			       (1<<EEPM0);  // ...and Erase-only mode.
-			EECR |= (1<<EEPE);  // Start Erase-only operation.
-		}
-	} else {
-		// Now we know that _no_ bits need to be erased to '1'.
-		
-		// Check if any bits are changed from '1' in the old value.
-		if( diff_mask ) {
-			// Now we know that _some_ bits need to the programmed to '0'.
-			
-			EEDR = new_value;   // Set EEPROM data register.
-			EECR = (1<<EEMPE) | // Set Master Write Enable bit...
-			       (1<<EEPM1);  // ...and Write-only mode.
-			EECR |= (1<<EEPE);  // Start Write-only operation.
-		}
+	if((EEAR=addr, EECR=(1<<EERE), val = EEDR) != value) {  // write eeprom value
+		val=(val^value) & value?!~value?(1<<EEMPE)|(1<<EEPM0):(1<<EEMPE):(1<<EEMPE)|(1<<EEPM1); 
+		EEDR = value; // Set EEPROM data register.
+		unsigned char _sreg = SREG; cli();			
+		EECR = val;
+		EECR |= (1<<EEPE);  
+		SREG = _sreg;	
 	}
-	
-	sei(); // Restore interrupt flag state.
 }
 
 // Extensions added as part of Grbl 
