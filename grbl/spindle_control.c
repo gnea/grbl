@@ -30,7 +30,6 @@
 void spindle_init()
 {
   #ifdef VARIABLE_SPINDLE
-
     // Configure variable spindle PWM and enable pin, if requried. On the Uno, PWM and enable are
     // combined unless configured otherwise.
     SPINDLE_PWM_DDR |= (1<<SPINDLE_PWM_BIT); // Configure as PWM output pin.
@@ -39,17 +38,16 @@ void spindle_init()
     #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
       SPINDLE_ENABLE_DDR |= (1<<SPINDLE_ENABLE_BIT); // Configure as output pin.
     #else
+      #ifndef ENABLE_DUAL_AXIS
+        SPINDLE_DIRECTION_DDR |= (1<<SPINDLE_DIRECTION_BIT); // Configure as output pin.
+      #endif
+    #endif
+    pwm_gradient = SPINDLE_PWM_RANGE/(settings.rpm_max-settings.rpm_min);
+  #else
+    SPINDLE_ENABLE_DDR |= (1<<SPINDLE_ENABLE_BIT); // Configure as output pin.
+    #ifndef ENABLE_DUAL_AXIS
       SPINDLE_DIRECTION_DDR |= (1<<SPINDLE_DIRECTION_BIT); // Configure as output pin.
     #endif
-
-    pwm_gradient = SPINDLE_PWM_RANGE/(settings.rpm_max-settings.rpm_min);
-
-  #else
-
-    // Configure no variable spindle and only enable pin.
-    SPINDLE_ENABLE_DDR |= (1<<SPINDLE_ENABLE_BIT); // Configure as output pin.
-    SPINDLE_DIRECTION_DDR |= (1<<SPINDLE_DIRECTION_BIT); // Configure as output pin.
-
   #endif
 
   spindle_stop();
@@ -58,31 +56,39 @@ void spindle_init()
 
 uint8_t spindle_get_state()
 {
-	#ifdef VARIABLE_SPINDLE
+  #ifdef VARIABLE_SPINDLE
     #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
-		  // No spindle direction output pin. 
-			#ifdef INVERT_SPINDLE_ENABLE_PIN
-			  if (bit_isfalse(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { return(SPINDLE_STATE_CW); }
-	    #else
-	 			if (bit_istrue(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { return(SPINDLE_STATE_CW); }
-	    #endif
+      // No spindle direction output pin. 
+      #ifdef INVERT_SPINDLE_ENABLE_PIN
+        if (bit_isfalse(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { return(SPINDLE_STATE_CW); }
+      #else
+        if (bit_istrue(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { return(SPINDLE_STATE_CW); }
+      #endif
     #else
       if (SPINDLE_TCCRA_REGISTER & (1<<SPINDLE_COMB_BIT)) { // Check if PWM is enabled.
-        if (SPINDLE_DIRECTION_PORT & (1<<SPINDLE_DIRECTION_BIT)) { return(SPINDLE_STATE_CCW); }
-        else { return(SPINDLE_STATE_CW); }
+        #ifdef ENABLE_DUAL_AXIS
+          return(SPINDLE_STATE_CW);
+        #else
+          if (SPINDLE_DIRECTION_PORT & (1<<SPINDLE_DIRECTION_BIT)) { return(SPINDLE_STATE_CCW); }
+          else { return(SPINDLE_STATE_CW); }
+        #endif
       }
     #endif
-	#else
-		#ifdef INVERT_SPINDLE_ENABLE_PIN
-		  if (bit_isfalse(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { 
-		#else
-		  if (bit_istrue(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) {
-		#endif
-      if (SPINDLE_DIRECTION_PORT & (1<<SPINDLE_DIRECTION_BIT)) { return(SPINDLE_STATE_CCW); }
-      else { return(SPINDLE_STATE_CW); }
+  #else
+    #ifdef INVERT_SPINDLE_ENABLE_PIN
+      if (bit_isfalse(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) { 
+    #else
+      if (bit_istrue(SPINDLE_ENABLE_PORT,(1<<SPINDLE_ENABLE_BIT))) {
+    #endif
+      #ifdef ENABLE_DUAL_AXIS    
+        return(SPINDLE_STATE_CW);
+      #else
+        if (SPINDLE_DIRECTION_PORT & (1<<SPINDLE_DIRECTION_BIT)) { return(SPINDLE_STATE_CCW); }
+        else { return(SPINDLE_STATE_CW); }
+      #endif
     }
-	#endif
-	return(SPINDLE_STATE_DISABLE);
+  #endif
+  return(SPINDLE_STATE_DISABLE);
 }
 
 
@@ -223,6 +229,7 @@ void spindle_stop()
 #endif
 {
   if (sys.abort) { return; } // Block during abort.
+
   if (state == SPINDLE_DISABLE) { // Halt or set spindle direction and rpm.
   
     #ifdef VARIABLE_SPINDLE
@@ -231,8 +238,8 @@ void spindle_stop()
     spindle_stop();
   
   } else {
-  
-    #ifndef USE_SPINDLE_DIR_AS_ENABLE_PIN
+    
+    #if !defined(USE_SPINDLE_DIR_AS_ENABLE_PIN) && !defined(ENABLE_DUAL_AXIS)
       if (state == SPINDLE_ENABLE_CW) {
         SPINDLE_DIRECTION_PORT &= ~(1<<SPINDLE_DIRECTION_BIT);
       } else {

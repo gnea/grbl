@@ -38,15 +38,16 @@
 #define EXEC_SLEEP          bit(7) // bitmask 10000000
 
 // Alarm executor codes. Valid values (1-255). Zero is reserved.
-#define EXEC_ALARM_HARD_LIMIT           1
-#define EXEC_ALARM_SOFT_LIMIT           2
-#define EXEC_ALARM_ABORT_CYCLE          3
-#define EXEC_ALARM_PROBE_FAIL_INITIAL   4
-#define EXEC_ALARM_PROBE_FAIL_CONTACT   5
-#define EXEC_ALARM_HOMING_FAIL_RESET    6
-#define EXEC_ALARM_HOMING_FAIL_DOOR     7
-#define EXEC_ALARM_HOMING_FAIL_PULLOFF  8
-#define EXEC_ALARM_HOMING_FAIL_APPROACH 9
+#define EXEC_ALARM_HARD_LIMIT                 1
+#define EXEC_ALARM_SOFT_LIMIT                 2
+#define EXEC_ALARM_ABORT_CYCLE                3
+#define EXEC_ALARM_PROBE_FAIL_INITIAL         4
+#define EXEC_ALARM_PROBE_FAIL_CONTACT         5
+#define EXEC_ALARM_HOMING_FAIL_RESET          6
+#define EXEC_ALARM_HOMING_FAIL_DOOR           7
+#define EXEC_ALARM_HOMING_FAIL_PULLOFF        8
+#define EXEC_ALARM_HOMING_FAIL_APPROACH       9
+#define EXEC_ALARM_HOMING_FAIL_DUAL_APPROACH  10
 
 // Override bit maps. Realtime bitflags to control feed, rapid, spindle, and coolant overrides.
 // Spindle/coolant and feed/rapids are separated into two controlling flag variables.
@@ -131,6 +132,9 @@ typedef struct {
   uint8_t step_control;        // Governs the step segment generator depending on system state.
   uint8_t probe_succeeded;     // Tracks if last probing cycle was successful.
   uint8_t homing_axis_lock;    // Locks axes when limits engage. Used as an axis motion mask in the stepper ISR.
+  #ifdef ENABLE_DUAL_AXIS
+    uint8_t homing_axis_lock_dual;
+  #endif
   uint8_t f_override;          // Feed rate override value in percent
   uint8_t r_override;          // Rapids override value in percent
   uint8_t spindle_speed_ovr;   // Spindle speed value in percent

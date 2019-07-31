@@ -436,6 +436,9 @@ void report_build_info(char *line)
   #ifndef FORCE_BUFFER_SYNC_DURING_WCO_CHANGE // NOTE: Shown when disabled.
     serial_write('W');
   #endif
+  #ifdef ENABLE_DUAL_AXIS
+    serial_write('2');
+  #endif
   // NOTE: Compiled values, like override increments/max/min values, may be added at some point later.
   serial_write(',');
   print_uint8_base10(BLOCK_BUFFER_SIZE-1);
@@ -569,9 +572,21 @@ void report_realtime_status()
       printPgmString(PSTR("|Pn:"));
       if (prb_pin_state) { serial_write('P'); }
       if (lim_pin_state) {
-        if (bit_istrue(lim_pin_state,bit(X_AXIS))) { serial_write('X'); }
-        if (bit_istrue(lim_pin_state,bit(Y_AXIS))) { serial_write('Y'); }
-        if (bit_istrue(lim_pin_state,bit(Z_AXIS))) { serial_write('Z'); }
+        #ifdef ENABLE_DUAL_AXIS
+          #if (DUAL_AXIS_SELECT == X_AXIS)
+            if (bit_istrue(lim_pin_state,(bit(X_AXIS)|bit(N_AXIS)))) { serial_write('X'); }
+            if (bit_istrue(lim_pin_state,bit(Y_AXIS))) { serial_write('Y'); }
+          #endif
+          #if (DUAL_AXIS_SELECT == Y_AXIS)
+            if (bit_istrue(lim_pin_state,bit(X_AXIS))) { serial_write('X'); 
+            if (bit_istrue(lim_pin_state,(bit(Y_AXIS)|bit(N_AXIS)))) { serial_write('Y'); }
+          #endif
+          if (bit_istrue(lim_pin_state,bit(Z_AXIS))) { serial_write('Z'); }
+        #else
+          if (bit_istrue(lim_pin_state,bit(X_AXIS))) { serial_write('X'); }
+          if (bit_istrue(lim_pin_state,bit(Y_AXIS))) { serial_write('Y'); }
+          if (bit_istrue(lim_pin_state,bit(Z_AXIS))) { serial_write('Z'); }
+        #endif
       }
       if (ctrl_pin_state) {
         #ifdef ENABLE_SAFETY_DOOR_INPUT_PIN

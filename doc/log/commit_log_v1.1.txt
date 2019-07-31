@@ -1,4 +1,41 @@
 ----------------
+Date: 2018-11-12
+Author: Sonny Jeon
+Subject: Update grbl.h
+
+----------------
+Date: 2018-11-12
+Author: Sonny Jeon
+Subject: Update system.c
+
+Correct control pin state checking within pin change interrupt. Improper if-else statements could lead to missed signal.
+
+----------------
+Date: 2018-11-12
+Author: Sonny Jeon
+Subject: Update gcode.c
+
+If statement bug fix related to jog motion modal group error checking.
+
+----------------
+Date: 2018-06-14
+Author: Sonny Jeon
+Subject: Spindle/coolant rare bug fixes. Free more flash.
+
+[new] Altered the way default settings are stored and restored. Saved about 300 bytes(!) of flashed size. Should free up enough for certain configurations of CoreXY machines.
+
+[fix] When the optional M7 mist coolant IO was enabled, coolant overrides was not disabling correctly.
+
+[fix] Coolant override states was not restored correctly after a parking motion in certain situations. It would restore programmed state, rather than current overridden state.
+
+[fix] Now allow coolant overrides to operate during jogging motion.
+
+[fix] Invert control pin mask typo.
+
+[new] Added a new build info feedback mechanism for enabling the safety door input pin.
+
+
+----------------
 Date: 2018-06-09
 Author: Jon
 Subject: Fix apparent error in restore masking that causes the call to coolant_set_state to not re-enable the mist (M7) output if it was previously enabled. (#469)

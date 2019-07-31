@@ -20,3 +20,4 @@ I,Build info write user string command,Disabled
 E,Force sync upon EEPROM write,Disabled
 W,Force sync upon work coordinate offset change,Disabled
 L,Homing initialization auto-lock,Disabled
+2,Dual axis motors,Enabled

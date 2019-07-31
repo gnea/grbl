@@ -67,6 +67,9 @@ typedef struct {
   uint32_t steps[N_AXIS];
   uint32_t step_event_count;
   uint8_t direction_bits;
+  #ifdef ENABLE_DUAL_AXIS
+    uint8_t direction_bits_dual;
+  #endif
   #ifdef VARIABLE_SPINDLE
     uint8_t is_pwm_rate_adjusted; // Tracks motions that require constant laser power/rate
   #endif
@@ -106,6 +109,10 @@ typedef struct {
   uint8_t step_pulse_time;  // Step pulse reset time after step rise
   uint8_t step_outbits;         // The next stepping-bits to be output
   uint8_t dir_outbits;
+  #ifdef ENABLE_DUAL_AXIS
+    uint8_t step_outbits_dual;
+    uint8_t dir_outbits_dual;
+  #endif
   #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
     uint32_t steps[N_AXIS];
   #endif
@@ -125,6 +132,10 @@ static uint8_t segment_next_head;
 // Step and direction port invert masks.
 static uint8_t step_port_invert_mask;
 static uint8_t dir_port_invert_mask;
+#ifdef ENABLE_DUAL_AXIS
+  static uint8_t step_port_invert_mask_dual;
+  static uint8_t dir_port_invert_mask_dual;
+#endif
 
 // Used to avoid ISR nesting of the "Stepper Driver Interrupt". Should never occur though.
 static volatile uint8_t busy;
@@ -311,12 +322,21 @@ ISR(TIMER1_COMPA_vect)
 
   // Set the direction pins a couple of nanoseconds before we step the steppers
   DIRECTION_PORT = (DIRECTION_PORT & ~DIRECTION_MASK) | (st.dir_outbits & DIRECTION_MASK);
+  #ifdef ENABLE_DUAL_AXIS
+    DIRECTION_PORT_DUAL = (DIRECTION_PORT_DUAL & ~DIRECTION_MASK_DUAL) | (st.dir_outbits_dual & DIRECTION_MASK_DUAL);
+  #endif
 
   // Then pulse the stepping pins
   #ifdef STEP_PULSE_DELAY
     st.step_bits = (STEP_PORT & ~STEP_MASK) | st.step_outbits; // Store out_bits to prevent overwriting.
+    #ifdef ENABLE_DUAL_AXIS
+      st.step_bits_dual = (STEP_PORT_DUAL & ~STEP_MASK_DUAL) | st.step_outbits_dual;
+    #endif
   #else  // Normal operation
     STEP_PORT = (STEP_PORT & ~STEP_MASK) | st.step_outbits;
+    #ifdef ENABLE_DUAL_AXIS
+      STEP_PORT_DUAL = (STEP_PORT_DUAL & ~STEP_MASK_DUAL) | st.step_outbits_dual;
+    #endif
   #endif
 
   // Enable step pulse reset timer so that The Stepper Port Reset Interrupt can reset the signal after
@@ -353,6 +373,9 @@ ISR(TIMER1_COMPA_vect)
         st.counter_x = st.counter_y = st.counter_z = (st.exec_block->step_event_count >> 1);
       }
       st.dir_outbits = st.exec_block->direction_bits ^ dir_port_invert_mask;
+      #ifdef ENABLE_DUAL_AXIS
+        st.dir_outbits_dual = st.exec_block->direction_bits_dual ^ dir_port_invert_mask_dual;
+      #endif
 
       #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
         // With AMASS enabled, adjust Bresenham axis increment counters according to AMASS level.
@@ -384,6 +407,9 @@ ISR(TIMER1_COMPA_vect)
 
   // Reset step out bits.
   st.step_outbits = 0;
+  #ifdef ENABLE_DUAL_AXIS
+    st.step_outbits_dual = 0;
+  #endif
 
   // Execute step displacement profile by Bresenham line algorithm
   #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
@@ -393,6 +419,9 @@ ISR(TIMER1_COMPA_vect)
   #endif
   if (st.counter_x > st.exec_block->step_event_count) {
     st.step_outbits |= (1<<X_STEP_BIT);
+    #if defined(ENABLE_DUAL_AXIS) && (DUAL_AXIS_SELECT == X_AXIS)
+      st.step_outbits_dual = (1<<DUAL_STEP_BIT);
+    #endif
     st.counter_x -= st.exec_block->step_event_count;
     if (st.exec_block->direction_bits & (1<<X_DIRECTION_BIT)) { sys_position[X_AXIS]--; }
     else { sys_position[X_AXIS]++; }
@@ -404,6 +433,9 @@ ISR(TIMER1_COMPA_vect)
   #endif
   if (st.counter_y > st.exec_block->step_event_count) {
     st.step_outbits |= (1<<Y_STEP_BIT);
+    #if defined(ENABLE_DUAL_AXIS) && (DUAL_AXIS_SELECT == Y_AXIS)
+      st.step_outbits_dual = (1<<DUAL_STEP_BIT);
+    #endif
     st.counter_y -= st.exec_block->step_event_count;
     if (st.exec_block->direction_bits & (1<<Y_DIRECTION_BIT)) { sys_position[Y_AXIS]--; }
     else { sys_position[Y_AXIS]++; }
@@ -421,7 +453,12 @@ ISR(TIMER1_COMPA_vect)
   }
 
   // During a homing cycle, lock out and prevent desired axes from moving.
-  if (sys.state == STATE_HOMING) { st.step_outbits &= sys.homing_axis_lock; }
+  if (sys.state == STATE_HOMING) { 
+    st.step_outbits &= sys.homing_axis_lock;
+    #ifdef ENABLE_DUAL_AXIS
+      st.step_outbits_dual &= sys.homing_axis_lock_dual;
+    #endif
+  }
 
   st.step_count--; // Decrement step events count
   if (st.step_count == 0) {
@@ -431,6 +468,9 @@ ISR(TIMER1_COMPA_vect)
   }
 
   st.step_outbits ^= step_port_invert_mask;  // Apply step port invert mask
+  #ifdef ENABLE_DUAL_AXIS
+    st.step_outbits_dual ^= step_port_invert_mask_dual;
+  #endif
   busy = false;
 }
 
@@ -450,6 +490,9 @@ ISR(TIMER0_OVF_vect)
 {
   // Reset stepping pins (leave the direction pins)
   STEP_PORT = (STEP_PORT & ~STEP_MASK) | (step_port_invert_mask & STEP_MASK);
+  #ifdef ENABLE_DUAL_AXIS
+    STEP_PORT_DUAL = (STEP_PORT_DUAL & ~STEP_MASK_DUAL) | (step_port_invert_mask_dual & STEP_MASK_DUAL);
+  #endif
   TCCR0B = 0; // Disable Timer0 to prevent re-entering this interrupt when it's not needed.
 }
 #ifdef STEP_PULSE_DELAY
@@ -461,6 +504,9 @@ ISR(TIMER0_OVF_vect)
   ISR(TIMER0_COMPA_vect)
   {
     STEP_PORT = st.step_bits; // Begin step pulse.
+    #ifdef ENABLE_DUAL_AXIS
+      STEP_PORT_DUAL = st.step_bits_dual;
+    #endif
   }
 #endif
 
@@ -475,6 +521,13 @@ void st_generate_step_dir_invert_masks()
     if (bit_istrue(settings.step_invert_mask,bit(idx))) { step_port_invert_mask |= get_step_pin_mask(idx); }
     if (bit_istrue(settings.dir_invert_mask,bit(idx))) { dir_port_invert_mask |= get_direction_pin_mask(idx); }
   }
+  #ifdef ENABLE_DUAL_AXIS
+    step_port_invert_mask_dual = 0;
+    dir_port_invert_mask_dual = 0;
+    // NOTE: Dual axis invert uses the N_AXIS bit to set step and direction invert pins.    
+    if (bit_istrue(settings.step_invert_mask,bit(N_AXIS))) { step_port_invert_mask_dual = (1<<DUAL_STEP_BIT); }
+    if (bit_istrue(settings.dir_invert_mask,bit(N_AXIS))) { dir_port_invert_mask_dual = (1<<DUAL_DIRECTION_BIT); }
+  #endif
 }
 
 
@@ -500,6 +553,12 @@ void st_reset()
   // Initialize step and direction port pins.
   STEP_PORT = (STEP_PORT & ~STEP_MASK) | step_port_invert_mask;
   DIRECTION_PORT = (DIRECTION_PORT & ~DIRECTION_MASK) | dir_port_invert_mask;
+  
+  #ifdef ENABLE_DUAL_AXIS
+    st.dir_outbits_dual = dir_port_invert_mask_dual;
+    STEP_PORT_DUAL = (STEP_PORT_DUAL & ~STEP_MASK_DUAL) | step_port_invert_mask_dual;
+    DIRECTION_PORT_DUAL = (DIRECTION_PORT_DUAL & ~DIRECTION_MASK_DUAL) | dir_port_invert_mask_dual;
+  #endif
 }
 
 
@@ -510,6 +569,11 @@ void stepper_init()
   STEP_DDR |= STEP_MASK;
   STEPPERS_DISABLE_DDR |= 1<<STEPPERS_DISABLE_BIT;
   DIRECTION_DDR |= DIRECTION_MASK;
+  
+  #ifdef ENABLE_DUAL_AXIS
+    STEP_DDR_DUAL |= STEP_MASK_DUAL;
+    DIRECTION_DDR_DUAL |= DIRECTION_MASK_DUAL;
+  #endif
 
   // Configure Timer 1: Stepper Driver Interrupt
   TCCR1B &= ~(1<<WGM13); // waveform generation = 0100 = CTC
@@ -636,6 +700,15 @@ void st_prep_buffer()
         // segment buffer finishes the prepped block, but the stepper ISR is still executing it.
         st_prep_block = &st_block_buffer[prep.st_block_index];
         st_prep_block->direction_bits = pl_block->direction_bits;
+        #ifdef ENABLE_DUAL_AXIS
+          #if (DUAL_AXIS_SELECT == X_AXIS)
+            if (st_prep_block->direction_bits & (1<<X_DIRECTION_BIT)) { 
+          #elif (DUAL_AXIS_SELECT == Y_AXIS)
+            if (st_prep_block->direction_bits & (1<<Y_DIRECTION_BIT)) { 
+          #endif
+            st_prep_block->direction_bits_dual = (1<<DUAL_DIRECTION_BIT); 
+          }  else { st_prep_block->direction_bits_dual = 0; }
+        #endif
         uint8_t idx;
         #ifndef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
           for (idx=0; idx<N_AXIS; idx++) { st_prep_block->steps[idx] = (pl_block->steps[idx] << 1); }

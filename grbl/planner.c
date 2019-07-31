@@ -456,7 +456,7 @@ uint8_t plan_buffer_line(float *target, plan_line_data_t *pl_data)
     float nominal_speed = plan_compute_profile_nominal_speed(block);
     plan_compute_profile_parameters(block, nominal_speed, pl.previous_nominal_speed);
     pl.previous_nominal_speed = nominal_speed;
-
+    
     // Update previous path unit_vector and planner position.
     memcpy(pl.previous_unit_vec, unit_vec, sizeof(unit_vec)); // pl.previous_unit_vec[] = unit_vec[]
     memcpy(pl.position, target_steps, sizeof(target_steps)); // pl.position[] = target_steps[]
