@@ -203,11 +203,19 @@ void report_grbl_settings() {
   report_util_float_setting(27,settings.homing_pulloff,N_DECIMAL_SETTINGVALUE);
   report_util_float_setting(30,settings.rpm_max,N_DECIMAL_RPMVALUE);
   report_util_float_setting(31,settings.rpm_min,N_DECIMAL_RPMVALUE);
+  
   #ifdef VARIABLE_SPINDLE
     report_util_uint8_setting(32,bit_istrue(settings.flags,BITFLAG_LASER_MODE));
   #else
     report_util_uint8_setting(32,0);
   #endif
+
+  #ifdef ENABLE_SKEW_COMPENSATION
+    report_util_float_setting(37,settings.xy_skew_factor,N_DECIMAL_SETTINGVALUE);
+    report_util_float_setting(38,settings.xz_skew_factor,N_DECIMAL_SETTINGVALUE);
+    report_util_float_setting(39,settings.yz_skew_factor,N_DECIMAL_SETTINGVALUE);
+  #endif
+  
   // Print axis settings
   uint8_t idx, set_idx;
   uint8_t val = AXIS_SETTINGS_START_VAL;
