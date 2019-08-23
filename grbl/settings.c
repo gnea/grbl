@@ -38,9 +38,13 @@ const __flash settings_t defaults = {\
     .homing_seek_rate = DEFAULT_HOMING_SEEK_RATE,
     .homing_debounce_delay = DEFAULT_HOMING_DEBOUNCE_DELAY,
     .homing_pulloff = DEFAULT_HOMING_PULLOFF,
-    .xy_skew_factor = XY_SKEW_FACTOR,
-    .xz_skew_factor = XZ_SKEW_FACTOR,
-    .yz_skew_factor = YZ_SKEW_FACTOR,
+    #ifdef ENABLE_SKEW_COMPENSATION
+      .xy_skew_factor = XY_SKEW_FACTOR,
+      #ifdef ALLAXIS_SKEW_COMPENSATION
+        .xz_skew_factor = XZ_SKEW_FACTOR,
+        .yz_skew_factor = YZ_SKEW_FACTOR,
+      #endif
+    #endif 
     .flags = (DEFAULT_REPORT_INCHES << BIT_REPORT_INCHES) | \
              (DEFAULT_LASER_MODE << BIT_LASER_MODE) | \
              (DEFAULT_INVERT_ST_ENABLE << BIT_INVERT_ST_ENABLE) | \
@@ -299,8 +303,10 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
         break;
       #ifdef ENABLE_SKEW_COMPENSATION
         case 37: settings.xy_skew_factor = value; break;
-        case 38: settings.xz_skew_factor = value; break;
-        case 39: settings.yz_skew_factor = value; break;
+        #ifdef ALLAXIS_SKEW_COMPENSATION
+          case 38: settings.xz_skew_factor = value; break;
+          case 39: settings.yz_skew_factor = value; break;
+        #endif
       #endif
       default:
         return(STATUS_INVALID_STATEMENT);

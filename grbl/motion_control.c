@@ -66,8 +66,11 @@ void mc_line(float *target, plan_line_data_t *pl_data)
 
   #ifdef ENABLE_SKEW_COMPENSATION
     //apply correction skew factors that compensate for machine axis alignemnt
-    target[X_AXIS] -= target[Y_AXIS] * settings.xy_skew_factor + target[Z_AXIS] * (settings.xy_skew_factor - settings.xz_skew_factor * settings.yz_skew_factor);
-    target[Y_AXIS] -= target[Z_AXIS] * settings.yz_skew_factor;
+    target[X_AXIS] -= target[Y_AXIS] * settings.xy_skew_factor;
+    #ifdef ALLAXIS_SKEW_COMPENSATION
+      target[X_AXIS] -= target[Z_AXIS] * (settings.xy_skew_factor - settings.xz_skew_factor * settings.yz_skew_factor);
+      target[Y_AXIS] -= target[Z_AXIS] * settings.yz_skew_factor;
+    #endif
   #endif
 
   // Plan and queue motion into planner buffer

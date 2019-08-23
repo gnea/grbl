@@ -110,9 +110,13 @@ typedef struct {
   float homing_seek_rate;
   uint16_t homing_debounce_delay;
   float homing_pulloff;
-  float xy_skew_factor;
-  float xz_skew_factor;
-  float yz_skew_factor;
+  #ifdef ENABLE_SKEW_COMPENSATION
+    float xy_skew_factor;
+    #ifdef ALLAXIS_SKEW_COMPENSATION
+      float xz_skew_factor;
+      float yz_skew_factor;
+    #endif
+  #endif
 } settings_t;
 extern settings_t settings;
 

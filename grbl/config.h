@@ -699,7 +699,12 @@
 //    +-------------->X     +-------------->X     +-------------->Y
 //    XY_SKEW_FACTOR        XZ_SKEW_FACTOR        YZ_SKEW_FACTOR
 //
+
+//uncomment to enable skew compensation
 #define ENABLE_SKEW_COMPENSATION
+//if enabled skew compensations is done only for XY axis (saves CPU cycles)
+//uncomment to extend skew compensation for XZ axis and YZ axis as well
+//#define ALLAXIS_SKEW_COMPENSATION
 
 /* ---------------------------------------------------------------------------------------
    OEM Single File Configuration Option

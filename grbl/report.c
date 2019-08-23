@@ -212,8 +212,10 @@ void report_grbl_settings() {
 
   #ifdef ENABLE_SKEW_COMPENSATION
     report_util_float_setting(37,settings.xy_skew_factor,N_DECIMAL_SETTINGVALUE);
-    report_util_float_setting(38,settings.xz_skew_factor,N_DECIMAL_SETTINGVALUE);
-    report_util_float_setting(39,settings.yz_skew_factor,N_DECIMAL_SETTINGVALUE);
+    #ifdef ALLAXIS_SKEW_COMPENSATION
+      report_util_float_setting(38,settings.xz_skew_factor,N_DECIMAL_SETTINGVALUE);
+      report_util_float_setting(39,settings.yz_skew_factor,N_DECIMAL_SETTINGVALUE);
+    #endif
   #endif
   
   // Print axis settings
