@@ -302,6 +302,7 @@ float system_convert_axis_steps_to_mpos(int32_t *steps, uint8_t idx)
   #else
     pos = steps[idx]/settings.steps_per_mm[idx];
   #endif
+
   return(pos);
 }
 
@@ -312,6 +313,16 @@ void system_convert_array_steps_to_mpos(float *position, int32_t *steps)
   for (idx=0; idx<N_AXIS; idx++) {
     position[idx] = system_convert_axis_steps_to_mpos(steps, idx);
   }
+
+  //perform unskew of the coordinates
+  #ifdef ENABLE_SKEW_COMPENSATION
+    position[X_AXIS] += position[Y_AXIS] * settings.xy_skew_factor;
+    #ifdef ALLAXIS_SKEW_COMPENSATION
+      position[X_AXIS] += position[Z_AXIS] * settings.xz_skew_factor;
+      position[Y_AXIS] += position[Z_AXIS] * settings.yz_skew_factor;
+    #endif
+  #endif
+
   return;
 }
 
