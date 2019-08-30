@@ -578,7 +578,7 @@ void report_realtime_status()
             if (bit_istrue(lim_pin_state,bit(Y_AXIS))) { serial_write('Y'); }
           #endif
           #if (DUAL_AXIS_SELECT == Y_AXIS)
-            if (bit_istrue(lim_pin_state,bit(X_AXIS))) { serial_write('X'); 
+            if (bit_istrue(lim_pin_state,bit(X_AXIS))) { serial_write('X'); }
             if (bit_istrue(lim_pin_state,(bit(Y_AXIS)|bit(N_AXIS)))) { serial_write('Y'); }
           #endif
           if (bit_istrue(lim_pin_state,bit(Z_AXIS))) { serial_write('Z'); }
