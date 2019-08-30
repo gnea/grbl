@@ -1,4 +1,42 @@
 ----------------
+Date: 2019-08-30
+Author: Sonny Jeon
+Subject: Fixed typo bug effecting dual-axis build with Y.
+
+
+----------------
+Date: 2019-08-25
+Author: Sonny Jeon
+Subject: Update grbl.h
+
+
+----------------
+Date: 2019-08-25
+Author: Sonny Jeon
+Subject: Update system.c
+
+
+----------------
+Date: 2019-07-30
+Author: Sonny Jeon
+Subject: Dual motor support for self-squaring gantry homing.
+
+- New dual motor support feature for gantry CNC machines. An axis motor is  efficiently mirrored to a dedicated set of step and direction pins (D12/D13 or A3/A4) with no detectable loss of performance. Primarily used to independently home both sides of a dual-motor gantry with a pair of limit switches (second shared with Z-axis limit pin). When the limit switches are setup correctly, Grbl will self-square the gantry (and stay square if $1=255 is programmed). Beware use at your own risk! Grbl is not responsible for any damage to any machines.
+
+- Dual axis motors is only supported on the X-axis or Y-axis. And deletes the spindle direction(D13) and optional coolant mist (A4) features to make room for the dual motor step and direction pins.
+
+- Dual axis homing will automatically abort homing if one limit switch triggers and travels more than 5% (default) of the non-dual axis max travel setting. For example, if the X-axis has dual motors and one X-axis triggers during homing, Grbl will abort 5% of the Y-axis max travel and the other X-axis limit fails to trigger. This will help keep any misconfigurations or failed limit switches from damaging the machine, but not completely eliminate this risk. Please take all precautions and test thouroughly before using this.
+
+- Dual axis motors supports two configurations:
+
+- Support for Arduino CNC shield clones. For these, step/dir on pins D12/D13, and spindle enable is moved to A3 (old coolant enable), while coolant enable is moved to A4 (SDA pin). Variable spindle/laser mode option is NOT supported for this shield.
+
+- Support for Protoneer CNC Shield v3.51. Step/dir on pins A3/A4, and  coolant enable is moved to D13 (old spindle direction pin). Variable spindle/laser mode option IS supported for this shield.
+
+- Added Bob's CNC E3 and E4 CNC machine defaults.
+
+
+----------------
 Date: 2018-11-12
 Author: Sonny Jeon
 Subject: Update grbl.h
