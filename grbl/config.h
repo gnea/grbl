@@ -367,6 +367,16 @@
 // NOTE: Requires USE_SPINDLE_DIR_AS_ENABLE_PIN to be enabled.
 // #define SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED // Default disabled. Uncomment to enable.
 
+// If you use a servo instead of a spindle (like on EggBot or pen plotter), you need to uncomment this option. 
+// This will set the PWM frequency to 61Hz and limit the PWM range to 0.5 - 2.5ms, as used by most servos.
+// #define SPINDLE_IS_SERVO // Default disabled. Uncomment to enable.
+
+#define SERVO_SHORT      7      // set min pulse duration to (7 = 0.5ms, 15 = 1.03ms, 20=1.40ms)
+#define SERVO_LONG       38      // set max pulse duration (38 = 2.49ms, 31 = 2.05ms)
+#define SERVO_RANGE      (SERVO_LONG-SERVO_SHORT)
+// #define SERVO_INVERT  1       // Uncomment to invert servo direction
+
+
 // With this enabled, Grbl sends back an echo of the line it has received, which has been pre-parsed (spaces
 // removed, capitalized letters, no comments) and is to be immediately executed by Grbl. Echoes will not be
 // sent upon a line buffer overflow, but should for all normal lines sent to Grbl. For example, if a user
