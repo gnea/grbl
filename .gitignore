@@ -3,5 +3,9 @@
 *.elf
 *.DS_Store
 *.d
+*.json
+./pio
+./clangd
+tags
 
-README.md
+
