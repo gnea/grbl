@@ -21,7 +21,6 @@
 
 #include "grbl.h"
 
-
 #ifdef VARIABLE_SPINDLE
   static float pwm_gradient; // Precalulated value to speed up rpm to PWM conversions.
 #endif
@@ -113,6 +112,16 @@ void spindle_stop()
       SPINDLE_ENABLE_PORT &= ~(1<<SPINDLE_ENABLE_BIT); // Set pin to low
     #endif
   #endif
+  if (!(settings.flags & BITFLAG_LASER_MODE)) {                                                         
+    #ifdef SPINDLE_IS_SERVO
+    SPINDLE_TCCRA_REGISTER |= (1<<SPINDLE_COMB_BIT); // Ensure PWM output is enabled.
+      #ifdef SERVO_INVERT                                                                              
+        SPINDLE_OCR_REGISTER = SERVO_LONG;
+      #else                                                                                               
+        SPINDLE_OCR_REGISTER = SERVO_SHORT;
+      #endif
+    #endif
+  }   
 }
 
 
@@ -135,11 +144,19 @@ void spindle_stop()
       }
     #else
       if (pwm_value == SPINDLE_PWM_OFF_VALUE) {
-        SPINDLE_TCCRA_REGISTER &= ~(1<<SPINDLE_COMB_BIT); // Disable PWM. Output voltage is zero.
+        if (!(settings.flags & BITFLAG_LASER_MODE)) {                                                
+          #ifndef SPINDLE_IS_SERVO                                                                     
+            SPINDLE_TCCRA_REGISTER &= ~(1<<SPINDLE_COMB_BIT); // Disable PWM. Output voltage is zero.
+          #else                                                                                      
+            spindle_stop();                                                                          
+          #endif                                                                                     
+        } else {                                                                                     
+          SPINDLE_TCCRA_REGISTER &= ~(1<<SPINDLE_COMB_BIT); // Disable PWM. Output voltage is zero.  
+        }
       } else {
         SPINDLE_TCCRA_REGISTER |= (1<<SPINDLE_COMB_BIT); // Ensure PWM output is enabled.
       }
-    #endif
+    #endif                                                                                                  
   }
 
 
@@ -212,6 +229,17 @@ void spindle_stop()
         sys.spindle_speed = rpm;
         pwm_value = floor((rpm-settings.rpm_min)*pwm_gradient) + SPINDLE_PWM_MIN_VALUE;
       }
+      
+      if (!(settings.flags & BITFLAG_LASER_MODE)) {
+        #ifdef SPINDLE_IS_SERVO
+          #ifdef SERVO_INVERT
+            pwm_value = floor(SERVO_LONG - rpm*(SERVO_RANGE/(settings.rpm_max-settings.rpm_min)));
+          #else
+            pwm_value = floor(rpm*(SERVO_RANGE/(settings.rpm_max-settings.rpm_min))+SERVO_SHORT);
+          #endif
+        #endif
+      }
+
       return(pwm_value);
     }
     
