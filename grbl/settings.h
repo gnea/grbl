@@ -27,7 +27,7 @@
 
 // Version of the EEPROM data. Will be used to migrate existing data from older versions of Grbl
 // when firmware is upgraded. Always stored in byte 0 of eeprom
-#define SETTINGS_VERSION 10  // NOTE: Check settings_reset() when moving to next version.
+#define SETTINGS_VERSION 11  // NOTE: Check settings_reset() when moving to next version.
 
 // Define bit flag masks for the boolean settings in settings.flag.
 #define BIT_REPORT_INCHES      0
@@ -110,6 +110,13 @@ typedef struct {
   float homing_seek_rate;
   uint16_t homing_debounce_delay;
   float homing_pulloff;
+  #ifdef ENABLE_SKEW_COMPENSATION
+    float xy_skew_factor;
+    #ifdef ALLAXIS_SKEW_COMPENSATION
+      float xz_skew_factor;
+      float yz_skew_factor;
+    #endif
+  #endif
 } settings_t;
 extern settings_t settings;
 

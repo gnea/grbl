@@ -674,6 +674,37 @@
 // updating lots of code to ensure everything is running correctly.
 // #define DUAL_AXIS_CONFIG_CNC_SHIELD_CLONE  // Uncomment to select. Comment other configs.
 
+// Grbl machine machine skew compensation
+// This feature corrects for misalignment in the XYZ axes.
+//
+// Take the following steps to compute the skew in the XY plane:
+//   1. Print or draw a test square (e.g., https://www.thingiverse.com/thing:2563185)
+//   2. For XY_DIAG_AC measure the diagonal A to C
+//   3. For XY_DIAG_BD measure the diagonal B to D
+//   4. For XY_SIDE_AD measure the edge A to D
+//
+// Skew factors are computed and set manually via $37(XY), $38(XZ) and $39(YZ) parameters:
+//
+//   Compute AB     : SQRT(2*AC*AC+2*BD*BD-4*AD*AD)/2
+//   XY_SKEW_FACTOR : TAN(PI/2-ACOS((AC*AC-AB*AB-AD*AD)/(2*AB*AD)))
+//
+// If desired, follow the same procedure for XZ and YZ.
+// Use these diagrams for reference:
+// 
+//    Y                     Z                     Z
+//    ^     B-------C       ^     B-------C       ^     B-------C
+//    |    /       /        |    /       /        |    /       /
+//    |   /       /         |   /       /         |   /       /
+//    |  A-------D          |  A-------D          |  A-------D
+//    +-------------->X     +-------------->X     +-------------->Y
+//    XY_SKEW_FACTOR        XZ_SKEW_FACTOR        YZ_SKEW_FACTOR
+//
+
+//uncomment to enable skew compensation
+#define ENABLE_SKEW_COMPENSATION
+//if enabled skew compensations is done only for XY axis (saves CPU cycles)
+//uncomment to extend skew compensation for XZ axis and YZ axis as well
+//#define ALLAXIS_SKEW_COMPENSATION
 
 /* ---------------------------------------------------------------------------------------
    OEM Single File Configuration Option
