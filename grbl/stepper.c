@@ -103,6 +103,7 @@ typedef struct {
            counter_z;
   #ifdef STEP_PULSE_DELAY
     uint8_t step_bits;  // Stores out_bits output to complete the step pulse delay
+    uint8_t step_bits_dual;
   #endif
 
   uint8_t execute_step;     // Flags step execution for each interrupt.
