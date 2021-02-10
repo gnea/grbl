@@ -20,6 +20,7 @@
 */
 
 #include "grbl.h"
+#include <stddef.h>
 
 // NOTE: Max line number is defined by the g-code standard to be 99999. It seems to be an
 // arbitrary value, and some GUIs may require more. So we increased it based on a max safe
@@ -41,7 +42,7 @@ parser_block_t gc_block;
 
 void gc_init()
 {
-  memset(&gc_state, 0, sizeof(parser_state_t));
+  memset(&gc_state, 0, offsetof(parser_state_t, coord_offset));
 
   // Load default G54 coordinate system.
   if (!(settings_read_coord_data(gc_state.modal.coord_select,gc_state.coord_system))) {
