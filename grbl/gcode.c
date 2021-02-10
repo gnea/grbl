@@ -44,7 +44,9 @@ void gc_init()
   memset(&gc_state, 0, sizeof(parser_state_t));
 
   // Load default G54 coordinate system.
-  if (!(settings_read_coord_data(gc_state.modal.coord_select,gc_state.coord_system))) {
+  if (!(settings_read_coord_data(gc_state.modal.coord_select,gc_state.coord_system))
+    || !(settings_read_coord_data(SETTING_INDEX_G92,gc_state.coord_offset))
+    || !(settings_read_coord_data(SETTING_INDEX_G43,gc_state.tool_length_offset))) {
     report_status_message(STATUS_SETTING_READ_FAIL);
   }
 }
@@ -549,8 +551,7 @@ uint8_t gc_execute_line(char *line)
           if (gc_block.values.l == 20) {
             // L20: Update coordinate system axis at current position (with modifiers) with programmed value
             // WPos = MPos - WCS - G92 - TLO  ->  WCS = MPos - G92 - TLO - WPos
-            gc_block.values.ijk[idx] = gc_state.position[idx]-gc_state.coord_offset[idx]-gc_block.values.xyz[idx];
-            if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.ijk[idx] -= gc_state.tool_length_offset; }
+            gc_block.values.ijk[idx] = gc_state.position[idx]-gc_state.coord_offset[idx]-gc_state.tool_length_offset[idx]-gc_block.values.xyz[idx];
           } else {
             // L2: Update coordinate system axis to programmed value.
             gc_block.values.ijk[idx] = gc_block.values.xyz[idx];
@@ -567,8 +568,7 @@ uint8_t gc_execute_line(char *line)
       for (idx=0; idx<N_AXIS; idx++) { // Axes indices are consistent, so loop may be used.
         if (bit_istrue(axis_words,bit(idx)) ) {
           // WPos = MPos - WCS - G92 - TLO  ->  G92 = MPos - WCS - TLO - WPos
-          gc_block.values.xyz[idx] = gc_state.position[idx]-block_coord_system[idx]-gc_block.values.xyz[idx];
-          if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] -= gc_state.tool_length_offset; }
+          gc_block.values.xyz[idx] = gc_state.position[idx]-block_coord_system[idx]-gc_state.tool_length_offset[idx]-gc_block.values.xyz[idx];
         } else {
           gc_block.values.xyz[idx] = gc_state.coord_offset[idx];
         }
@@ -592,8 +592,7 @@ uint8_t gc_execute_line(char *line)
               if (gc_block.non_modal_command != NON_MODAL_ABSOLUTE_OVERRIDE) {
                 // Apply coordinate offsets based on distance mode.
                 if (gc_block.modal.distance == DISTANCE_MODE_ABSOLUTE) {
-                  gc_block.values.xyz[idx] += block_coord_system[idx] + gc_state.coord_offset[idx];
-                  if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] += gc_state.tool_length_offset; }
+                  gc_block.values.xyz[idx] += block_coord_system[idx] + gc_state.coord_offset[idx] + gc_state.tool_length_offset[idx];
                 } else {  // Incremental mode
                   gc_block.values.xyz[idx] += gc_state.position[idx];
                 }
@@ -986,8 +985,10 @@ uint8_t gc_execute_line(char *line)
     if (gc_state.modal.tool_length == TOOL_LENGTH_OFFSET_CANCEL) { // G49
       gc_block.values.xyz[TOOL_LENGTH_OFFSET_AXIS] = 0.0;
     } // else G43.1
-    if ( gc_state.tool_length_offset != gc_block.values.xyz[TOOL_LENGTH_OFFSET_AXIS] ) {
-      gc_state.tool_length_offset = gc_block.values.xyz[TOOL_LENGTH_OFFSET_AXIS];
+    if ( gc_state.tool_length_offset[TOOL_LENGTH_OFFSET_AXIS] != gc_block.values.xyz[TOOL_LENGTH_OFFSET_AXIS] ) {
+      clear_vector(gc_state.tool_length_offset); //keep all other axes zeroed
+      gc_state.tool_length_offset[TOOL_LENGTH_OFFSET_AXIS] = gc_block.values.xyz[TOOL_LENGTH_OFFSET_AXIS];
+      settings_write_coord_data(SETTING_INDEX_G43,gc_state.tool_length_offset);
       system_flag_wco_change();
     }
   }
@@ -1033,6 +1034,7 @@ uint8_t gc_execute_line(char *line)
       break;
     case NON_MODAL_SET_COORDINATE_OFFSET:
       memcpy(gc_state.coord_offset,gc_block.values.xyz,sizeof(gc_block.values.xyz));
+      settings_write_coord_data(SETTING_INDEX_G92,gc_state.coord_offset);
       system_flag_wco_change();
       break;
     case NON_MODAL_RESET_COORDINATE_OFFSET:
