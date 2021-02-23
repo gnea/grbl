@@ -21,7 +21,6 @@
 
 #include "grbl.h"
 
-
 // Some useful constants.
 #define DT_SEGMENT (1.0/(ACCELERATION_TICKS_PER_SECOND*60.0)) // min/segment
 #define REQ_MM_INCREMENT_SCALAR 1.25
@@ -55,6 +54,17 @@
     error "AMASS must have 1 or more levels to operate correctly."
   #endif
 #endif
+
+uint8_t stepper_pos[8] = {
+  0b0001,
+  0b0011,
+  0b0010,
+  0b0110,
+  0b0100,
+  0b1100,
+  0b1000,
+  0b1001
+};
 
 
 // Stores the planner block Bresenham algorithm execution data for the segments in the segment
@@ -425,6 +435,7 @@ ISR(TIMER1_COMPA_vect)
     st.counter_x -= st.exec_block->step_event_count;
     if (st.exec_block->direction_bits & (1<<X_DIRECTION_BIT)) { sys_position[X_AXIS]--; }
     else { sys_position[X_AXIS]++; }
+    PORTD = stepper_pos[sys_position[X_AXIS] & 0b111] << 2;
   }
   #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
     st.counter_y += st.steps[Y_AXIS];
@@ -439,8 +450,10 @@ ISR(TIMER1_COMPA_vect)
     st.counter_y -= st.exec_block->step_event_count;
     if (st.exec_block->direction_bits & (1<<Y_DIRECTION_BIT)) { sys_position[Y_AXIS]--; }
     else { sys_position[Y_AXIS]++; }
+    PORTC = stepper_pos[sys_position[Y_AXIS] & 0b111];
   }
-  #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
+  // Completely disable the Z axis
+  /*#ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
     st.counter_z += st.steps[Z_AXIS];
   #else
     st.counter_z += st.exec_block->steps[Z_AXIS];
@@ -450,7 +463,7 @@ ISR(TIMER1_COMPA_vect)
     st.counter_z -= st.exec_block->step_event_count;
     if (st.exec_block->direction_bits & (1<<Z_DIRECTION_BIT)) { sys_position[Z_AXIS]--; }
     else { sys_position[Z_AXIS]++; }
-  }
+  }*/
 
   // During a homing cycle, lock out and prevent desired axes from moving.
   if (sys.state == STATE_HOMING) { 
