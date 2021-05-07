@@ -64,7 +64,6 @@ void spindle_init()
 
 uint8_t spindle_get_state()
 {
-  // TODO add INVERT_SPINDLE_PWM handling
   #ifdef VARIABLE_SPINDLE
     #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
       // No spindle direction output pin. 
