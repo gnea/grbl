@@ -210,6 +210,11 @@
 // uncomment the config option USE_SPINDLE_DIR_AS_ENABLE_PIN below.
 // #define INVERT_SPINDLE_ENABLE_PIN // Default disabled. Uncomment to enable.
 
+// Inverts the PWM signal of the spindle. This can be used, if the inverter of the spindle requires 
+// inverted speed signals. Another example are some power supplies of the K40 lasers which fire the laser
+// at 0V and disable them at 5V.
+// #define INVERT_SPINDLE_PWM // Default disabled. Uncomment to enable.
+
 // Inverts the selected coolant pin from low-disabled/high-enabled to low-enabled/high-disabled. Useful
 // for some pre-built electronic boards.
 // #define INVERT_COOLANT_FLOOD_PIN // Default disabled. Uncomment to enable.
