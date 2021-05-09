@@ -26,6 +26,7 @@
    NOTE: Ensure one and only one of these DEFAULTS_XXX values is defined in config.h */
 
 #ifndef defaults_h
+#define defaults_h
 
 #ifdef DEFAULTS_GENERIC
   // Grbl generic default settings. Should work across different machines.
