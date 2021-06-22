@@ -73,7 +73,7 @@
 #endif
 
 #if defined(USE_SPINDLE_DIR_AS_ENABLE_PIN)
-  #if !defined(CPU_MAP_ATMEGA328P) || !defined(CPU_MAP_ATMEGA328P_NANO_V4)
+  #if !defined(CPU_MAP_ATMEGA328P) && !defined(CPU_MAP_ATMEGA328P_NANO_V4)
     #error "USE_SPINDLE_DIR_AS_ENABLE_PIN may only be used with a 328p processor"
   #endif
 #endif
