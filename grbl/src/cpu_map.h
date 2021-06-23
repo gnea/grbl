@@ -153,8 +153,8 @@
 
   #else
 
-    // Dual axis feature requires an independent step pulse pin to operate. The independent direction pin is not 
-    // absolutely necessary but facilitates easy direction inverting with a Grbl $$ setting. These pins replace 
+    // Dual axis feature requires an independent step pulse pin to operate. The independent direction pin is not
+    // absolutely necessary but facilitates easy direction inverting with a Grbl $$ setting. These pins replace
     // the spindle direction and optional coolant mist pins.
 
     #ifdef DUAL_AXIS_CONFIG_PROTONEER_V3_51
@@ -285,9 +285,9 @@
   #define X_LIMIT_BIT      1  // Nano Digital Pin 9
   #define Y_LIMIT_BIT      2  // Nano Digital Pin 10
   #ifdef VARIABLE_SPINDLE // Z Limit pin and spindle enabled swapped to access hardware PWM on Pin 11.
-    #define Z_LIMIT_BIT    3  // Nano Digital Pin 11
-  #else
     #define Z_LIMIT_BIT    4  // Nano Digital Pin 12
+  #else
+    #define Z_LIMIT_BIT    3  // Nano Digital Pin 11
   #endif
   #if !defined(ENABLE_DUAL_AXIS)
     #define LIMIT_MASK     ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)) // All limit bits
@@ -337,10 +337,10 @@
         // If enabled, spindle direction pin now used as spindle enable, while PWM remains on D11.
         #define SPINDLE_ENABLE_BIT    5  // Nano Digital Pin 13 (NOTE: D13 can't be pulled-high input due to LED.)
       #else
-        #define SPINDLE_ENABLE_BIT    4  // Nano Digital Pin 12
+        #define SPINDLE_ENABLE_BIT    3  // Nano Digital Pin 11
       #endif
     #else
-      #define SPINDLE_ENABLE_BIT    3  // Nano Digital Pin 11
+      #define SPINDLE_ENABLE_BIT    4  // Nano Digital Pin 12
     #endif
     #ifndef USE_SPINDLE_DIR_AS_ENABLE_PIN
       #define SPINDLE_DIRECTION_DDR   DDRB
@@ -371,7 +371,7 @@
     // NOTE: On the 328p, these must be the same as the SPINDLE_ENABLE settings.
     #define SPINDLE_PWM_DDR   DDRB
     #define SPINDLE_PWM_PORT  PORTB
-    #define SPINDLE_PWM_BIT    4  // Nano Digital Pin 12
+    #define SPINDLE_PWM_BIT    3  // Nano Digital Pin 11
   
   #else
 
@@ -407,9 +407,9 @@
       #define SPINDLE_ENABLE_PORT   PORTB
       #ifdef VARIABLE_SPINDLE
         // NOTE: USE_SPINDLE_DIR_AS_ENABLE_PIN not supported with dual axis feature.
-        #define SPINDLE_ENABLE_BIT    4  // Nano Digital Pin 12
-      #else
         #define SPINDLE_ENABLE_BIT    3  // Nano Digital Pin 11
+      #else
+        #define SPINDLE_ENABLE_BIT    4  // Nano Digital Pin 12
       #endif
 
       // Variable spindle configuration below. Do not change unless you know what you are doing.
@@ -435,7 +435,7 @@
       // NOTE: On the 328p, these must be the same as the SPINDLE_ENABLE settings.
       #define SPINDLE_PWM_DDR   DDRB
       #define SPINDLE_PWM_PORT  PORTB
-      #define SPINDLE_PWM_BIT    4  // Nano Digital Pin 12
+      #define SPINDLE_PWM_BIT    3  // Nano Digital Pin 11
     #endif
 
     // NOTE: Variable spindle not supported with this shield.
@@ -443,7 +443,7 @@
       // NOTE: Step pulse and direction pins may be on any port and output pin.
       #define STEP_DDR_DUAL       DDRB
       #define STEP_PORT_DUAL      PORTB
-      #define DUAL_STEP_BIT    3  // Nano Digital Pin 11
+      #define DUAL_STEP_BIT    4  // Nano Digital Pin 12
       #define STEP_MASK_DUAL      ((1<<DUAL_STEP_BIT))
       #define DIRECTION_DDR_DUAL  DDRB
       #define DIRECTION_PORT_DUAL PORTB
