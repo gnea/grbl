@@ -1,0 +1,14 @@
+{
+  "name": "GRBL",
+  "keywords": "grbl, cnc",
+  "description": "Control a CNC machine interface.",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/gnea/grbl.git"
+  },
+  "version": "1.1",
+  "exclude": "doc",
+  "frameworks": "arduino",
+  "platforms": ["atmelavr"]
+}
