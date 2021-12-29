@@ -800,7 +800,15 @@ uint8_t gc_execute_line(char *line)
 
             // Compute difference between current location and target radii for final error-checks.
             float delta_r = fabs(target_r-gc_block.values.r);
-            if (delta_r > 0.005) {
+
+            float max_delta_r = 0.005;
+            if (gc_block.modal.units == UNITS_MODE_INCHES) {
+              // We need to adjust this when using inches,
+              // otherwise we get false negatives STATUS_GCODE_INVALID_TARGET errors.
+              max_delta_r *= MM_PER_INCH;
+            }
+
+            if (delta_r > max_delta_r) {
               if (delta_r > 0.5) { FAIL(STATUS_GCODE_INVALID_TARGET); } // [Arc definition error] > 0.5mm
               if (delta_r > (0.001*gc_block.values.r)) { FAIL(STATUS_GCODE_INVALID_TARGET); } // [Arc definition error] > 0.005mm AND 0.1% radius
             }
