@@ -808,7 +808,7 @@ uint8_t gc_execute_line(char *line)
               max_delta_r *= MM_PER_INCH;
             }
 
-            if (delta_r > ) {
+            if (delta_r > max_delta_r) {
               if (delta_r > 0.5) { FAIL(STATUS_GCODE_INVALID_TARGET); } // [Arc definition error] > 0.5mm
               if (delta_r > (0.001*gc_block.values.r)) { FAIL(STATUS_GCODE_INVALID_TARGET); } // [Arc definition error] > 0.005mm AND 0.1% radius
             }
