@@ -313,6 +313,8 @@ uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t parser_
     report_probe_parameters();
   #endif
 
+  sys.step_control = STEP_CONTROL_NORMAL_OP; // Restore step control to normal operation
+
   if (sys.probe_succeeded) { return(GC_PROBE_FOUND); } // Successful probe cycle.
   else { return(GC_PROBE_FAIL_END); } // Failed to trigger probe within travel. With or without error.
 }
