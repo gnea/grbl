@@ -132,7 +132,7 @@ if settings_mode:
     print "SETTINGS MODE: Streaming", args.gcode_file.name, " to ", args.device_file
     for line in f:
         l_count += 1 # Iterate line counter    
-        # l_block = re.sub('\s|\(.*?\)','',line).upper() # Strip comments/spaces/new line and capitalize
+        # l_block = re.sub('\s|\(.*?\)|;.*','',line).upper() # Strip comments/spaces/new line and capitalize
         l_block = line.strip() # Strip all EOL characters for consistency
         if verbose: print "SND>"+str(l_count)+": \"" + l_block + "\""
         s.write(l_block + '\n') # Send g-code block to grbl
@@ -157,7 +157,7 @@ else:
     c_line = []
     for line in f:
         l_count += 1 # Iterate line counter
-        l_block = re.sub('\s|\(.*?\)','',line).upper() # Strip comments/spaces/new line and capitalize
+        l_block = re.sub('\s|\(.*?\)|;.*','',line).upper() # Strip comments/spaces/new line and capitalize
         # l_block = line.strip()
         c_line.append(len(l_block)+1) # Track number of characters in grbl serial read buffer
         grbl_out = '' 
