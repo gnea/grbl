@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """\
 Simple g-code streaming script for grbl
 
@@ -7,8 +7,8 @@ for grbl. When grbl has finished parsing the g-code block, it will
 return an 'ok' or 'error' response. When the planner buffer is full,
 grbl will not send a response until the planner buffer clears space.
 
-G02/03 arcs are special exceptions, where they inject short line 
-segments directly into the planner. So there may not be a response 
+G02/03 arcs are special exceptions, where they inject short line
+segments directly into the planner. So there may not be a response
 from grbl for the duration of the arc.
 
 ---------------------
@@ -35,32 +35,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ---------------------
 """
-
-import serial
 import time
+import serial
+
 
 # Open grbl serial port
-s = serial.Serial('/dev/tty.usbmodem1811',115200)
+try:
+    s = serial.Serial('/dev/tty.usbmodem1811',115200)
+except serial.serialutil.SerialException as e:
+    print(e)
+    exit(1)
 
 # Open g-code file
-f = open('grbl.gcode','r');
+with open('grbl.gcode','r') as f:
+    # Wake up grbl
+    s.write(b"\r\n\r\n")
+    time.sleep(2)   # Wait for grbl to initialize
+    s.flushInput()  # Flush startup text in serial input
 
-# Wake up grbl
-s.write("\r\n\r\n")
-time.sleep(2)   # Wait for grbl to initialize 
-s.flushInput()  # Flush startup text in serial input
+    # Stream g-code to grbl
+    for line in f:
+        l = line.strip() # Strip all EOL characters for consistency
+        print(f"Sending {l}", end="")
+        s.write(l.encode(encoding = 'ASCII') + b'\n') # Send g-code block to grbl
+        grbl_out = s.readline() # Wait for grbl response with carriage return
+        print(' : ' + grbl_out.strip().decode('utf-8'))
 
-# Stream g-code to grbl
-for line in f:
-    l = line.strip() # Strip all EOL characters for consistency
-    print 'Sending: ' + l,
-    s.write(l + '\n') # Send g-code block to grbl
-    grbl_out = s.readline() # Wait for grbl response with carriage return
-    print ' : ' + grbl_out.strip()
+    # Wait here until grbl is finished to close serial port and file.
+    input("  Press <Enter> to exit and disable grbl.")
 
-# Wait here until grbl is finished to close serial port and file.
-raw_input("  Press <Enter> to exit and disable grbl.") 
-
-# Close file and serial port
-f.close()
-s.close()    
+# Close serial port
+s.close()
