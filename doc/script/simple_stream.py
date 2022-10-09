@@ -40,7 +40,11 @@ import serial
 
 
 # Open grbl serial port
-s = serial.Serial('/dev/tty.usbmodem1811',115200)
+try:
+    s = serial.Serial('/dev/tty.usbmodem1811',115200)
+except serial.serialutil.SerialException as e:
+    print(e)
+    exit(1)
 
 # Open g-code file
 with open('grbl.gcode','r') as f:
