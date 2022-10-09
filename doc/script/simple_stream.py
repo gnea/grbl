@@ -49,7 +49,7 @@ except serial.serialutil.SerialException as e:
 # Open g-code file
 with open('grbl.gcode','r') as f:
     # Wake up grbl
-    s.write("\r\n\r\n")
+    s.write(b"\r\n\r\n")
     time.sleep(2)   # Wait for grbl to initialize
     s.flushInput()  # Flush startup text in serial input
 
@@ -57,9 +57,9 @@ with open('grbl.gcode','r') as f:
     for line in f:
         l = line.strip() # Strip all EOL characters for consistency
         print(f"Sending {l}", end="")
-        s.write(l + '\n') # Send g-code block to grbl
+        s.write(l.encode(encoding = 'ASCII') + b'\n') # Send g-code block to grbl
         grbl_out = s.readline() # Wait for grbl response with carriage return
-        print(' : ' + grbl_out.strip())
+        print(' : ' + grbl_out.strip().decode('utf-8'))
 
     # Wait here until grbl is finished to close serial port and file.
     input("  Press <Enter> to exit and disable grbl.")
