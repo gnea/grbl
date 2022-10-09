@@ -7,8 +7,8 @@ for grbl. When grbl has finished parsing the g-code block, it will
 return an 'ok' or 'error' response. When the planner buffer is full,
 grbl will not send a response until the planner buffer clears space.
 
-G02/03 arcs are special exceptions, where they inject short line 
-segments directly into the planner. So there may not be a response 
+G02/03 arcs are special exceptions, where they inject short line
+segments directly into the planner. So there may not be a response
 from grbl for the duration of the arc.
 
 ---------------------
@@ -43,11 +43,11 @@ import time
 s = serial.Serial('/dev/tty.usbmodem1811',115200)
 
 # Open g-code file
-f = open('grbl.gcode','r');
+f = open('grbl.gcode','r')
 
 # Wake up grbl
 s.write("\r\n\r\n")
-time.sleep(2)   # Wait for grbl to initialize 
+time.sleep(2)   # Wait for grbl to initialize
 s.flushInput()  # Flush startup text in serial input
 
 # Stream g-code to grbl
@@ -59,7 +59,7 @@ for line in f:
     print(' : ' + grbl_out.strip())
 
 # Wait here until grbl is finished to close serial port and file.
-raw_input("  Press <Enter> to exit and disable grbl.") 
+raw_input("  Press <Enter> to exit and disable grbl.")
 
 # Close file and serial port
 f.close()
