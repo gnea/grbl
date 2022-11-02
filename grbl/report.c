@@ -208,6 +208,7 @@ void report_grbl_settings() {
   #else
     report_util_uint8_setting(32,0);
   #endif
+  report_util_uint8_setting(33,settings.auto_sleep);
   // Print axis settings
   uint8_t idx, set_idx;
   uint8_t val = AXIS_SETTINGS_START_VAL;
