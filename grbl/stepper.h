@@ -56,4 +56,7 @@ void st_update_plan_block_parameters();
 // Called by realtime status reporting if realtime rate reporting is enabled in config.h.
 float st_get_realtime_rate();
 
+// Disable stepper
+void st_disable_set(bool a_state) ;
+
 #endif

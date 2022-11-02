@@ -71,6 +71,10 @@ void protocol_main_loop()
   uint8_t line_flags = 0;
   uint8_t char_counter = 0;
   uint8_t c;
+
+  const uint_fast32_t stepper_sleep_counts = 60000 * settings.auto_sleep;
+  uint_fast32_t stepper_sleep = stepper_sleep_counts;
+
   for (;;) {
 
     // Process one line of incoming serial data, as the data becomes available. Performs an
@@ -100,6 +104,13 @@ void protocol_main_loop()
           // Everything else is gcode. Block if in alarm or jog mode.
           report_status_message(STATUS_SYSTEM_GC_LOCK);
         } else {
+          // Wakeup stepper if IU have disabled before
+		  if (stepper_sleep == 0) {
+			 st_wake_up();
+		  }
+          // Reset loop sleep
+          stepper_sleep = stepper_sleep_counts;
+
           // Parse and execute g-code block.
           report_status_message(gc_execute_line(line));
         }
@@ -158,6 +169,25 @@ void protocol_main_loop()
 
     protocol_execute_realtime();  // Runtime command check point.
     if (sys.abort) { return; } // Bail to main() program loop to reset system.
+
+    // idle lock is off?
+    if (settings.stepper_idle_lock_time == 255) {
+    	// Will I do a block in next loop?
+    	if (sys.state == STATE_IDLE) {
+    		// Last waiting loop. so disable stepper
+    		if (stepper_sleep == 1) {
+    			st_disable_set(true);
+    		}
+    		// I will sleep ...
+    		if (stepper_sleep > 0) {
+    			stepper_sleep--;
+    			_delay_ms(1);
+    		}
+    	} else {
+    		// I will do something, so don't sleep
+    		stepper_sleep = stepper_sleep_counts;
+    	}
+    }
   }
 
   return; /* Never reached */

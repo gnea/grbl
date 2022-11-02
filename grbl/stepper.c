@@ -262,11 +262,20 @@ void st_go_idle()
     delay_ms(settings.stepper_idle_lock_time);
     pin_state = true; // Override. Disable steppers.
   }
-  if (bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE)) { pin_state = !pin_state; } // Apply pin invert.
-  if (pin_state) { STEPPERS_DISABLE_PORT |= (1<<STEPPERS_DISABLE_BIT); }
-  else { STEPPERS_DISABLE_PORT &= ~(1<<STEPPERS_DISABLE_BIT); }
+	st_disable_set(pin_state);
 }
 
+void st_disable_set(bool a_state) {
+	bool pin_state = a_state; // Keep enabled.
+	if (bit_istrue(settings.flags, BITFLAG_INVERT_ST_ENABLE)) {
+		pin_state = !pin_state;
+	} // Apply pin invert.
+	if (pin_state) {
+		STEPPERS_DISABLE_PORT |= (1 << STEPPERS_DISABLE_BIT);
+	} else {
+		STEPPERS_DISABLE_PORT &= ~(1 << STEPPERS_DISABLE_BIT);
+	}
+}
 
 /* "The Stepper Driver Interrupt" - This timer interrupt is the workhorse of Grbl. Grbl employs
    the venerable Bresenham line algorithm to manage and exactly synchronize multi-axis moves.

@@ -57,7 +57,8 @@ const __flash settings_t defaults = {\
     .acceleration[Z_AXIS] = DEFAULT_Z_ACCELERATION,
     .max_travel[X_AXIS] = (-DEFAULT_X_MAX_TRAVEL),
     .max_travel[Y_AXIS] = (-DEFAULT_Y_MAX_TRAVEL),
-    .max_travel[Z_AXIS] = (-DEFAULT_Z_MAX_TRAVEL)};
+    .max_travel[Z_AXIS] = (-DEFAULT_Z_MAX_TRAVEL),
+    .auto_sleep = DEFAULT_AUTOSLEEP };
 
 
 // Method to store startup lines into EEPROM
@@ -286,6 +287,7 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
       case 27: settings.homing_pulloff = value; break;
       case 30: settings.rpm_max = value; spindle_init(); break; // Re-initialize spindle rpm calibration
       case 31: settings.rpm_min = value; spindle_init(); break; // Re-initialize spindle rpm calibration
+      case 33: settings.auto_sleep = int_value; break; // autosleep sec
       case 32:
         #ifdef VARIABLE_SPINDLE
           if (int_value) { settings.flags |= BITFLAG_LASER_MODE; }
