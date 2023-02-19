@@ -223,7 +223,7 @@ This sets the spindle speed for the minimum 0.02V PWM pin output (0V is disabled
 
 #### $32 - Laser mode, boolean
 
-When enabled, Grbl will move continuously through consecutive `G1`, `G2`, or `G3` motion commands when programmed with a `S` spindle speed (laser power). The spindle PWM pin will be updated instantaneously through each motion without stopping. Please read the Grbl laser documentation and your laser device documentation prior to using this mode. Lasers are very dangerous. They can instantly damage your vision permanantly and cause fires. Grbl does not assume any responsibility for any issues the firmware may cause, as defined by its GPL license. 
+When enabled, Grbl will move continuously through consecutive `G1`, `G2`, or `G3` motion commands when programmed with a `S` spindle speed (laser power). The spindle PWM pin will be updated instantaneously through each motion without stopping. Please read the Grbl laser documentation and your laser device documentation prior to using this mode. Lasers are very dangerous. They can instantly damage your vision permanently and cause fires. Grbl does not assume any responsibility for any issues the firmware may cause, as defined by its GPL license. 
 
 When disabled, Grbl will operate as it always has, stopping motion with every `S` spindle speed command. This is the default operation of a milling machine to allow a pause to let the spindle change speeds.
 

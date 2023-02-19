@@ -30,7 +30,7 @@
 void spindle_init()
 {
   #ifdef VARIABLE_SPINDLE
-    // Configure variable spindle PWM and enable pin, if requried. On the Uno, PWM and enable are
+    // Configure variable spindle PWM and enable pin, if required. On the Uno, PWM and enable are
     // combined unless configured otherwise.
     SPINDLE_PWM_DDR |= (1<<SPINDLE_PWM_BIT); // Configure as PWM output pin.
     SPINDLE_TCCRA_REGISTER = SPINDLE_TCCRA_INIT_MASK; // Configure PWM output compare timer

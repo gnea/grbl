@@ -148,7 +148,7 @@ if settings_mode:
             else:
                 print "    MSG: \""+grbl_out+"\""
 else:    
-    # Send g-code program via a more agressive streaming protocol that forces characters into
+    # Send g-code program via a more aggressive streaming protocol that forces characters into
     # Grbl's serial read buffer to ensure Grbl has immediate access to the next g-code command
     # rather than wait for the call-response serial protocol to finish. This is done by careful
     # counting of the number of characters sent by the streamer to Grbl and tracking Grbl's 

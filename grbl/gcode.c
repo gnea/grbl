@@ -126,7 +126,7 @@ uint8_t gc_execute_line(char *line)
     // NOTE: Mantissa is multiplied by 100 to catch non-integer command values. This is more
     // accurate than the NIST gcode requirement of x10 when used for commands, but not quite
     // accurate enough for value words that require integers to within 0.0001. This should be
-    // a good enough comprimise and catch most all non-integer errors. To make it compliant,
+    // a good enough compromise and catch most all non-integer errors. To make it compliant,
     // we would simply need to change the mantissa to int16, but this add compiled flash space.
     // Maybe update this later.
     int_value = trunc(value);
@@ -608,7 +608,7 @@ uint8_t gc_execute_line(char *line)
         case NON_MODAL_GO_HOME_0: // G28
         case NON_MODAL_GO_HOME_1: // G30
           // [G28/30 Errors]: Cutter compensation is enabled.
-          // Retreive G28/30 go-home position data (in machine coordinates) from EEPROM
+          // Retrieve G28/30 go-home position data (in machine coordinates) from EEPROM
           // NOTE: Store parameter data in IJK values. By rule, they are not in use with this command.
           if (gc_block.non_modal_command == NON_MODAL_GO_HOME_0) {
             if (!settings_read_coord_data(SETTING_INDEX_G28,gc_block.values.ijk)) { FAIL(STATUS_SETTING_READ_FAIL); }

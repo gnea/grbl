@@ -49,7 +49,7 @@
 // Define command actions for within execution-type modal groups (motion, stopping, non-modal). Used
 // internally by the parser to know which command to execute.
 // NOTE: Some macro values are assigned specific values to make g-code state reporting and parsing 
-// compile a litte smaller. Necessary due to being completely out of flash on the 328p. Although not
+// compile a little smaller. Necessary due to being completely out of flash on the 328p. Although not
 // ideal, just be careful with values that state 'do not alter' and check both report.c and gcode.c 
 // to see how they are used, if you need to alter them.
 

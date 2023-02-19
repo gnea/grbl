@@ -26,7 +26,7 @@
 // unless invert_feed_rate is true. Then the feed_rate means that the motion should be completed in
 // (1 minute)/feed_rate time.
 // NOTE: This is the primary gateway to the grbl planner. All line motions, including arc line
-// segments, must pass through this routine before being passed to the planner. The seperation of
+// segments, must pass through this routine before being passed to the planner. The separation of
 // mc_line and plan_buffer_line is done primarily to place non-planner-type functions from being
 // in the planner and to let backlash compensation or canned cycle integration simple and direct.
 void mc_line(float *target, plan_line_data_t *pl_data)

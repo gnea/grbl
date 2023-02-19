@@ -107,7 +107,7 @@ void plan_reset_buffer(); // Reset buffer only.
 uint8_t plan_buffer_line(float *target, plan_line_data_t *pl_data);
 
 // Called when the current block is no longer needed. Discards the block and makes the memory
-// availible for new blocks.
+// available for new blocks.
 void plan_discard_current_block();
 
 // Gets the planner block for the special system motion cases. (Parking/Homing)

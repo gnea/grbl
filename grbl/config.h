@@ -56,7 +56,7 @@
 // NOTE: All override realtime commands must be in the extended ASCII character set, starting
 // at character value 128 (0x80) and up to 255 (0xFF). If the normal set of realtime commands,
 // such as status reports, feed hold, reset, and cycle start, are moved to the extended set
-// space, serial.c's RX ISR will need to be modified to accomodate the change.
+// space, serial.c's RX ISR will need to be modified to accommodate the change.
 // #define CMD_RESET 0x80
 // #define CMD_STATUS_REPORT 0x81
 // #define CMD_CYCLE_START 0x82
@@ -98,7 +98,7 @@
 // cycle, but this requires some pin settings changes in cpu_map.h file. For example, the default homing
 // cycle can share the Z limit pin with either X or Y limit pins, since they are on different cycles.
 // By sharing a pin, this frees up a precious IO pin for other purposes. In theory, all axes limit pins
-// may be reduced to one pin, if all axes are homed with seperate cycles, or vice versa, all three axes
+// may be reduced to one pin, if all axes are homed with separate cycles, or vice versa, all three axes
 // on separate pin, but homed in one cycle. Also, it should be noted that the function of hard limits
 // will not be affected by pin sharing.
 // NOTE: Defaults are set for a traditional 3-axis CNC machine. Z-axis first to clear, followed by X & Y.
@@ -278,7 +278,7 @@
 // the associated data is refreshed and included in the status report. However, if one of these value
 // changes, Grbl will automatically include this data in the next status report, regardless of what the
 // count is at the time. This helps reduce the communication overhead involved with high frequency reporting
-// and agressive streaming. There is also a busy and an idle refresh count, which sets up Grbl to send
+// and aggressive streaming. There is also a busy and an idle refresh count, which sets up Grbl to send
 // refreshes more often when its not doing anything important. With a good GUI, this data doesn't need
 // to be refreshed very often, on the order of a several seconds.
 // NOTE: WCO refresh must be 2 or greater. OVR refresh must be 1 or greater.
@@ -391,7 +391,7 @@
 #define MINIMUM_FEED_RATE 1.0 // (mm/min)
 
 // Number of arc generation iterations by small angle approximation before exact arc trajectory
-// correction with expensive sin() and cos() calcualtions. This parameter maybe decreased if there
+// correction with expensive sin() and cos() calculations. This parameter maybe decreased if there
 // are issues with the accuracy of the arc generations, or increased if arc execution is getting
 // bogged down by too many trig calculations.
 #define N_ARC_CORRECTION 12 // Integer (1-255)
@@ -452,7 +452,7 @@
 // Serial send and receive buffer size. The receive buffer is often used as another streaming
 // buffer to store incoming blocks to be processed by Grbl when its ready. Most streaming
 // interfaces will character count and track each block send to each block response. So,
-// increase the receive buffer if a deeper receive buffer is needed for streaming and avaiable
+// increase the receive buffer if a deeper receive buffer is needed for streaming and available
 // memory allows. The send buffer primarily handles messages in Grbl. Only increase if large
 // messages are sent and Grbl begins to stall, waiting to send the rest of the message.
 // NOTE: Grbl generates an average status report in about 0.5msec, but the serial TX stream at
@@ -505,8 +505,8 @@
 // Defines the EEPROM data restored upon a settings version change and `$RST=*` command. Whenever the
 // the settings or other EEPROM data structure changes between Grbl versions, Grbl will automatically
 // wipe and restore the EEPROM. This macro controls what data is wiped and restored. This is useful
-// particularily for OEMs that need to retain certain data. For example, the BUILD_INFO string can be
-// written into the Arduino EEPROM via a seperate .INO sketch to contain product data. Altering this
+// particularly for OEMs that need to retain certain data. For example, the BUILD_INFO string can be
+// written into the Arduino EEPROM via a separate .INO sketch to contain product data. Altering this
 // macro to not restore the build info EEPROM will ensure this data is retained after firmware upgrades.
 // NOTE: Uncomment to override defaults in settings.h
 // #define SETTINGS_RESTORE_ALL (SETTINGS_RESTORE_DEFAULTS | SETTINGS_RESTORE_PARAMETERS | SETTINGS_RESTORE_STARTUP_LINES | SETTINGS_RESTORE_BUILD_INFO)
@@ -516,7 +516,7 @@
 // to prevent this data from being over-written by a user, when used to store OEM product data.
 // NOTE: If disabled and to ensure Grbl can never alter the build info line, you'll also need to enable
 // the SETTING_RESTORE_ALL macro above and remove SETTINGS_RESTORE_BUILD_INFO from the mask.
-// NOTE: See the included grblWrite_BuildInfo.ino example file to write this string seperately.
+// NOTE: See the included grblWrite_BuildInfo.ino example file to write this string separately.
 #define ENABLE_BUILD_INFO_WRITE_COMMAND // '$I=' Default enabled. Comment to disable.
 
 // AVR processors require all interrupts to be disabled during an EEPROM write. This includes both
@@ -525,7 +525,7 @@
 // option forces the planner buffer to completely empty whenever the EEPROM is written to prevent
 // any chance of lost steps.
 // However, this doesn't prevent issues with lost serial RX data during an EEPROM write, especially
-// if a GUI is premptively filling up the serial RX buffer simultaneously. It's highly advised for
+// if a GUI is preemptively filling up the serial RX buffer simultaneously. It's highly advised for
 // GUIs to flag these gcodes (G10,G28.1,G30.1) to always wait for an 'ok' after a block containing
 // one of these commands before sending more data to eliminate this issue.
 // NOTE: Most EEPROM write commands are implicitly blocked during a job (all '$' commands). However,
@@ -582,7 +582,7 @@
 
 // This option will automatically disable the laser during a feed hold by invoking a spindle stop
 // override immediately after coming to a stop. However, this also means that the laser still may
-// be reenabled by disabling the spindle stop override, if needed. This is purely a safety feature
+// be re-enabled by disabling the spindle stop override, if needed. This is purely a safety feature
 // to ensure the laser doesn't inadvertently remain powered while at a stop and cause a fire.
 #define DISABLE_LASER_DURING_HOLD // Default enabled. Comment to disable.
 
@@ -669,7 +669,7 @@
 // integrate this feature without arguably too much work. 
 // Variable spindle (i.e. laser mode) does NOT work with this shield as configured. While
 // variable spindle technically can work with this shield, it requires too many changes for
-// most user setups to accomodate. It would best be implemented by sharing all limit switches
+// most user setups to accommodate. It would best be implemented by sharing all limit switches
 // on pins D9/D10 (as [X1,Z]/[X2,Y] or [X,Y2]/[Y1,Z]), home each axis independently, and 
 // updating lots of code to ensure everything is running correctly.
 // #define DUAL_AXIS_CONFIG_CNC_SHIELD_CLONE  // Uncomment to select. Comment other configs.
