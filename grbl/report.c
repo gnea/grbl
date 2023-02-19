@@ -23,7 +23,7 @@
   as the protocol status messages, feedback messages, and status reports, are stored here.
   For the most part, these functions primarily are called from protocol.c methods. If a
   different style feedback is desired (i.e. JSON), then a user can change these following
-  methods to accomodate their needs.
+  methods to accommodate their needs.
 */
 
 #include "grbl.h"

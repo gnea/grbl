@@ -1,6 +1,6 @@
 ## Grbl v1.1 Laser Mode
 
-**_DISCLAIMER: Lasers are extremely dangerous devices. They can instantly cause fires and permanently damage your vision. Please read and understand all related documentation for your laser prior to using it. The Grbl project is not resposible for any damage or issues the firmware may cause, as defined by its GPL license._**
+**_DISCLAIMER: Lasers are extremely dangerous devices. They can instantly cause fires and permanently damage your vision. Please read and understand all related documentation for your laser prior to using it. The Grbl project is not responsible for any damage or issues the firmware may cause, as defined by its GPL license._**
 
 ----
 

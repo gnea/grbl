@@ -98,7 +98,7 @@ int main(void)
     plan_sync_position();
     gc_sync_position();
 
-    // Print welcome message. Indicates an initialization has occured at power-up or with a reset.
+    // Print welcome message. Indicates an initialization has occurred at power-up or with a reset.
     report_init_message();
 
     // Start Grbl main loop. Processes program inputs and executes them.

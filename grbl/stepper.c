@@ -282,7 +282,7 @@ void st_go_idle()
    AMASS artificially increases the Bresenham resolution without effecting the algorithm's
    innate exactness. AMASS adapts its resolution levels automatically depending on the step
    frequency to be executed, meaning that for even lower step frequencies the step smoothing
-   level increases. Algorithmically, AMASS is acheived by a simple bit-shifting of the Bresenham
+   level increases. Algorithmically, AMASS is achieved by a simple bit-shifting of the Bresenham
    step count for each AMASS level. For example, for a Level 1 step smoothing, we bit shift
    the Bresenham step event count, effectively multiplying it by 2, while the axis step counts
    remain the same, and then double the stepper ISR frequency. In effect, we are allowing the

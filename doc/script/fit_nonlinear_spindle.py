@@ -109,7 +109,7 @@ USAGE:
     points 'PWM_pointX' in this script to move where the piecewise line junctions are 
     located along the plot x-axis. It may be desired to tweak the junction points so the 
     model solution is more accurate in the region that the spindle typically running. 
-    Re-run the script and tweak the junction points until you are satified with the model.
+    Re-run the script and tweak the junction points until you are satisfied with the model.
     
   - Record the solution and enter the RPM_POINT and RPM_LINE values into config.h. Set the 
     number of piecewise lines used in this model in config.h. Also set the '$30' and '$31'

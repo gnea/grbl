@@ -16,7 +16,7 @@ Finally, Grbl has **real-time commands** that are invoked by a set of special ch
 
 # Writing an Interface for Grbl
 
-The general interface for Grbl has been described above, but what's missing is how to run an entire G-code program on Grbl, when it doesn't seem to have an upload feature. This is where this section fits in. Early on, users fiercely requested for flash drive, external RAM, LCD support, joysticks, or network support so they can upload a g-code program and run it directly on Grbl. The general answer to that is, good ideas, but Grbl doesn't need them. Grbl already has nearly all of the tools and features to reliably communicate with a graphical user interface (GUI) or a seperate host interface that provides all those extra bells and whistles. Grbl's base philosophy is to minimize what Grbl should be doing, because, in the end, Grbl needs to be concentrating on producing clean, reliable motion. That's it.
+The general interface for Grbl has been described above, but what's missing is how to run an entire G-code program on Grbl, when it doesn't seem to have an upload feature. This is where this section fits in. Early on, users fiercely requested for flash drive, external RAM, LCD support, joysticks, or network support so they can upload a g-code program and run it directly on Grbl. The general answer to that is, good ideas, but Grbl doesn't need them. Grbl already has nearly all of the tools and features to reliably communicate with a graphical user interface (GUI) or a separate host interface that provides all those extra bells and whistles. Grbl's base philosophy is to minimize what Grbl should be doing, because, in the end, Grbl needs to be concentrating on producing clean, reliable motion. That's it.
 
 
 ## Streaming a G-Code Program to Grbl
@@ -134,7 +134,7 @@ Every G-code block sent to Grbl and Grbl `$` system command that is terminated w
   - If an empty line with only a return is sent to Grbl, it considers it a valid line and will return an `ok` too, except it didn't do anything.
 
 
-* **`error:X`**: Something went wrong! Grbl did not recognize the command and did not execute anything inside that message. The `X` is given as a numeric error code to tell you exactly what happened. The table below decribes every one of them.
+* **`error:X`**: Something went wrong! Grbl did not recognize the command and did not execute anything inside that message. The `X` is given as a numeric error code to tell you exactly what happened. The table below describes every one of them.
 
 	| ID | Error Code Description |
 |:-------------:|----|
@@ -212,7 +212,7 @@ The start up message always prints upon startup and after a reset. Whenever you 
 
 Alarm is an emergency state. Something has gone terribly wrong when these occur. Typically, they are caused by limit error when the machine has moved or wants to move outside the machine travel and crash into the ends. They also report problems if Grbl is lost and can't guarantee positioning or a probe command has failed. Once in alarm-mode, Grbl will lock out all g-code functionality and accept only a small set of commands. It may even stop everything and force you to acknowledge the problem until you issue Grbl a reset. While in alarm-mode, the user can override the alarm manually with a specific command, which then re-enables g-code so you can move the machine again. This ensures the user knows about the problem and has taken steps to fix or account for it.
 
-Similar to error messages, all alarm messages are sent as  **`ALARM:X`**, where `X` is an alarm code to tell you exacly what caused the alarm. The table below describes the meaning of each alarm code.
+Similar to error messages, all alarm messages are sent as  **`ALARM:X`**, where `X` is an alarm code to tell you exactly what caused the alarm. The table below describes the meaning of each alarm code.
 
 | ID | Alarm Code Description |
 |:-------------:|----|
