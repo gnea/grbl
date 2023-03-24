@@ -130,7 +130,12 @@ void eeprom_put_char( unsigned int addr, unsigned char new_value )
 void memcpy_to_eeprom_with_checksum(unsigned int destination, char *source, unsigned int size) {
   unsigned char checksum = 0;
   for(; size > 0; size--) { 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+    // Seee https://github.com/gnea/grbl/issues/355 -- very much a bug
+    // but kept in place to not break every EEPROM out there.0
     checksum = (checksum << 1) || (checksum >> 7);
+#pragma GCC diagnostic pop
     checksum += *source;
     eeprom_put_char(destination++, *(source++)); 
   }
@@ -141,7 +146,12 @@ int memcpy_from_eeprom_with_checksum(char *destination, unsigned int source, uns
   unsigned char data, checksum = 0;
   for(; size > 0; size--) { 
     data = eeprom_get_char(source++);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+    // Seee https://github.com/gnea/grbl/issues/355 -- very much a bug
+    // but kept in place to not break every EEPROM out there.0
     checksum = (checksum << 1) || (checksum >> 7);
+#pragma GCC diagnostic pop
     checksum += data;    
     *(destination++) = data; 
   }
