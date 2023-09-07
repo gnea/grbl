@@ -376,11 +376,22 @@ void limits_go_home(uint8_t cycle_mask)
       #ifdef HOMING_FORCE_SET_ORIGIN
         set_axis_position = 0;
       #else
+      #ifdef HOMING_SET_ORIGIN_AFTER_PULLOFF
+        if ( bit_istrue(settings.homing_dir_mask,bit(idx)) ) {
+	  // Round up (i.e. away from the limit) to avoid a situation where a later
+	  // rounding error sometimes causes the axis position after homing to be a tiny
+	  // amount past max_travel, which immediately triggers its soft limit.
+	  set_axis_position = lround(ceil(settings.max_travel[idx]*settings.steps_per_mm[idx]));
+        } else {
+          set_axis_position = 0;
+        }
+      #else
         if ( bit_istrue(settings.homing_dir_mask,bit(idx)) ) {
           set_axis_position = lround((settings.max_travel[idx]+settings.homing_pulloff)*settings.steps_per_mm[idx]);
         } else {
           set_axis_position = lround(-settings.homing_pulloff*settings.steps_per_mm[idx]);
         }
+      #endif
       #endif
 
       #ifdef COREXY

@@ -128,6 +128,15 @@
 // define to force Grbl to always set the machine origin at the homed location despite switch orientation.
 // #define HOMING_FORCE_SET_ORIGIN // Uncomment to enable.
 
+// By default, Grbl sets the machine origin to zero at the exact point where the homing switches first
+// make contact, then moves away from the switch by the homing pulloff distance given in setting 27.
+// Even with soft limits enabled, this does not prevent the operator subsequently jogging right up to
+// the machine origin and possibly triggering the limit switch. This option instead sets the machine
+// origin to zero after it has performed the pulloff move, so that soft limits won't allow the machine
+// to be jogged any closer to the limit switch than the pulloff distance.
+// Note: this setting is ignored if HOMING_FORCE_SET_ORIGIN is enabled.
+// #define HOMING_SET_ORIGIN_AFTER_PULLOFF
+
 // Number of blocks Grbl executes upon startup. These blocks are stored in EEPROM, where the size
 // and addresses are defined in settings.h. With the current settings, up to 2 startup blocks may
 // be stored and executed in order. These startup blocks would typically be used to set the g-code
