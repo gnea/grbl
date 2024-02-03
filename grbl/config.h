@@ -33,7 +33,7 @@
 // NOTE: OEMs can avoid the need to maintain/update the defaults.h and cpu_map.h files and use only
 // one configuration file by placing their specific defaults and pin map at the bottom of this file.
 // If doing so, simply comment out these two defines and see instructions below.
-#define DEFAULTS_GENERIC
+// #define DEFAULTS_GENERIC
 #define CPU_MAP_ATMEGA328P // Arduino Uno CPU
 
 // Serial baud rate
@@ -101,8 +101,10 @@
 // on separate pin, but homed in one cycle. Also, it should be noted that the function of hard limits
 // will not be affected by pin sharing.
 // NOTE: Defaults are set for a traditional 3-axis CNC machine. Z-axis first to clear, followed by X & Y.
-#define HOMING_CYCLE_0 (1 << Z_AXIS)                   // REQUIRED: First move Z to clear workspace.
-#define HOMING_CYCLE_1 ((1 << X_AXIS) | (1 << Y_AXIS)) // OPTIONAL: Then move X,Y at the same time.
+// NOTE: Configured for a yoyo string twisting 1-axis CNC machine.
+#define HOMING_CYCLE_0 (1 << X_AXIS) // REQUIRED: First move Z to clear workspace.
+// #define HOMING_CYCLE_0 (1 << Z_AXIS)                   // REQUIRED: First move Z to clear workspace.
+// #define HOMING_CYCLE_1 ((1 << X_AXIS) | (1 << Y_AXIS)) // OPTIONAL: Then move X,Y at the same time.
 // #define HOMING_CYCLE_2                         // OPTIONAL: Uncomment and add axes mask to enable
 
 // NOTE: The following are two examples to setup homing for 2-axis machines.
