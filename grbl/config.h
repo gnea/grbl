@@ -29,7 +29,6 @@
 #define config_h
 #include "grbl.h" // For Arduino IDE compatibility.
 
-
 // Define CPU pin map and default settings.
 // NOTE: OEMs can avoid the need to maintain/update the defaults.h and cpu_map.h files and use only
 // one configuration file by placing their specific defaults and pin map at the bottom of this file.
@@ -62,18 +61,18 @@
 // #define CMD_CYCLE_START 0x82
 // #define CMD_FEED_HOLD 0x83
 #define CMD_SAFETY_DOOR 0x84
-#define CMD_JOG_CANCEL  0x85
-#define CMD_DEBUG_REPORT 0x86 // Only when DEBUG enabled, sends debug report in '{}' braces.
-#define CMD_FEED_OVR_RESET 0x90         // Restores feed override value to 100%.
+#define CMD_JOG_CANCEL 0x85
+#define CMD_DEBUG_REPORT 0x86   // Only when DEBUG enabled, sends debug report in '{}' braces.
+#define CMD_FEED_OVR_RESET 0x90 // Restores feed override value to 100%.
 #define CMD_FEED_OVR_COARSE_PLUS 0x91
 #define CMD_FEED_OVR_COARSE_MINUS 0x92
-#define CMD_FEED_OVR_FINE_PLUS  0x93
-#define CMD_FEED_OVR_FINE_MINUS  0x94
-#define CMD_RAPID_OVR_RESET 0x95        // Restores rapid override value to 100%.
+#define CMD_FEED_OVR_FINE_PLUS 0x93
+#define CMD_FEED_OVR_FINE_MINUS 0x94
+#define CMD_RAPID_OVR_RESET 0x95 // Restores rapid override value to 100%.
 #define CMD_RAPID_OVR_MEDIUM 0x96
 #define CMD_RAPID_OVR_LOW 0x97
 // #define CMD_RAPID_OVR_EXTRA_LOW 0x98 // *NOT SUPPORTED*
-#define CMD_SPINDLE_OVR_RESET 0x99      // Restores spindle override value to 100%.
+#define CMD_SPINDLE_OVR_RESET 0x99 // Restores spindle override value to 100%.
 #define CMD_SPINDLE_OVR_COARSE_PLUS 0x9A
 #define CMD_SPINDLE_OVR_COARSE_MINUS 0x9B
 #define CMD_SPINDLE_OVR_FINE_PLUS 0x9C
@@ -102,12 +101,12 @@
 // on separate pin, but homed in one cycle. Also, it should be noted that the function of hard limits
 // will not be affected by pin sharing.
 // NOTE: Defaults are set for a traditional 3-axis CNC machine. Z-axis first to clear, followed by X & Y.
-#define HOMING_CYCLE_0 (1<<Z_AXIS)                // REQUIRED: First move Z to clear workspace.
-#define HOMING_CYCLE_1 ((1<<X_AXIS)|(1<<Y_AXIS))  // OPTIONAL: Then move X,Y at the same time.
+#define HOMING_CYCLE_0 (1 << Z_AXIS)                   // REQUIRED: First move Z to clear workspace.
+#define HOMING_CYCLE_1 ((1 << X_AXIS) | (1 << Y_AXIS)) // OPTIONAL: Then move X,Y at the same time.
 // #define HOMING_CYCLE_2                         // OPTIONAL: Uncomment and add axes mask to enable
 
 // NOTE: The following are two examples to setup homing for 2-axis machines.
-// #define HOMING_CYCLE_0 ((1<<X_AXIS)|(1<<Y_AXIS))  // NOT COMPATIBLE WITH COREXY: Homes both X-Y in one cycle. 
+// #define HOMING_CYCLE_0 ((1<<X_AXIS)|(1<<Y_AXIS))  // NOT COMPATIBLE WITH COREXY: Homes both X-Y in one cycle.
 
 // #define HOMING_CYCLE_0 (1<<X_AXIS)  // COREXY COMPATIBLE: First home X
 // #define HOMING_CYCLE_1 (1<<Y_AXIS)  // COREXY COMPATIBLE: Then home Y
@@ -117,7 +116,7 @@
 // greater.
 #define N_HOMING_LOCATE_CYCLE 1 // Integer (1-128)
 
-// Enables single axis homing commands. $HX, $HY, and $HZ for X, Y, and Z-axis homing. The full homing 
+// Enables single axis homing commands. $HX, $HY, and $HZ for X, Y, and Z-axis homing. The full homing
 // cycle is still invoked by the $H command. This is disabled by default. It's here only to address
 // users that need to switch between a two-axis and three-axis machine. This is actually very rare.
 // If you have a two-axis machine, DON'T USE THIS. Instead, just alter the homing cycle for two-axes.
@@ -140,11 +139,11 @@
 // precise this. So, there is likely no need to change these, but you can if you need to here.
 // NOTE: Must be an integer value from 0 to ~4. More than 4 may exhibit round-off errors.
 #define N_DECIMAL_COORDVALUE_INCH 4 // Coordinate or position value in inches
-#define N_DECIMAL_COORDVALUE_MM   3 // Coordinate or position value in mm
-#define N_DECIMAL_RATEVALUE_INCH  1 // Rate or velocity value in in/min
-#define N_DECIMAL_RATEVALUE_MM    0 // Rate or velocity value in mm/min
-#define N_DECIMAL_SETTINGVALUE    3 // Decimals for floating point setting values
-#define N_DECIMAL_RPMVALUE        0 // RPM value in rotations per min.
+#define N_DECIMAL_COORDVALUE_MM 3   // Coordinate or position value in mm
+#define N_DECIMAL_RATEVALUE_INCH 1  // Rate or velocity value in in/min
+#define N_DECIMAL_RATEVALUE_MM 0    // Rate or velocity value in mm/min
+#define N_DECIMAL_SETTINGVALUE 3    // Decimals for floating point setting values
+#define N_DECIMAL_RPMVALUE 0        // RPM value in rotations per min.
 
 // If your machine has two limits switches wired in parallel to one axis, you will need to enable
 // this feature. Since the two switches are sharing a single pin, there is no way for Grbl to tell
@@ -238,22 +237,22 @@
 // Configure rapid, feed, and spindle override settings. These values define the max and min
 // allowable override values and the coarse and fine increments per command received. Please
 // note the allowable values in the descriptions following each define.
-#define DEFAULT_FEED_OVERRIDE           100 // 100%. Don't change this value.
-#define MAX_FEED_RATE_OVERRIDE          200 // Percent of programmed feed rate (100-255). Usually 120% or 200%
-#define MIN_FEED_RATE_OVERRIDE           10 // Percent of programmed feed rate (1-100). Usually 50% or 1%
-#define FEED_OVERRIDE_COARSE_INCREMENT   10 // (1-99). Usually 10%.
-#define FEED_OVERRIDE_FINE_INCREMENT      1 // (1-99). Usually 1%.
+#define DEFAULT_FEED_OVERRIDE 100         // 100%. Don't change this value.
+#define MAX_FEED_RATE_OVERRIDE 200        // Percent of programmed feed rate (100-255). Usually 120% or 200%
+#define MIN_FEED_RATE_OVERRIDE 10         // Percent of programmed feed rate (1-100). Usually 50% or 1%
+#define FEED_OVERRIDE_COARSE_INCREMENT 10 // (1-99). Usually 10%.
+#define FEED_OVERRIDE_FINE_INCREMENT 1    // (1-99). Usually 1%.
 
-#define DEFAULT_RAPID_OVERRIDE  100 // 100%. Don't change this value.
-#define RAPID_OVERRIDE_MEDIUM    50 // Percent of rapid (1-99). Usually 50%.
-#define RAPID_OVERRIDE_LOW       25 // Percent of rapid (1-99). Usually 25%.
+#define DEFAULT_RAPID_OVERRIDE 100 // 100%. Don't change this value.
+#define RAPID_OVERRIDE_MEDIUM 50   // Percent of rapid (1-99). Usually 50%.
+#define RAPID_OVERRIDE_LOW 25      // Percent of rapid (1-99). Usually 25%.
 // #define RAPID_OVERRIDE_EXTRA_LOW 5 // *NOT SUPPORTED* Percent of rapid (1-99). Usually 5%.
 
-#define DEFAULT_SPINDLE_SPEED_OVERRIDE    100 // 100%. Don't change this value.
-#define MAX_SPINDLE_SPEED_OVERRIDE        200 // Percent of programmed spindle speed (100-255). Usually 200%.
-#define MIN_SPINDLE_SPEED_OVERRIDE         10 // Percent of programmed spindle speed (1-100). Usually 10%.
-#define SPINDLE_OVERRIDE_COARSE_INCREMENT  10 // (1-99). Usually 10%.
-#define SPINDLE_OVERRIDE_FINE_INCREMENT     1 // (1-99). Usually 1%.
+#define DEFAULT_SPINDLE_SPEED_OVERRIDE 100   // 100%. Don't change this value.
+#define MAX_SPINDLE_SPEED_OVERRIDE 200       // Percent of programmed spindle speed (100-255). Usually 200%.
+#define MIN_SPINDLE_SPEED_OVERRIDE 10        // Percent of programmed spindle speed (1-100). Usually 10%.
+#define SPINDLE_OVERRIDE_COARSE_INCREMENT 10 // (1-99). Usually 10%.
+#define SPINDLE_OVERRIDE_FINE_INCREMENT 1    // (1-99). Usually 1%.
 
 // When a M2 or M30 program end command is executed, most g-code states are restored to their defaults.
 // This compile-time option includes the restoring of the feed, rapid, and spindle speed override values
@@ -262,16 +261,16 @@
 
 // The status report change for Grbl v1.1 and after also removed the ability to disable/enable most data
 // fields from the report. This caused issues for GUI developers, who've had to manage several scenarios
-// and configurations. The increased efficiency of the new reporting style allows for all data fields to 
+// and configurations. The increased efficiency of the new reporting style allows for all data fields to
 // be sent without potential performance issues.
 // NOTE: The options below are here only provide a way to disable certain data fields if a unique
 // situation demands it, but be aware GUIs may depend on this data. If disabled, it may not be compatible.
-#define REPORT_FIELD_BUFFER_STATE // Default enabled. Comment to disable.
-#define REPORT_FIELD_PIN_STATE // Default enabled. Comment to disable.
+#define REPORT_FIELD_BUFFER_STATE       // Default enabled. Comment to disable.
+#define REPORT_FIELD_PIN_STATE          // Default enabled. Comment to disable.
 #define REPORT_FIELD_CURRENT_FEED_SPEED // Default enabled. Comment to disable.
-#define REPORT_FIELD_WORK_COORD_OFFSET // Default enabled. Comment to disable.
-#define REPORT_FIELD_OVERRIDES // Default enabled. Comment to disable.
-#define REPORT_FIELD_LINE_NUMBERS // Default enabled. Comment to disable.
+#define REPORT_FIELD_WORK_COORD_OFFSET  // Default enabled. Comment to disable.
+#define REPORT_FIELD_OVERRIDES          // Default enabled. Comment to disable.
+#define REPORT_FIELD_LINE_NUMBERS       // Default enabled. Comment to disable.
 
 // Some status report data isn't necessary for realtime, only intermittently, because the values don't
 // change often. The following macros configures how many times a status report needs to be called before
@@ -282,10 +281,10 @@
 // refreshes more often when its not doing anything important. With a good GUI, this data doesn't need
 // to be refreshed very often, on the order of a several seconds.
 // NOTE: WCO refresh must be 2 or greater. OVR refresh must be 1 or greater.
-#define REPORT_OVR_REFRESH_BUSY_COUNT 20  // (1-255)
-#define REPORT_OVR_REFRESH_IDLE_COUNT 10  // (1-255) Must be less than or equal to the busy count
-#define REPORT_WCO_REFRESH_BUSY_COUNT 30  // (2-255)
-#define REPORT_WCO_REFRESH_IDLE_COUNT 10  // (2-255) Must be less than or equal to the busy count
+#define REPORT_OVR_REFRESH_BUSY_COUNT 20 // (1-255)
+#define REPORT_OVR_REFRESH_IDLE_COUNT 10 // (1-255) Must be less than or equal to the busy count
+#define REPORT_WCO_REFRESH_BUSY_COUNT 30 // (2-255)
+#define REPORT_WCO_REFRESH_IDLE_COUNT 10 // (2-255) Must be less than or equal to the busy count
 
 // The temporal resolution of the acceleration management subsystem. A higher number gives smoother
 // acceleration, particularly noticeable on machines that run at very high feedrates, but may negatively
@@ -301,7 +300,7 @@
 // frequencies below 10kHz, where the aliasing between axes of multi-axis motions can cause audible
 // noise and shake your machine. At even lower step frequencies, AMASS adapts and provides even better
 // step smoothing. See stepper.c for more details on the AMASS system works.
-#define ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING  // Default enabled. Comment to disable.
+#define ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING // Default enabled. Comment to disable.
 
 // Sets the maximum step rate allowed to be written as a Grbl setting. This option enables an error
 // check in the settings module to prevent settings values that will exceed this limitation. The maximum
@@ -323,9 +322,9 @@
 // normal-open switch and vice versa.
 // NOTE: All pins associated with the feature are disabled, i.e. XYZ limit pins, not individual axes.
 // WARNING: When the pull-ups are disabled, this requires additional wiring with pull-down resistors!
-//#define DISABLE_LIMIT_PIN_PULL_UP
-//#define DISABLE_PROBE_PIN_PULL_UP
-//#define DISABLE_CONTROL_PIN_PULL_UP
+// #define DISABLE_LIMIT_PIN_PULL_UP
+// #define DISABLE_PROBE_PIN_PULL_UP
+// #define DISABLE_CONTROL_PIN_PULL_UP
 
 // Sets which axis the tool length offset is applied. Assumes the spindle is always parallel with
 // the selected axis with the tool oriented toward the negative direction. In other words, a positive
@@ -353,16 +352,16 @@
 // preserve I/O pins. For certain setups, these may need to be separate pins. This configure option uses
 // the spindle direction pin(D13) as a separate spindle enable pin along with spindle speed PWM on pin D11.
 // NOTE: This configure option only works with VARIABLE_SPINDLE enabled and a 328p processor (Uno).
-// NOTE: Without a direction pin, M4 will not have a pin output to indicate a difference with M3. 
+// NOTE: Without a direction pin, M4 will not have a pin output to indicate a difference with M3.
 // NOTE: BEWARE! The Arduino bootloader toggles the D13 pin when it powers up. If you flash Grbl with
 // a programmer (you can use a spare Arduino as "Arduino as ISP". Search the web on how to wire this.),
 // this D13 LED toggling should go away. We haven't tested this though. Please report how it goes!
 // #define USE_SPINDLE_DIR_AS_ENABLE_PIN // Default disabled. Uncomment to enable.
 
 // Alters the behavior of the spindle enable pin with the USE_SPINDLE_DIR_AS_ENABLE_PIN option . By default,
-// Grbl will not disable the enable pin if spindle speed is zero and M3/4 is active, but still sets the PWM 
+// Grbl will not disable the enable pin if spindle speed is zero and M3/4 is active, but still sets the PWM
 // output to zero. This allows the users to know if the spindle is active and use it as an additional control
-// input. However, in some use cases, user may want the enable pin to disable with a zero spindle speed and 
+// input. However, in some use cases, user may want the enable pin to disable with a zero spindle speed and
 // re-enable when spindle speed is greater than zero. This option does that.
 // NOTE: Requires USE_SPINDLE_DIR_AS_ENABLE_PIN to be enabled.
 // #define SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED // Default disabled. Uncomment to enable.
@@ -462,12 +461,12 @@
 // #define RX_BUFFER_SIZE 128 // (1-254) Uncomment to override defaults in serial.h
 // #define TX_BUFFER_SIZE 100 // (1-254)
 
-// A simple software debouncing feature for hard limit switches. When enabled, the interrupt 
-// monitoring the hard limit switch pins will enable the Arduino's watchdog timer to re-check 
-// the limit pin state after a delay of about 32msec. This can help with CNC machines with 
-// problematic false triggering of their hard limit switches, but it WILL NOT fix issues with 
+// A simple software debouncing feature for hard limit switches. When enabled, the interrupt
+// monitoring the hard limit switch pins will enable the Arduino's watchdog timer to re-check
+// the limit pin state after a delay of about 32msec. This can help with CNC machines with
+// problematic false triggering of their hard limit switches, but it WILL NOT fix issues with
 // electrical interference on the signal cables from external sources. It's recommended to first
-// use shielded signal cables with their shielding connected to ground (old USB/computer cables 
+// use shielded signal cables with their shielding connected to ground (old USB/computer cables
 // work well and are cheap to find) and wire in a low-pass circuit into each limit pin.
 // #define ENABLE_SOFTWARE_DEBOUNCE // Default disabled. Uncomment to enable.
 
@@ -542,8 +541,8 @@
 #define FORCE_BUFFER_SYNC_DURING_WCO_CHANGE // Default enabled. Comment to disable.
 
 // By default, Grbl disables feed rate overrides for all G38.x probe cycle commands. Although this
-// may be different than some pro-class machine control, it's arguable that it should be this way. 
-// Most probe sensors produce different levels of error that is dependent on rate of speed. By 
+// may be different than some pro-class machine control, it's arguable that it should be this way.
+// Most probe sensors produce different levels of error that is dependent on rate of speed. By
 // keeping probing cycles to their programmed feed rates, the probe sensor should be a lot more
 // repeatable. If needed, you can disable this behavior by uncommenting the define below.
 // #define ALLOW_FEED_OVERRIDE_DURING_PROBE_CYCLES // Default disabled. Uncomment to enable.
@@ -564,18 +563,18 @@
 // #define PARKING_ENABLE  // Default disabled. Uncomment to enable
 
 // Configure options for the parking motion, if enabled.
-#define PARKING_AXIS Z_AXIS // Define which axis that performs the parking motion
-#define PARKING_TARGET -5.0 // Parking axis target. In mm, as machine coordinate [-max_travel,0].
-#define PARKING_RATE 500.0 // Parking fast rate after pull-out in mm/min.
-#define PARKING_PULLOUT_RATE 100.0 // Pull-out/plunge slow feed rate in mm/min.
+#define PARKING_AXIS Z_AXIS           // Define which axis that performs the parking motion
+#define PARKING_TARGET -5.0           // Parking axis target. In mm, as machine coordinate [-max_travel,0].
+#define PARKING_RATE 500.0            // Parking fast rate after pull-out in mm/min.
+#define PARKING_PULLOUT_RATE 100.0    // Pull-out/plunge slow feed rate in mm/min.
 #define PARKING_PULLOUT_INCREMENT 5.0 // Spindle pull-out and plunge distance in mm. Incremental distance.
                                       // Must be positive value or equal to zero.
 
-// Enables a special set of M-code commands that enables and disables the parking motion. 
-// These are controlled by `M56`, `M56 P1`, or `M56 Px` to enable and `M56 P0` to disable. 
-// The command is modal and will be set after a planner sync. Since it is g-code, it is 
+// Enables a special set of M-code commands that enables and disables the parking motion.
+// These are controlled by `M56`, `M56 P1`, or `M56 Px` to enable and `M56 P0` to disable.
+// The command is modal and will be set after a planner sync. Since it is g-code, it is
 // executed in sync with g-code commands. It is not a real-time command.
-// NOTE: PARKING_ENABLE is required. By default, M56 is active upon initialization. Use 
+// NOTE: PARKING_ENABLE is required. By default, M56 is active upon initialization. Use
 // DEACTIVATE_PARKING_UPON_INIT to set M56 P0 as the power-up default.
 // #define ENABLE_PARKING_OVERRIDE_CONTROL   // Default disabled. Uncomment to enable
 // #define DEACTIVATE_PARKING_UPON_INIT // Default disabled. Uncomment to enable.
@@ -587,7 +586,7 @@
 #define DISABLE_LASER_DURING_HOLD // Default enabled. Comment to disable.
 
 // This feature alters the spindle PWM/speed to a nonlinear output with a simple piecewise linear
-// curve. Useful for spindles that don't produce the right RPM from Grbl's standard spindle PWM 
+// curve. Useful for spindles that don't produce the right RPM from Grbl's standard spindle PWM
 // linear model. Requires a solution by the 'fit_nonlinear_spindle.py' script in the /doc/script
 // folder of the repo. See file comments on how to gather spindle data and run the script to
 // generate a solution.
@@ -597,41 +596,41 @@
 // the 'fit_nonlinear_spindle.py' script solution. Used only when ENABLE_PIECEWISE_LINEAR_SPINDLE
 // is enabled. Make sure the constant values are exactly the same as the script solution.
 // NOTE: When N_PIECES < 4, unused RPM_LINE and RPM_POINT defines are not required and omitted.
-#define N_PIECES 4  // Integer (1-4). Number of piecewise lines used in script solution.
-#define RPM_MAX  11686.4  // Max RPM of model. $30 > RPM_MAX will be limited to RPM_MAX.
-#define RPM_MIN  202.5    // Min RPM of model. $31 < RPM_MIN will be limited to RPM_MIN.
-#define RPM_POINT12  6145.4  // Used N_PIECES >=2. Junction point between lines 1 and 2.
-#define RPM_POINT23  9627.8  // Used N_PIECES >=3. Junction point between lines 2 and 3.
-#define RPM_POINT34  10813.9 // Used N_PIECES = 4. Junction point between lines 3 and 4.
-#define RPM_LINE_A1  3.197101e-03  // Used N_PIECES >=1. A and B constants of line 1.
-#define RPM_LINE_B1  -3.526076e-1
-#define RPM_LINE_A2  1.722950e-2   // Used N_PIECES >=2. A and B constants of line 2.
-#define RPM_LINE_B2  8.588176e+01
-#define RPM_LINE_A3  5.901518e-02  // Used N_PIECES >=3. A and B constants of line 3.
-#define RPM_LINE_B3  4.881851e+02
-#define RPM_LINE_A4  1.203413e-01  // Used N_PIECES = 4. A and B constants of line 4.
-#define RPM_LINE_B4  1.151360e+03
+#define N_PIECES 4               // Integer (1-4). Number of piecewise lines used in script solution.
+#define RPM_MAX 11686.4          // Max RPM of model. $30 > RPM_MAX will be limited to RPM_MAX.
+#define RPM_MIN 202.5            // Min RPM of model. $31 < RPM_MIN will be limited to RPM_MIN.
+#define RPM_POINT12 6145.4       // Used N_PIECES >=2. Junction point between lines 1 and 2.
+#define RPM_POINT23 9627.8       // Used N_PIECES >=3. Junction point between lines 2 and 3.
+#define RPM_POINT34 10813.9      // Used N_PIECES = 4. Junction point between lines 3 and 4.
+#define RPM_LINE_A1 3.197101e-03 // Used N_PIECES >=1. A and B constants of line 1.
+#define RPM_LINE_B1 -3.526076e-1
+#define RPM_LINE_A2 1.722950e-2 // Used N_PIECES >=2. A and B constants of line 2.
+#define RPM_LINE_B2 8.588176e+01
+#define RPM_LINE_A3 5.901518e-02 // Used N_PIECES >=3. A and B constants of line 3.
+#define RPM_LINE_B3 4.881851e+02
+#define RPM_LINE_A4 1.203413e-01 // Used N_PIECES = 4. A and B constants of line 4.
+#define RPM_LINE_B4 1.151360e+03
 
-/* --------------------------------------------------------------------------------------- 
-  This optional dual axis feature is primarily for the homing cycle to locate two sides of 
+/* ---------------------------------------------------------------------------------------
+  This optional dual axis feature is primarily for the homing cycle to locate two sides of
   a dual-motor gantry independently, i.e. self-squaring. This requires an additional limit
   switch for the cloned motor. To self square, both limit switches on the cloned axis must
-  be physically positioned to trigger when the gantry is square. Highly recommend keeping  
+  be physically positioned to trigger when the gantry is square. Highly recommend keeping
   the motors always enabled to ensure the gantry stays square with the $1=255 setting.
 
-  For Grbl on the Arduino Uno, the cloned axis limit switch must to be shared with and 
+  For Grbl on the Arduino Uno, the cloned axis limit switch must to be shared with and
   wired with z-axis limit pin due to the lack of available pins. The homing cycle must home
   the z-axis and cloned axis in different cycles, which is already the default config.
 
   The dual axis feature works by cloning an axis step output onto another pair of step
-  and direction pins. The step pulse and direction of the cloned motor can be set 
+  and direction pins. The step pulse and direction of the cloned motor can be set
   independently of the main axis motor. However to save precious flash and memory, this
-  dual axis feature must share the same settings (step/mm, max speed, acceleration) as the 
+  dual axis feature must share the same settings (step/mm, max speed, acceleration) as the
   parent motor. This is NOT a feature for an independent fourth axis. Only a motor clone.
 
   WARNING: Make sure to test the directions of your dual axis motors! They must be setup
   to move the same direction BEFORE running your first homing cycle or any long motion!
-  Motors moving in opposite directions can cause serious damage to your machine! Use this 
+  Motors moving in opposite directions can cause serious damage to your machine! Use this
   dual axis feature at your own risk.
 */
 // NOTE: This feature requires approximately 400 bytes of flash. Certain configurations can
@@ -641,39 +640,38 @@
 // #define ENABLE_DUAL_AXIS	// Default disabled. Uncomment to enable.
 
 // Select the one axis to mirror another motor. Only X and Y axis is supported at this time.
-#define DUAL_AXIS_SELECT  X_AXIS  // Must be either X_AXIS or Y_AXIS
+#define DUAL_AXIS_SELECT X_AXIS // Must be either X_AXIS or Y_AXIS
 
 // To prevent the homing cycle from racking the dual axis, when one limit triggers before the
-// other due to switch failure or noise, the homing cycle will automatically abort if the second 
-// motor's limit switch does not trigger within the three distance parameters defined below. 
+// other due to switch failure or noise, the homing cycle will automatically abort if the second
+// motor's limit switch does not trigger within the three distance parameters defined below.
 // Axis length percent will automatically compute a fail distance as a percentage of the max
-// travel of the other non-dual axis, i.e. if dual axis select is X_AXIS at 5.0%, then the fail 
-// distance will be computed as 5.0% of y-axis max travel. Fail distance max and min are the 
+// travel of the other non-dual axis, i.e. if dual axis select is X_AXIS at 5.0%, then the fail
+// distance will be computed as 5.0% of y-axis max travel. Fail distance max and min are the
 // limits of how far or little a valid fail distance is.
-#define DUAL_AXIS_HOMING_FAIL_AXIS_LENGTH_PERCENT  5.0  // Float (percent)
-#define DUAL_AXIS_HOMING_FAIL_DISTANCE_MAX  25.0  // Float (mm)
-#define DUAL_AXIS_HOMING_FAIL_DISTANCE_MIN  2.5  // Float (mm)
+#define DUAL_AXIS_HOMING_FAIL_AXIS_LENGTH_PERCENT 5.0 // Float (percent)
+#define DUAL_AXIS_HOMING_FAIL_DISTANCE_MAX 25.0       // Float (mm)
+#define DUAL_AXIS_HOMING_FAIL_DISTANCE_MIN 2.5        // Float (mm)
 
 // Dual axis pin configuration currently supports two shields. Uncomment the shield you want,
 // and comment out the other one(s).
 // NOTE: Protoneer CNC Shield v3.51 has A.STP and A.DIR wired to pins A4 and A3 respectively.
 // The variable spindle (i.e. laser mode) build option works and may be enabled or disabled.
 // Coolant pin A3 is moved to D13, replacing spindle direction.
-#define DUAL_AXIS_CONFIG_PROTONEER_V3_51    // Uncomment to select. Comment other configs.
+#define DUAL_AXIS_CONFIG_PROTONEER_V3_51 // Uncomment to select. Comment other configs.
 
-// NOTE: Arduino CNC Shield Clone (Originally Protoneer v3.0) has A.STP and A.DIR wired to 
+// NOTE: Arduino CNC Shield Clone (Originally Protoneer v3.0) has A.STP and A.DIR wired to
 // D12 and D13, respectively. With the limit pins and stepper enable pin on this same port,
 // the spindle enable pin had to be moved and spindle direction pin deleted. The spindle
 // enable pin now resides on A3, replacing coolant enable. Coolant enable is bumped over to
-// pin A4. Spindle enable is used far more and this pin setup helps facilitate users to 
-// integrate this feature without arguably too much work. 
+// pin A4. Spindle enable is used far more and this pin setup helps facilitate users to
+// integrate this feature without arguably too much work.
 // Variable spindle (i.e. laser mode) does NOT work with this shield as configured. While
 // variable spindle technically can work with this shield, it requires too many changes for
 // most user setups to accomodate. It would best be implemented by sharing all limit switches
-// on pins D9/D10 (as [X1,Z]/[X2,Y] or [X,Y2]/[Y1,Z]), home each axis independently, and 
+// on pins D9/D10 (as [X1,Z]/[X2,Y] or [X,Y2]/[Y1,Z]), home each axis independently, and
 // updating lots of code to ensure everything is running correctly.
 // #define DUAL_AXIS_CONFIG_CNC_SHIELD_CLONE  // Uncomment to select. Comment other configs.
-
 
 /* ---------------------------------------------------------------------------------------
    OEM Single File Configuration Option
@@ -687,6 +685,5 @@
 // Paste CPU_MAP definitions here.
 
 // Paste default settings definitions here.
-
 
 #endif
