@@ -207,6 +207,11 @@ void limits_go_home(uint8_t cycle_mask)
   // Set search mode with approach at seek rate to quickly engage the specified cycle_mask limit switches.
   bool approach = true;
   float homing_rate = settings.homing_seek_rate;
+  #ifdef ENABLE_HOMING_DISTANCE_REPORT
+    int32_t homing_steps[N_AXIS];
+    uint8_t homing_steps_saved = 0;
+    memset(homing_steps, 0, sizeof(homing_steps));
+  #endif
 
   uint8_t limit_state, axislock, n_active_axis;
   do {
@@ -273,6 +278,13 @@ void limits_go_home(uint8_t cycle_mask)
         for (idx=0; idx<N_AXIS; idx++) {
           if (axislock & step_pin[idx]) {
             if (limit_state & (1 << idx)) {
+              // Capture this axis's travel distance at the exact moment it hits the limit switch.
+              #ifdef ENABLE_HOMING_DISTANCE_REPORT
+              if (bit_istrue(cycle_mask, bit(idx)) && bit_isfalse(homing_steps_saved, bit(idx))) {
+                homing_steps[idx] = sys_position[idx];
+                homing_steps_saved |= bit(idx);
+              }
+              #endif
               #ifdef COREXY
                 if (idx==Z_AXIS) { axislock &= ~(step_pin[Z_AXIS]); }
                 else { axislock &= ~(step_pin[A_MOTOR]|step_pin[B_MOTOR]); }
@@ -401,6 +413,16 @@ void limits_go_home(uint8_t cycle_mask)
 
     }
   }
+
+  #ifdef ENABLE_HOMING_DISTANCE_REPORT
+  for (idx=0; idx<N_AXIS; idx++) {
+    if (bit_istrue(cycle_mask, bit(idx))) {
+      float homing_mpos = system_convert_axis_steps_to_mpos(homing_steps, idx);
+      sys.homing_distance[idx] = homing_mpos;
+    }
+  }
+  #endif
+
   sys.step_control = STEP_CONTROL_NORMAL_OP; // Return step control to normal operation.
 }
 

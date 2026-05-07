@@ -147,6 +147,9 @@ typedef struct {
   #ifdef VARIABLE_SPINDLE
     float spindle_speed;
   #endif
+  #ifdef ENABLE_HOMING_DISTANCE_REPORT
+    float homing_distance[N_AXIS];  // Distance traveled during last homing cycle (signed: preserves direction)
+  #endif
 } system_t;
 extern system_t sys;
 

@@ -647,6 +647,12 @@
 // pin, and M7 mist coolant are disabled/not supported.
 // #define ENABLE_DUAL_AXIS	// Default disabled. Uncomment to enable.
 
+// Enable homing distance reporting in status reports
+// Reports the distance traveled during $H homing cycle as |HOMDist:x.xxx,y.yyy,z.zzz> in status reports.
+// Useful for pen calibration workflows where the machine position is manually adjusted after homing.
+// Default disabled for backward compatibility. Uncomment to enable.
+#define ENABLE_HOMING_DISTANCE_REPORT // Enabled on report-homing-distance branch
+
 // Select the one axis to mirror another motor. Only X and Y axis is supported at this time.
 #define DUAL_AXIS_SELECT  X_AXIS  // Must be either X_AXIS or Y_AXIS
 

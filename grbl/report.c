@@ -611,6 +611,14 @@ void report_realtime_status()
     }
   #endif
 
+  #ifdef ENABLE_HOMING_DISTANCE_REPORT
+    // Report homing distance (signed: preserves direction) when idle and after homing
+    if (sys.state == STATE_IDLE) {
+      printPgmString(PSTR("|HOMDist:"));
+      report_util_axis_values(sys.homing_distance);
+    }
+  #endif
+
   #ifdef REPORT_FIELD_OVERRIDES
     if (sys.report_ovr_counter > 0) { sys.report_ovr_counter--; }
     else {
