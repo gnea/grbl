@@ -418,7 +418,7 @@ void limits_go_home(uint8_t cycle_mask)
   for (idx=0; idx<N_AXIS; idx++) {
     if (bit_istrue(cycle_mask, bit(idx))) {
       float homing_mpos = system_convert_axis_steps_to_mpos(homing_steps, idx);
-      sys.homing_distance[idx] = (homing_mpos < 0.0f) ? -homing_mpos : homing_mpos;
+      sys.homing_distance[idx] = homing_mpos;
     }
   }
   #endif
