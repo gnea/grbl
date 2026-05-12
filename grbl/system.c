@@ -20,9 +20,9 @@
 
 #include "grbl.h"
 
-#ifdef ENABLE_CONTROL_RESET_PIN_DEBOUNCE
+#ifdef ENABLE_CONTROL_PIN_DEBOUNCE
   #ifdef ENABLE_SOFTWARE_DEBOUNCE
-    #error "ENABLE_CONTROL_RESET_PIN_DEBOUNCE is not compatible with ENABLE_SOFTWARE_DEBOUNCE."
+    #error "ENABLE_CONTROL_PIN_DEBOUNCE is not compatible with ENABLE_SOFTWARE_DEBOUNCE."
   #endif
 #endif
 
@@ -38,10 +38,10 @@ void system_init()
   CONTROL_PCMSK |= CONTROL_MASK;  // Enable specific pins of the Pin Change Interrupt
   PCICR |= (1 << CONTROL_INT);   // Enable Pin Change Interrupt
 
-  #ifdef ENABLE_CONTROL_RESET_PIN_DEBOUNCE
+  #ifdef ENABLE_CONTROL_PIN_DEBOUNCE
     MCUSR &= ~(1<<WDRF);
     WDTCSR |= (1<<WDCE) | (1<<WDE);
-    WDTCSR = CONTROL_RESET_PIN_DEBOUNCE_WDT_BITS;
+    WDTCSR = CONTROL_PIN_DEBOUNCE_WDT_BITS;
   #endif
 }
 
@@ -77,34 +77,42 @@ ISR(CONTROL_INT_vect)
 {
   uint8_t pin = system_control_get_state();
   if (pin) {
-    if (bit_istrue(pin,CONTROL_PIN_INDEX_RESET)) {
-      #ifdef ENABLE_CONTROL_RESET_PIN_DEBOUNCE
-        if (!(WDTCSR & (1<<WDIE))) { WDTCSR |= (1<<WDIE); }
-      #else
-        mc_reset();
-      #endif
-    }
-    if (bit_istrue(pin,CONTROL_PIN_INDEX_CYCLE_START)) {
-      bit_true(sys_rt_exec_state, EXEC_CYCLE_START);
-    }
-    #ifndef ENABLE_SAFETY_DOOR_INPUT_PIN
-      if (bit_istrue(pin,CONTROL_PIN_INDEX_FEED_HOLD)) {
-        bit_true(sys_rt_exec_state, EXEC_FEED_HOLD);
+    #ifdef ENABLE_CONTROL_PIN_DEBOUNCE
+      if (!(WDTCSR & (1<<WDIE))) { WDTCSR |= (1<<WDIE); }
     #else
-      if (bit_istrue(pin,CONTROL_PIN_INDEX_SAFETY_DOOR)) {
-        bit_true(sys_rt_exec_state, EXEC_SAFETY_DOOR);
+      if (bit_istrue(pin,CONTROL_PIN_INDEX_RESET)) { mc_reset(); }
+      if (bit_istrue(pin,CONTROL_PIN_INDEX_CYCLE_START)) {
+        bit_true(sys_rt_exec_state, EXEC_CYCLE_START);
+      }
+      #ifndef ENABLE_SAFETY_DOOR_INPUT_PIN
+        if (bit_istrue(pin,CONTROL_PIN_INDEX_FEED_HOLD)) {
+          bit_true(sys_rt_exec_state, EXEC_FEED_HOLD);
+      #else
+        if (bit_istrue(pin,CONTROL_PIN_INDEX_SAFETY_DOOR)) {
+          bit_true(sys_rt_exec_state, EXEC_SAFETY_DOOR);
+      #endif
+        }
     #endif
-    }
   }
 }
 
-#ifdef ENABLE_CONTROL_RESET_PIN_DEBOUNCE
+#ifdef ENABLE_CONTROL_PIN_DEBOUNCE
 ISR(WDT_vect)
 {
   WDTCSR &= ~(1<<WDIE); // Disable watchdog timer.
-  if (bit_istrue(system_control_get_state(),CONTROL_PIN_INDEX_RESET)) {
-    mc_reset();
+  uint8_t pin = system_control_get_state();
+  if (bit_istrue(pin,CONTROL_PIN_INDEX_RESET)) { mc_reset(); }
+  if (bit_istrue(pin,CONTROL_PIN_INDEX_CYCLE_START)) {
+    bit_true(sys_rt_exec_state, EXEC_CYCLE_START);
   }
+  #ifndef ENABLE_SAFETY_DOOR_INPUT_PIN
+    if (bit_istrue(pin,CONTROL_PIN_INDEX_FEED_HOLD)) {
+      bit_true(sys_rt_exec_state, EXEC_FEED_HOLD);
+  #else
+    if (bit_istrue(pin,CONTROL_PIN_INDEX_SAFETY_DOOR)) {
+      bit_true(sys_rt_exec_state, EXEC_SAFETY_DOOR);
+  #endif
+    }
 }
 #endif
 

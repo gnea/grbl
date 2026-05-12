@@ -195,12 +195,12 @@
 // #define INVERT_CONTROL_PIN_MASK CONTROL_MASK // Default disabled. Uncomment to disable.
 // #define INVERT_CONTROL_PIN_MASK ((1<<CONTROL_SAFETY_DOOR_BIT)|(1<<CONTROL_RESET_BIT)) // Default disabled.
 
-// Re-checks the RESET control pin via the watchdog interrupt before issuing a soft reset.
+// Re-checks all control pins via the watchdog interrupt before acting on them.
 // This rejects short EMI spikes without blocking the stepper ISR, at the cost of a short
-// delay before a real RESET button press is honored.
-#define ENABLE_CONTROL_RESET_PIN_DEBOUNCE
-// Watchdog timeout selection for RESET pin debounce. Default is ~125 msec.
-#define CONTROL_RESET_PIN_DEBOUNCE_WDT_BITS ((1<<WDP1)|(1<<WDP0))
+// delay before a button press is honored.
+#define ENABLE_CONTROL_PIN_DEBOUNCE
+// Watchdog timeout selection for control pin debounce. Default is ~125 msec.
+#define CONTROL_PIN_DEBOUNCE_WDT_BITS ((1<<WDP1)|(1<<WDP0))
 
 // Inverts select limit pin states based on the following mask. This effects all limit pin functions,
 // such as hard limits and homing. However, this is different from overall invert limits setting.
