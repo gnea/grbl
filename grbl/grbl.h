@@ -21,9 +21,13 @@
 #ifndef grbl_h
 #define grbl_h
 
-// Grbl versioning system
+// Grbl versioning system.
+// GRBL_VERSION stays upstream-shaped: the startup banner ("Grbl 1.1h ...")
+// is parsed by senders and by grbl-k-server. The fork identifies itself in
+// GRBL_VERSION_BUILD, reported via $I as [VER:1.1h.KONIN-1.1.5:] — this is
+// how deployments positively identify the flashed firmware (D-020).
 #define GRBL_VERSION "1.1h"
-#define GRBL_VERSION_BUILD "20190830"
+#define GRBL_VERSION_BUILD "KONIN-1.1.5"
 
 // Define standard libraries used by Grbl.
 #include <avr/io.h>
