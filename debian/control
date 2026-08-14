@@ -1,0 +1,16 @@
+Package: grbl-k-firmware
+Version: @VERSION@
+Section: misc
+Priority: optional
+Architecture: all
+Maintainer: Tadeusz Puźniakowski <puzniakowski@protonmail.com>
+Recommends: avrdude
+Installed-Size: @INSTALLED_SIZE@
+Description: GRBL-K firmware -- compiled .hex + GPLv3 source for the Konin CNC Arduino
+ Precompiled AVR firmware image (grbl-k.hex) for the Arduino/CNC Shield
+ controller, plus its full GPLv3 source (grbl-k is a fork of grbl with
+ signed homing-distance reporting and control-button debounce). This
+ package only stores the artifact -- it never flashes automatically.
+ Flashing is a deliberate, operator-triggered action via
+ install/lib/grbl-k-flash.sh (konin-deployment).
+ Part of the Konin CNC system (konin-deployment).

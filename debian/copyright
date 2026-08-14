@@ -1,0 +1,24 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: grbl-k
+Source: https://github.com/pantadeusz/grbl-k
+
+Files: *
+Copyright: 2009-2011 Simen Svale Skogsrud
+           2012-2016 Sungeun K. Jeon for Gnea Research LLC
+           Tadeusz Puźniakowski (konin fork changes: control-button debounce,
+           signed homing-distance reporting, fork+version identification)
+License: GPL-3+
+
+License: GPL-3+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+ .
+ Full license text is included verbatim in this package's source bundle
+ (source.tar.gz, COPYING) and at https://www.gnu.org/licenses/gpl-3.0.html
