@@ -24,6 +24,12 @@
 #     var, or the mounted release-key drive (security/KEY-POLICY.md in
 #     konin-deployment). Fails loudly, before doing anything else, if
 #     neither is available -- never silently skips signing.
+#
+# A mistyped signing passphrase gets up to 3 attempts before giving up
+# (sign_with_retry). Any failure after the release tag is pushed --
+# exhausted signing attempts, a build failure, gh release create failing --
+# rolls the tag back (local + remote) rather than leaving a stray pushed
+# tag with no matching release behind.
 set -euo pipefail
 die() { echo "release/publish.sh: error: $*" >&2; exit 1; }
 
@@ -76,15 +82,22 @@ git -C "$REPO" tag -s "$NEW" "$TARGET_SHA" -m "$COMPONENT $NEW" \
 git -C "$REPO" push origin "$NEW" || die "push of tag $NEW failed"
 
 OUT="$(mktemp -d)"
-trap 'rm -rf "$OUT"' EXIT
+RELEASED=0
+cleanup() {
+  rm -rf "$OUT"
+  [ "$RELEASED" -eq 1 ] || release_rollback_tag "$REPO" "$NEW"
+}
+trap cleanup EXIT
 echo "▶ Building"
 "$HERE/build.sh" "$NEW" --out "$OUT"
 
 echo "▶ Signing artifacts"
-minisign -S -s "$SECKEY" -m "$OUT/grbl-k-firmware.deb"
+DEB_NAME="grbl-k-firmware_${NEW}_all.deb"
+sign_with_retry "$OUT/$DEB_NAME" || die "signing $DEB_NAME failed -- wrong password entered too many times"
 
 gh release create "$NEW" --repo "$REPO_SLUG" --target "$TARGET_SHA" \
-  --title "$COMPONENT $NEW" --generate-notes "$OUT"/grbl-k-firmware.deb "$OUT"/grbl-k-firmware.deb.minisig "$OUT"/grbl-k.hex \
-  || die "gh release create failed for $COMPONENT $NEW -- the tag was already pushed and the .deb was built+signed at $OUT; create the release manually: gh release create $NEW --repo $REPO_SLUG --generate-notes $OUT/grbl-k-firmware.deb $OUT/grbl-k-firmware.deb.minisig $OUT/grbl-k.hex"
+  --title "$COMPONENT $NEW" --generate-notes "$OUT"/*.deb "$OUT"/*.deb.minisig "$OUT"/grbl-k.hex \
+  || die "gh release create failed for $COMPONENT $NEW -- the tag was already pushed and the .deb was built+signed at $OUT; create the release manually: gh release create $NEW --repo $REPO_SLUG --generate-notes $OUT/*.deb $OUT/*.deb.minisig $OUT/grbl-k.hex"
+RELEASED=1
 
 echo "✓ $COMPONENT $NEW released: https://github.com/$REPO_SLUG/releases/tag/$NEW"

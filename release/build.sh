@@ -11,10 +11,13 @@
 #   [ref]     git ref to build from (tag, branch, sha) -- default HEAD.
 #   --out DIR output directory -- default ./dist
 #
-# Version: `git describe --tags --always <ref>`, stripped of its leading
-# 'v'. On a clean tag this is just the tag (a real release); off a tag it
-# naturally includes '-<N>-g<shortsha>' -- git's own standard mechanism,
-# no hand-rolled dev-version scheme needed.
+# Version: `git describe --tags --always <ref>`. On a clean tag this is
+# just the tag (a real release); off a tag it naturally includes
+# '-<N>-g<shortsha>' -- git's own standard mechanism, no hand-rolled
+# dev-version scheme needed. Output filename:
+# grbl-k-firmware_<version>_all.deb (standard Debian repo convention);
+# grbl-k.hex stays unversioned -- it's not a package, and the manifest
+# records its path explicitly for install/lib/grbl-k-flash.sh anyway.
 #
 # Requires: KONIN_DEPLOYMENT_DIR pointing at a konin-deployment checkout
 # (this repo's own build recipe lives there:
@@ -67,6 +70,7 @@ docker buildx build --pull --platform linux/amd64 \
 [ -f "$STAGE/out/grbl-k.hex" ] || die "build produced no .hex"
 [ -f "$STAGE/out/grbl-k-firmware.deb" ] || die "build produced no .deb"
 mkdir -p "$OUT"
+DEB_NAME="grbl-k-firmware_${VERSION}_all.deb"
 cp "$STAGE/out/grbl-k.hex" "$OUT/grbl-k.hex"
-cp "$STAGE/out/grbl-k-firmware.deb" "$OUT/grbl-k-firmware.deb"
-echo "built $OUT/grbl-k-firmware.deb ($(du -h "$OUT/grbl-k-firmware.deb" | cut -f1)), version $VERSION"
+cp "$STAGE/out/grbl-k-firmware.deb" "$OUT/$DEB_NAME"
+echo "built $OUT/$DEB_NAME ($(du -h "$OUT/$DEB_NAME" | cut -f1)), version $VERSION"
