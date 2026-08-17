@@ -94,10 +94,15 @@ echo "▶ Building"
 echo "▶ Signing artifacts"
 DEB_NAME="grbl-k-firmware_${NEW}_all.deb"
 sign_with_retry "$OUT/$DEB_NAME" || die "signing $DEB_NAME failed -- wrong password entered too many times"
+# grbl-k.hex is what actually gets flashed onto the Arduino (bootstrap.sh /
+# install/lib/grbl-k-flash.sh read it straight from the manifest's artifact
+# field, not the .deb) -- it needs its own signature just as much as the
+# .deb, not a free ride on being uploaded alongside a signed file.
+sign_with_retry "$OUT/grbl-k.hex" || die "signing grbl-k.hex failed -- wrong password entered too many times"
 
 gh release create "$NEW" --repo "$REPO_SLUG" --target "$TARGET_SHA" \
-  --title "$COMPONENT $NEW" --generate-notes "$OUT"/*.deb "$OUT"/*.deb.minisig "$OUT"/grbl-k.hex \
-  || die "gh release create failed for $COMPONENT $NEW -- the tag was already pushed and the .deb was built+signed at $OUT; create the release manually: gh release create $NEW --repo $REPO_SLUG --generate-notes $OUT/*.deb $OUT/*.deb.minisig $OUT/grbl-k.hex"
+  --title "$COMPONENT $NEW" --generate-notes "$OUT"/*.deb "$OUT"/*.deb.minisig "$OUT"/grbl-k.hex "$OUT"/grbl-k.hex.minisig \
+  || die "gh release create failed for $COMPONENT $NEW -- the tag was already pushed and both artifacts were built+signed at $OUT; create the release manually: gh release create $NEW --repo $REPO_SLUG --generate-notes $OUT/*.deb $OUT/*.deb.minisig $OUT/grbl-k.hex $OUT/grbl-k.hex.minisig"
 RELEASED=1
 
 echo "✓ $COMPONENT $NEW released: https://github.com/$REPO_SLUG/releases/tag/$NEW"
