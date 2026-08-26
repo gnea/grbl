@@ -55,6 +55,9 @@ SECKEY_LIB="$KONIN_DEPLOYMENT_DIR/releases/lib/find-release-seckey.sh"
 [ -f "$SECKEY_LIB" ] \
   || die "$SECKEY_LIB not found -- is KONIN_DEPLOYMENT_DIR pointing at a real konin-deployment checkout? (needed to find the release-signing key: \$KONIN_RELEASE_SECKEY, or a mounted drive at /media/\$USER/*/konin-release.key)"
 . "$SECKEY_LIB"
+PUSH_TO_RELEASES="$KONIN_DEPLOYMENT_DIR/releases/lib/push-to-konin-releases.sh"
+[ -f "$PUSH_TO_RELEASES" ] \
+  || die "$PUSH_TO_RELEASES not found -- is KONIN_DEPLOYMENT_DIR pointing at a real konin-deployment checkout?"
 SECKEY="$(find_release_seckey)"
 
 REPO_SLUG="pantadeusz/$COMPONENT"
@@ -104,5 +107,8 @@ gh release create "$NEW" --repo "$REPO_SLUG" --target "$TARGET_SHA" \
   --title "$COMPONENT $NEW" --generate-notes "$OUT"/*.deb "$OUT"/*.deb.minisig "$OUT"/grbl-k.hex "$OUT"/grbl-k.hex.minisig \
   || die "gh release create failed for $COMPONENT $NEW -- the tag was already pushed and both artifacts were built+signed at $OUT; create the release manually: gh release create $NEW --repo $REPO_SLUG --generate-notes $OUT/*.deb $OUT/*.deb.minisig $OUT/grbl-k.hex $OUT/grbl-k.hex.minisig"
 RELEASED=1
+
+echo "▶ Publishing package + hex into konin-releases/packages/grbl-k"
+"$PUSH_TO_RELEASES" grbl-k "$OUT/$DEB_NAME" "$OUT/grbl-k.hex"
 
 echo "✓ $COMPONENT $NEW released: https://github.com/$REPO_SLUG/releases/tag/$NEW"
