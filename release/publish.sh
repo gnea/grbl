@@ -71,7 +71,8 @@ if [ "$MODE" = snapshot ]; then
   SNAPSHOT_REF="${REF_ARG:-HEAD}"
   git -C "$REPO" rev-parse -q --verify "$SNAPSHOT_REF^{commit}" >/dev/null \
     || die "snapshot ref '$SNAPSHOT_REF' not found"
-  VERSION="v$(git -C "$REPO" describe --tags --always "$SNAPSHOT_REF")"
+  DESCRIBE="$(git -C "$REPO" describe --tags --always "$SNAPSHOT_REF")"
+  VERSION="v${DESCRIBE#v}"
   OUT="$(mktemp -d)"
   trap 'rm -rf "$OUT"' EXIT
   echo "▶ $COMPONENT snapshot: $VERSION (ref=$SNAPSHOT_REF)"
