@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# release/publish.sh — tag, build, sign, and publish a GitHub Release for
+# release/publish.sh — tag, build, and publish a GitHub Release for
 # this repo.
 #
 # Usage:
@@ -9,27 +9,21 @@
 # those instead (resets lower components to 0, SemVer, D-034). Tags this
 # repo's default branch tip (auto-detected via gh, signed with the pinned
 # git-signing key, KEY-POLICY.md), builds grbl-k-firmware.deb
-# (release/build.sh -- AVR machine code, no arch selection needed), signs
-# it with the release minisign key, and creates a GitHub Release with the
-# tag, auto-generated notes, and the signed .deb + .hex assets attached.
+# (release/build.sh -- AVR machine code, no arch selection needed), and
+# creates a GitHub Release with the tag, auto-generated notes, and the .deb
+# + .hex assets attached.
 # This is GPLv3, already-public source (github.com/pantadeusz/grbl-k) --
 # the release itself is a public GitHub Release, same as any other tag on
 # this repo.
 #
 # Requires:
 #   - gh (GitHub CLI), authenticated
-#   - minisign
 #   - KONIN_DEPLOYMENT_DIR (see release/build.sh's own requirement)
-#   - the release-signing minisign secret key -- KONIN_RELEASE_SECKEY env
-#     var, or the mounted release-key drive (security/KEY-POLICY.md in
-#     konin-deployment). Fails loudly, before doing anything else, if
-#     neither is available -- never silently skips signing.
 #
-# A mistyped signing passphrase gets up to 3 attempts before giving up
-# (sign_with_retry). Any failure after the release tag is pushed --
-# exhausted signing attempts, a build failure, gh release create failing --
-# rolls the tag back (local + remote) rather than leaving a stray pushed
-# tag with no matching release behind.
+# Any failure after the release tag is pushed — a build failure, gh release
+# create failing, or package publish failing — rolls the tag back (local +
+# remote) rather than leaving a stray pushed tag with no matching release
+# behind.
 set -euo pipefail
 die() { echo "release/publish.sh: error: $*" >&2; exit 1; }
 
@@ -45,20 +39,18 @@ esac
 
 command -v gh >/dev/null || die "gh (GitHub CLI) not installed"
 gh auth status >/dev/null 2>&1 || die "gh not authenticated — run: gh auth login"
-command -v minisign >/dev/null || die "minisign not installed (sudo apt install minisign)"
 
 [ -n "${KONIN_DEPLOYMENT_DIR:-}" ] \
   || die "KONIN_DEPLOYMENT_DIR is not set -- point it at a konin-deployment checkout"
 [ -d "$KONIN_DEPLOYMENT_DIR" ] \
   || die "KONIN_DEPLOYMENT_DIR=$KONIN_DEPLOYMENT_DIR does not exist"
-SECKEY_LIB="$KONIN_DEPLOYMENT_DIR/releases/lib/find-release-seckey.sh"
-[ -f "$SECKEY_LIB" ] \
-  || die "$SECKEY_LIB not found -- is KONIN_DEPLOYMENT_DIR pointing at a real konin-deployment checkout? (needed to find the release-signing key: \$KONIN_RELEASE_SECKEY, or a mounted drive at /media/\$USER/*/konin-release.key)"
-. "$SECKEY_LIB"
+HELPERS_LIB="$KONIN_DEPLOYMENT_DIR/releases/lib/release-helpers.sh"
+[ -f "$HELPERS_LIB" ] \
+  || die "$HELPERS_LIB not found -- is KONIN_DEPLOYMENT_DIR pointing at a real konin-deployment checkout?"
+. "$HELPERS_LIB"
 PUSH_TO_RELEASES="$KONIN_DEPLOYMENT_DIR/releases/lib/push-to-konin-releases.sh"
 [ -f "$PUSH_TO_RELEASES" ] \
   || die "$PUSH_TO_RELEASES not found -- is KONIN_DEPLOYMENT_DIR pointing at a real konin-deployment checkout?"
-SECKEY="$(find_release_seckey)"
 
 REPO_SLUG="pantadeusz/$COMPONENT"
 DEFAULT_BRANCH="$(gh repo view "$REPO_SLUG" --json defaultBranchRef -q .defaultBranchRef.name)" \
@@ -93,19 +85,11 @@ cleanup() {
 trap cleanup EXIT
 echo "▶ Building"
 "$HERE/build.sh" "$NEW" --out "$OUT"
-
-echo "▶ Signing artifacts"
 DEB_NAME="grbl-k-firmware_${NEW}_all.deb"
-sign_with_retry "$OUT/$DEB_NAME" || die "signing $DEB_NAME failed -- wrong password entered too many times"
-# grbl-k.hex is what actually gets flashed onto the Arduino (bootstrap.sh /
-# install/lib/grbl-k-flash.sh read it straight from the manifest's artifact
-# field, not the .deb) -- it needs its own signature just as much as the
-# .deb, not a free ride on being uploaded alongside a signed file.
-sign_with_retry "$OUT/grbl-k.hex" || die "signing grbl-k.hex failed -- wrong password entered too many times"
 
 gh release create "$NEW" --repo "$REPO_SLUG" --target "$TARGET_SHA" \
-  --title "$COMPONENT $NEW" --generate-notes "$OUT"/*.deb "$OUT"/*.deb.minisig "$OUT"/grbl-k.hex "$OUT"/grbl-k.hex.minisig \
-  || die "gh release create failed for $COMPONENT $NEW -- the tag was already pushed and both artifacts were built+signed at $OUT; create the release manually: gh release create $NEW --repo $REPO_SLUG --generate-notes $OUT/*.deb $OUT/*.deb.minisig $OUT/grbl-k.hex $OUT/grbl-k.hex.minisig"
+  --title "$COMPONENT $NEW" --generate-notes "$OUT"/*.deb "$OUT"/grbl-k.hex \
+  || die "gh release create failed for $COMPONENT $NEW -- the tag was already pushed and both artifacts were built at $OUT; create the release manually: gh release create $NEW --repo $REPO_SLUG --generate-notes $OUT/*.deb $OUT/grbl-k.hex"
 RELEASED=1
 
 echo "▶ Publishing package + hex into konin-releases/packages/grbl-k"
