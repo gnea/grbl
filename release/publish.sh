@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# release/publish.sh — tag, build, and publish a GitHub Release for
-# this repo.
+# release/publish.sh — publish either a tagged release or a snapshot package
+# for this repo.
 #
 # Usage:
 #   release/publish.sh [major|minor|patch]
+#   release/publish.sh snapshot [ref]
 #
 # Bump defaults to "patch" (0.1.2 -> 0.1.3); pass "minor"/"major" to bump
 # those instead (resets lower components to 0, SemVer, D-034). Tags this
@@ -12,6 +13,10 @@
 # (release/build.sh -- AVR machine code, no arch selection needed), and
 # creates a GitHub Release with the tag, auto-generated notes, and the .deb
 # + .hex assets attached.
+#
+# Snapshot mode publishes the current state of [ref] into konin-releases using
+# the build script's own hash-suffixed version string. It does not create a
+# git tag or GitHub Release.
 # This is GPLv3, already-public source (github.com/pantadeusz/grbl-k) --
 # the release itself is a public GitHub Release, same as any other tag on
 # this repo.
@@ -31,10 +36,11 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 COMPONENT="$(basename "$REPO")"
 
-BUMP="${1:-patch}"
-case "$BUMP" in
-  major|minor|patch) : ;;
-  *) die "usage: release/publish.sh [major|minor|patch]" ;;
+MODE="${1:-patch}"
+REF_ARG="${2:-}"
+case "$MODE" in
+  major|minor|patch|snapshot) : ;;
+  *) die "usage: release/publish.sh [major|minor|patch] | snapshot [ref]" ;;
 esac
 
 command -v gh >/dev/null || die "gh (GitHub CLI) not installed"
@@ -61,8 +67,25 @@ git -C "$REPO" fetch -q origin "$DEFAULT_BRANCH" || die "fetch origin/$DEFAULT_B
 TARGET_SHA="$(git -C "$REPO" rev-parse "origin/$DEFAULT_BRANCH")"
 
 CURRENT="$(git -C "$REPO" describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' "$TARGET_SHA" 2>/dev/null || echo v0.0.0)"
+if [ "$MODE" = snapshot ]; then
+  SNAPSHOT_REF="${REF_ARG:-HEAD}"
+  git -C "$REPO" rev-parse -q --verify "$SNAPSHOT_REF^{commit}" >/dev/null \
+    || die "snapshot ref '$SNAPSHOT_REF' not found"
+  VERSION="v$(git -C "$REPO" describe --tags --always "$SNAPSHOT_REF")"
+  OUT="$(mktemp -d)"
+  trap 'rm -rf "$OUT"' EXIT
+  echo "▶ $COMPONENT snapshot: $VERSION (ref=$SNAPSHOT_REF)"
+  echo "▶ Building"
+  "$HERE/build.sh" "$SNAPSHOT_REF" --out "$OUT"
+  DEB_NAME="grbl-k-firmware_${VERSION}_all.deb"
+  echo "▶ Publishing package + hex into konin-releases/packages/grbl-k"
+  "$PUSH_TO_RELEASES" grbl-k "$OUT/$DEB_NAME" "$OUT/grbl-k.hex"
+  echo "✓ $COMPONENT snapshot $VERSION published to konin-releases/packages/grbl-k"
+  exit 0
+fi
+
 IFS='.' read -r CUR_MAJOR CUR_MINOR CUR_PATCH <<< "${CURRENT#v}"
-case "$BUMP" in
+case "$MODE" in
   major) NEW="v$((CUR_MAJOR + 1)).0.0" ;;
   minor) NEW="v${CUR_MAJOR}.$((CUR_MINOR + 1)).0" ;;
   patch) NEW="v${CUR_MAJOR}.${CUR_MINOR}.$((CUR_PATCH + 1))" ;;
@@ -70,7 +93,7 @@ esac
 git -C "$REPO" rev-parse -q --verify "refs/tags/$NEW" >/dev/null \
   && die "$NEW already exists — something is out of sync (fetch and check manually)"
 
-echo "▶ $COMPONENT: $CURRENT -> $NEW (bump=$BUMP, target=origin/$DEFAULT_BRANCH @ ${TARGET_SHA:0:12})"
+echo "▶ $COMPONENT: $CURRENT -> $NEW (bump=$MODE, target=origin/$DEFAULT_BRANCH @ ${TARGET_SHA:0:12})"
 
 git -C "$REPO" tag -s "$NEW" "$TARGET_SHA" -m "$COMPONENT $NEW" \
   || die "signing tag $NEW failed — is git signing configured? (KEY-POLICY.md)"
