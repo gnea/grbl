@@ -71,8 +71,13 @@ if [ "$MODE" = snapshot ]; then
   SNAPSHOT_REF="${REF_ARG:-HEAD}"
   git -C "$REPO" rev-parse -q --verify "$SNAPSHOT_REF^{commit}" >/dev/null \
     || die "snapshot ref '$SNAPSHOT_REF' not found"
-  DESCRIBE="$(git -C "$REPO" describe --tags --always "$SNAPSHOT_REF")"
-  VERSION="v${DESCRIBE#v}"
+  if DESCRIBE="$(git -C "$REPO" describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' "$SNAPSHOT_REF" 2>/dev/null)"; then
+    VERSION="v${DESCRIBE#v}"
+  else
+    SHORT_SHA="$(git -C "$REPO" rev-parse --short "$SNAPSHOT_REF")"
+    COMMIT_COUNT="$(git -C "$REPO" rev-list --count "$SNAPSHOT_REF")"
+    VERSION="v0.0.0~${COMMIT_COUNT}.g${SHORT_SHA}"
+  fi
   OUT="$(mktemp -d)"
   trap 'rm -rf "$OUT"' EXIT
   echo "▶ $COMPONENT snapshot: $VERSION (ref=$SNAPSHOT_REF)"
