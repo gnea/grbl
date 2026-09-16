@@ -35,6 +35,17 @@ volatile uint8_t sys_rt_exec_accessory_override; // Global realtime executor bit
   volatile uint8_t sys_rt_exec_debug;
 #endif
 
+void spindle_init() {}
+uint8_t spindle_get_state() { return SPINDLE_STATE_DISABLE; }
+void spindle_stop() {}
+void _spindle_sync(uint8_t state) { (void)state; }
+void _spindle_set_state(uint8_t state) { (void)state; }
+void coolant_init() {}
+uint8_t coolant_get_state() { return COOLANT_STATE_DISABLE; }
+void coolant_stop() {}
+void coolant_set_state(uint8_t mode) { (void)mode; }
+void coolant_sync(uint8_t mode) { (void)mode; }
+
 
 int main(void)
 {
@@ -42,7 +53,7 @@ int main(void)
   serial_init();   // Setup serial baud rate and interrupts
   settings_init(); // Load Grbl settings from EEPROM
   stepper_init();  // Configure stepper pins and interrupt timers
-  rotation_init(); // Configure rotation stepper pins
+  gripper_init();  // Reserved gripper hardware placeholder
   system_init();   // Configure pinout pins and pin-change interrupt
 
   memset(sys_position,0,sizeof(sys_position)); // Clear machine position.
@@ -91,7 +102,6 @@ int main(void)
     spindle_init();
     coolant_init();
     limits_init();
-    probe_init();
     plan_reset(); // Clear block buffer and planner variables
     st_reset(); // Clear stepper subsystem variables.
 

@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "Arduino AVR ATmega328P",
+            "compilerPath": "C:/Users/alama/AppData/Local/Arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/bin/avr-gcc.exe",
+            "compilerArgs": [
+                "-mmcu=atmega328p",
+                "-DF_CPU=16000000"
+            ],
+            "includePath": [
+                "${workspaceFolder}/grbl",
+                "C:/Users/alama/AppData/Local/Arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/avr/include"
+            ],
+            "defines": [
+                "F_CPU=16000000",
+                "__AVR_ATmega328P__"
+            ],
+            "cStandard": "gnu11",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

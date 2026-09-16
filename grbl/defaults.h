@@ -30,11 +30,15 @@
 #ifdef DEFAULTS_GENERIC
   // Grbl generic default settings. Should work across different machines.
   #define DEFAULT_X_STEPS_PER_MM 250.0
+    #define DEFAULT_A_STEPS_PER_DEGREE 200.0
   #define DEFAULT_Y_STEPS_PER_MM 250.0
+    #define DEFAULT_A_MAX_RATE 360.0 // degrees/min
   #define DEFAULT_Z_STEPS_PER_MM 250.0
-  #define DEFAULT_X_MAX_RATE 500.0 // mm/min
-  #define DEFAULT_Y_MAX_RATE 500.0 // mm/min
-  #define DEFAULT_Z_MAX_RATE 500.0 // mm/min
+    #define DEFAULT_A_ACCELERATION (30.0*60*60) // degrees/min^2
+  #define DEFAULT_X_MAX_RATE 100.0 // mm/min
+    #define DEFAULT_A_MAX_TRAVEL 360.0 // degrees
+  #define DEFAULT_Y_MAX_RATE 100.0 // mm/min
+  #define DEFAULT_Z_MAX_RATE 100.0 // mm/min
   #define DEFAULT_X_ACCELERATION (10.0*60*60) // 10*60*60 mm/min^2 = 10 mm/sec^2
   #define DEFAULT_Y_ACCELERATION (10.0*60*60) // 10*60*60 mm/min^2 = 10 mm/sec^2
   #define DEFAULT_Z_ACCELERATION (10.0*60*60) // 10*60*60 mm/min^2 = 10 mm/sec^2
@@ -52,7 +56,7 @@
   #define DEFAULT_ARC_TOLERANCE 0.002 // mm
   #define DEFAULT_REPORT_INCHES 0 // false
   #define DEFAULT_INVERT_ST_ENABLE 0 // false
-  #define DEFAULT_INVERT_LIMIT_PINS 0 // false
+  #define DEFAULT_INVERT_LIMIT_PINS 1 // NC switches: idle LOW, triggered HIGH
   #define DEFAULT_SOFT_LIMIT_ENABLE 0 // false
   #define DEFAULT_HARD_LIMIT_ENABLE 0  // false
   #define DEFAULT_INVERT_PROBE_PIN 0 // false

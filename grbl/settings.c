@@ -49,15 +49,19 @@ const __flash settings_t defaults = {\
     .steps_per_mm[X_AXIS] = DEFAULT_X_STEPS_PER_MM,
     .steps_per_mm[Y_AXIS] = DEFAULT_Y_STEPS_PER_MM,
     .steps_per_mm[Z_AXIS] = DEFAULT_Z_STEPS_PER_MM,
+      .steps_per_mm[A_AXIS] = DEFAULT_A_STEPS_PER_DEGREE,
     .max_rate[X_AXIS] = DEFAULT_X_MAX_RATE,
     .max_rate[Y_AXIS] = DEFAULT_Y_MAX_RATE,
     .max_rate[Z_AXIS] = DEFAULT_Z_MAX_RATE,
+      .max_rate[A_AXIS] = DEFAULT_A_MAX_RATE,
     .acceleration[X_AXIS] = DEFAULT_X_ACCELERATION,
     .acceleration[Y_AXIS] = DEFAULT_Y_ACCELERATION,
     .acceleration[Z_AXIS] = DEFAULT_Z_ACCELERATION,
+      .acceleration[A_AXIS] = DEFAULT_A_ACCELERATION,
     .max_travel[X_AXIS] = (-DEFAULT_X_MAX_TRAVEL),
     .max_travel[Y_AXIS] = (-DEFAULT_Y_MAX_TRAVEL),
-    .max_travel[Z_AXIS] = (-DEFAULT_Z_MAX_TRAVEL)};
+    .max_travel[Z_AXIS] = (-DEFAULT_Z_MAX_TRAVEL),
+    .max_travel[A_AXIS] = (-DEFAULT_A_MAX_TRAVEL)};
 
 
 // Method to store startup lines into EEPROM
@@ -318,7 +322,8 @@ uint8_t get_step_pin_mask(uint8_t axis_idx)
 {
   if ( axis_idx == X_AXIS ) { return((1<<X_STEP_BIT)); }
   if ( axis_idx == Y_AXIS ) { return((1<<Y_STEP_BIT)); }
-  return((1<<Z_STEP_BIT));
+  if ( axis_idx == Z_AXIS ) { return((1<<Z_STEP_BIT)); }
+  return((1<<A_STEP_BIT));
 }
 
 
@@ -327,7 +332,8 @@ uint8_t get_direction_pin_mask(uint8_t axis_idx)
 {
   if ( axis_idx == X_AXIS ) { return((1<<X_DIRECTION_BIT)); }
   if ( axis_idx == Y_AXIS ) { return((1<<Y_DIRECTION_BIT)); }
-  return((1<<Z_DIRECTION_BIT));
+  if ( axis_idx == Z_AXIS ) { return((1<<Z_DIRECTION_BIT)); }
+  return((1<<A_DIRECTION_BIT));
 }
 
 
@@ -336,5 +342,6 @@ uint8_t get_limit_pin_mask(uint8_t axis_idx)
 {
   if ( axis_idx == X_AXIS ) { return((1<<X_LIMIT_BIT)); }
   if ( axis_idx == Y_AXIS ) { return((1<<Y_LIMIT_BIT)); }
-  return((1<<Z_LIMIT_BIT));
+  if ( axis_idx == Z_AXIS ) { return((1<<Z_LIMIT_BIT)); }
+  return((1<<A_LIMIT_BIT));
 }

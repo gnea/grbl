@@ -567,7 +567,7 @@ void report_realtime_status()
   #ifdef REPORT_FIELD_PIN_STATE
     uint8_t lim_pin_state = limits_get_state();
     uint8_t ctrl_pin_state = system_control_get_state();
-    uint8_t prb_pin_state = probe_get_state();
+    uint8_t prb_pin_state = 0;
     if (lim_pin_state | ctrl_pin_state | prb_pin_state) {
       printPgmString(PSTR("|Pn:"));
       if (prb_pin_state) { serial_write('P'); }
@@ -586,6 +586,7 @@ void report_realtime_status()
           if (bit_istrue(lim_pin_state,bit(X_AXIS))) { serial_write('X'); }
           if (bit_istrue(lim_pin_state,bit(Y_AXIS))) { serial_write('Y'); }
           if (bit_istrue(lim_pin_state,bit(Z_AXIS))) { serial_write('Z'); }
+          if (bit_istrue(lim_pin_state,bit(A_AXIS))) { serial_write('A'); }
         #endif
       }
       if (ctrl_pin_state) {

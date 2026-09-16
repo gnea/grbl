@@ -39,53 +39,60 @@
   #define X_STEP_BIT      2  // Uno Digital Pin 2
   #define Y_STEP_BIT      3  // Uno Digital Pin 3
   #define Z_STEP_BIT      4  // Uno Digital Pin 4
-  #define STEP_MASK       ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)) // All step bits
+  #define A_STEP_BIT      5  // Uno Digital Pin 5
+  #define STEP_MASK       ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)|(1<<A_STEP_BIT)) // All step bits
 
   // Define step direction output pins. NOTE: All direction pins must be on the same port.
   #define DIRECTION_DDR     DDRD
   #define DIRECTION_PORT    PORTD
-  #define X_DIRECTION_BIT   5  // Uno Digital Pin 5
-  #define Y_DIRECTION_BIT   6  // Uno Digital Pin 6
-  #define Z_DIRECTION_BIT   7  // Uno Digital Pin 7
-  #define DIRECTION_MASK    ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)) // All direction bits
+  #define X_DIRECTION_BIT   6  // Uno Digital Pin 6
+  #define Y_DIRECTION_BIT   7  // Uno Digital Pin 7
+  #define DIRECTION_MASK    ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)) // X/Y direction bits on PORTD
+  #define Z_DIRECTION_DDR   DDRB
+  #define Z_DIRECTION_PORT  PORTB
+  #define Z_DIRECTION_BIT   0  // Uno Digital Pin 8
+  #define A_DIRECTION_DDR   DDRB
+  #define A_DIRECTION_PORT  PORTB
+  #define A_DIRECTION_BIT   1  // Uno Digital Pin 9
 
   // Define stepper driver enable/disable output pin.
   #define STEPPERS_DISABLE_DDR    DDRB
   #define STEPPERS_DISABLE_PORT   PORTB
-  #define STEPPERS_DISABLE_BIT    0  // Uno Digital Pin 8
+  #define STEPPERS_DISABLE_BIT    0  // Unused; retained for source compatibility.
   #define STEPPERS_DISABLE_MASK   (1<<STEPPERS_DISABLE_BIT)
 
   // Define homing/hard limit switch input pins and limit interrupt vectors.
   // NOTE: All limit bit pins must be on the same port, but not on a port with other input pins (CONTROL).
-  #define LIMIT_DDR        DDRB
-  #define LIMIT_PIN        PINB
-  #define LIMIT_PORT       PORTB
-  #define X_LIMIT_BIT      1  // Uno Digital Pin 9
-  #define Y_LIMIT_BIT      2  // Uno Digital Pin 10
+  #define LIMIT_DDR        DDRC
+  #define LIMIT_PIN        PINC
+  #define LIMIT_PORT       PORTC
+  #define X_LIMIT_BIT      0  // Uno Analog Pin 0
+  #define Y_LIMIT_BIT      1  // Uno Analog Pin 1
   #ifdef VARIABLE_SPINDLE // Z Limit pin and spindle enabled swapped to access hardware PWM on Pin 11.
     #define Z_LIMIT_BIT	   4 // Uno Digital Pin 12
   #else
-    #define Z_LIMIT_BIT    3  // Uno Digital Pin 11
+    #define Z_LIMIT_BIT    2  // Uno Analog Pin 2
   #endif
   #if !defined(ENABLE_DUAL_AXIS)
-    #define LIMIT_MASK     ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)) // All limit bits
+    #define A_LIMIT_BIT    3  // Uno Analog Pin 3
+    #define LIMIT_MASK     ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<A_LIMIT_BIT)) // All limit bits
   #endif
-  #define LIMIT_INT        PCIE0  // Pin change interrupt enable pin
-  #define LIMIT_INT_vect   PCINT0_vect
-  #define LIMIT_PCMSK      PCMSK0 // Pin change interrupt register
+  #define LIMIT_INT        PCIE1  // Pin change interrupt enable pin
+  #define LIMIT_INT_vect   PCINT1_vect
+  #define LIMIT_PCMSK      PCMSK1 // Pin change interrupt register
 
   // Define user-control controls (cycle start, reset, feed hold) input pins.
   // NOTE: All CONTROLs pins must be on the same port and not on a port with other input pins (limits).
-  #define CONTROL_DDR       DDRC
-  #define CONTROL_PIN       PINC
-  #define CONTROL_PORT      PORTC
-  #define CONTROL_RESET_BIT         0  // Uno Analog Pin 0
-  #define CONTROL_FEED_HOLD_BIT     1  // Uno Analog Pin 1
-  #define CONTROL_CYCLE_START_BIT   2  // Uno Analog Pin 2
-  #define CONTROL_SAFETY_DOOR_BIT   1  // Uno Analog Pin 1 NOTE: Safety door is shared with feed hold. Enabled by config define.
-  #define CONTROL_INT       PCIE1  // Pin change interrupt enable pin
-  #define CONTROL_INT_vect  PCINT1_vect
-  #define CONTROL_PCMSK     PCMSK1 // Pin change interrupt register
+   #define CONTROL_DDR       DDRB
+   #define CONTROL_PIN       PINB
+   #define CONTROL_PORT      PORTB
+   #define CONTROL_RESET_BIT         2  // Uno Digital Pin 10
+   #define CONTROL_FEED_HOLD_BIT     4  // Uno Digital Pin 12
+   #define CONTROL_CYCLE_START_BIT   5  // Uno Digital Pin 13
+   #define CONTROL_SAFETY_DOOR_BIT   4  // Uno Digital Pin 12
+   #define CONTROL_INT       PCIE0  // Pin change interrupt enable pin
+   #define CONTROL_INT_vect  PCINT0_vect
+   #define CONTROL_PCMSK     PCMSK0 // Pin change mask register
   #define CONTROL_MASK      ((1<<CONTROL_RESET_BIT)|(1<<CONTROL_FEED_HOLD_BIT)|(1<<CONTROL_CYCLE_START_BIT)|(1<<CONTROL_SAFETY_DOOR_BIT))
   #define CONTROL_INVERT_MASK   CONTROL_MASK // May be re-defined to only invert certain control pins.
 
@@ -96,13 +103,10 @@
   #define PROBE_BIT       5  // Uno Analog Pin 5
   #define PROBE_MASK      (1<<PROBE_BIT)
 
-  #define ROT_STEP_DDR   DDRC
-  #define ROT_STEP_PORT  PORTC
-  #define ROT_STEP_BIT   3   // Uno Analog Pin 3
-
-  #define ROT_DIR_DDR    DDRC
-  #define ROT_DIR_PORT   PORTC
-  #define ROT_DIR_BIT    4   // Uno Analog Pin 4
+  // DRV8871 IN1 uses Timer2 PWM on D11. IN2 is held low externally.
+  #define GRIPPER_PWM_DDR   DDRB
+  #define GRIPPER_PWM_PORT  PORTB
+  #define GRIPPER_PWM_BIT   3  // Uno Digital Pin 11
 
   #if !defined(ENABLE_DUAL_AXIS)
 

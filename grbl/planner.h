@@ -80,9 +80,9 @@ typedef struct {
   float programmed_rate;        // Programmed rate of this block (mm/min).
 
   #ifdef VARIABLE_SPINDLE
-    // Stored spindle speed data used by spindle overrides and resuming methods.
-    float spindle_speed;    // Block spindle speed. Copied from pl_line_data.
+    float spindle_speed;
   #endif
+
 } plan_block_t;
 
 

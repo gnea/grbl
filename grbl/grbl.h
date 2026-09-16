@@ -46,9 +46,9 @@
 #include "defaults.h"
 #include "cpu_map.h"
 #include "planner.h"
-#include "coolant_control.h"
 #include "eeprom.h"
 #include "gcode.h"
+#include "gripper_control.h"
 #include "limits.h"
 #include "motion_control.h"
 #include "planner.h"
@@ -56,11 +56,29 @@
 #include "probe.h"
 #include "protocol.h"
 #include "report.h"
-#include "rotation_control.h"
 #include "serial.h"
-#include "spindle_control.h"
 #include "stepper.h"
 #include "jog.h"
+
+// Spindle and coolant are unused; these declarations preserve internal build compatibility.
+#define SPINDLE_STATE_DISABLE 0
+#define SPINDLE_STATE_CW bit(0)
+#define SPINDLE_STATE_CCW bit(1)
+#define COOLANT_STATE_DISABLE 0
+#define COOLANT_STATE_FLOOD PL_COND_FLAG_COOLANT_FLOOD
+#define COOLANT_STATE_MIST PL_COND_FLAG_COOLANT_MIST
+void spindle_init();
+uint8_t spindle_get_state();
+void spindle_stop();
+void _spindle_sync(uint8_t state);
+void _spindle_set_state(uint8_t state);
+#define spindle_sync(state, rpm) _spindle_sync(state)
+#define spindle_set_state(state, rpm) _spindle_set_state(state)
+void coolant_init();
+uint8_t coolant_get_state();
+void coolant_stop();
+void coolant_set_state(uint8_t mode);
+void coolant_sync(uint8_t mode);
 
 // ---------------------------------------------------------------------------------------
 // COMPILE-TIME ERROR CHECKING OF DEFINE VALUES:

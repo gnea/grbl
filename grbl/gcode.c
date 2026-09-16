@@ -250,28 +250,6 @@ uint8_t gc_execute_line(char *line)
               default: gc_block.modal.program_flow = int_value; // Program end and reset
             }
             break;
-          case 3: case 4: case 5:
-            word_bit = MODAL_GROUP_M7;
-            switch(int_value) {
-              case 3: gc_block.modal.spindle = SPINDLE_ENABLE_CW; break;
-              case 4: gc_block.modal.spindle = SPINDLE_ENABLE_CCW; break;
-              case 5: gc_block.modal.spindle = SPINDLE_DISABLE; break;
-            }
-            break;
-          #ifdef ENABLE_M7
-            case 7: case 8: case 9:
-          #else
-            case 8: case 9:
-          #endif
-            word_bit = MODAL_GROUP_M8;
-            switch(int_value) {
-              #ifdef ENABLE_M7
-                case 7: gc_block.modal.coolant |= COOLANT_MIST_ENABLE; break;
-              #endif
-              case 8: gc_block.modal.coolant |= COOLANT_FLOOD_ENABLE; break;
-              case 9: gc_block.modal.coolant = COOLANT_DISABLE; break; // M9 disables both M7 and M8.
-            }
-            break;
           #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
             case 56:
               word_bit = MODAL_GROUP_M9;
@@ -294,7 +272,7 @@ uint8_t gc_execute_line(char *line)
            legal g-code words and stores their value. Error-checking is performed later since some
            words (I,J,K,L,P,R) have multiple connotations and/or depend on the issued commands. */
         switch(letter){
-          case 'A': word_bit = WORD_A; gc_block.values.a = value; axis_words |= (1<<A_AXIS); break;
+          case 'A': word_bit = WORD_A; gc_block.values.xyz[A_AXIS] = value; axis_words |= (1<<A_AXIS); break;
           // case 'B': // Not supported
           // case 'C': // Not supported
           // case 'D': // Not supported
@@ -634,7 +612,7 @@ uint8_t gc_execute_line(char *line)
           if (!(gc_block.modal.motion == MOTION_MODE_SEEK || gc_block.modal.motion == MOTION_MODE_LINEAR)) {
             FAIL(STATUS_GCODE_G53_INVALID_MOTION_MODE); // [G53 G0/1 not active]
           }
-          break;
+            break;
       }
   }
 
@@ -911,24 +889,15 @@ uint8_t gc_execute_line(char *line)
 
   // [4. Set spindle speed ]:
   if ((gc_state.spindle_speed != gc_block.values.s) || bit_istrue(gc_parser_flags,GC_PARSER_LASER_FORCE_SYNC)) {
-    if (gc_state.modal.spindle != SPINDLE_DISABLE) { 
-      #ifdef VARIABLE_SPINDLE
-        if (bit_isfalse(gc_parser_flags,GC_PARSER_LASER_ISMOTION)) {
-          if (bit_istrue(gc_parser_flags,GC_PARSER_LASER_DISABLE)) {
-             spindle_sync(gc_state.modal.spindle, 0.0);
-          } else { spindle_sync(gc_state.modal.spindle, gc_block.values.s); }
-        }
-      #else
-        spindle_sync(gc_state.modal.spindle, 0.0);
-      #endif
+    if (gc_state.modal.spindle != SPINDLE_DISABLE) {
+      spindle_sync(gc_state.modal.spindle, gc_block.values.s);
     }
-    gc_state.spindle_speed = gc_block.values.s; // Update spindle speed state.
+    gc_state.spindle_speed = gc_block.values.s;
   }
-  // NOTE: Pass zero spindle speed for all restricted laser motions.
   if (bit_isfalse(gc_parser_flags,GC_PARSER_LASER_DISABLE)) {
-    pl_data->spindle_speed = gc_state.spindle_speed; // Record data for planner use. 
-  } // else { pl_data->spindle_speed = 0.0; } // Initialized as zero already.
-  
+    pl_data->spindle_speed = gc_state.spindle_speed;
+  }
+
   // [5. Select tool ]: NOT SUPPORTED. Only tracks tool value.
   gc_state.tool = gc_block.values.t;
 
@@ -1054,7 +1023,7 @@ uint8_t gc_execute_line(char *line)
         mc_arc(gc_block.values.xyz, pl_data, gc_state.position, gc_block.values.ijk, gc_block.values.r,
             axis_0, axis_1, axis_linear, bit_istrue(gc_parser_flags,GC_PARSER_ARC_IS_CLOCKWISE));
       } else if (gc_state.modal.motion == MOTION_MODE_AXLE_ROTATE) {
-        rotate_to_angle(gc_block.values.a);
+        mc_line(gc_block.values.xyz, pl_data);
       } else {
         // NOTE: gc_block.values.xyz is returned from mc_probe_cycle with the updated position value. So
         // upon a successful probing cycle, the machine position and the returned value should be the same.
