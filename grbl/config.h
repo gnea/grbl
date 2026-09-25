@@ -37,8 +37,11 @@
 #define DEFAULTS_GENERIC
 #define CPU_MAP_ATMEGA328P // Arduino Uno CPU
 #define DISABLE_PROBE
-#define INVERT_LIMIT_PIN_MASK (1<<A_LIMIT_BIT)
-
+// A's limit switch is wired opposite polarity (NO) vs. X/Y/Z (NC), so its raw pin
+// reading needs an extra XOR on top of the global $5 (BITFLAG_INVERT_LIMIT_PINS) setting.
+// #define INVERT_LIMIT_PIN_MASK (1<<A_LIMIT_BIT)
+#define A_LIMIT_DISABLE_PULL_UP // A's endstop module already drives its own line; matches bare-sketch test.
+#define DEBUG_REPORT_A_LIMIT_EDGE // TEMP: prints when the A limit pin state changes. Remove after debugging.
 // Serial baud rate
 // #define BAUD_RATE 230400
 #define BAUD_RATE 115200

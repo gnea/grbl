@@ -47,6 +47,11 @@ void limits_init()
   #else
     LIMIT_PORT |= (LIMIT_MASK);  // Enable internal pull-up resistors. Normal high operation.
   #endif
+  #ifdef A_LIMIT_DISABLE_PULL_UP
+    // A's endstop module drives its own line; the AVR's internal pull-up fights it near
+    // the logic threshold and causes spurious oscillation, so leave A floating instead.
+    LIMIT_PORT &= ~(1<<A_LIMIT_BIT);
+  #endif
 
   if (bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE)) {
     LIMIT_PCMSK |= LIMIT_MASK; // Enable specific pins of the Pin Change Interrupt
@@ -91,6 +96,15 @@ uint8_t limits_get_state()
       if (pin & (1<<DUAL_LIMIT_BIT)) { limit_state |= (1 << N_AXIS); }
     #endif
   }
+  #ifdef DEBUG_REPORT_A_LIMIT_EDGE
+    // Temporary debug aid: print once per A limit trigger/release transition, not every poll.
+    static uint8_t last_a_state = 0;
+    uint8_t a_state = (limit_state >> A_AXIS) & 1;
+    if (a_state != last_a_state) {
+      printPgmString(a_state ? PSTR("[A LIMIT TRIGGERED]\r\n") : PSTR("[A LIMIT RELEASED]\r\n"));
+      last_a_state = a_state;
+    }
+  #endif
   return(limit_state);
 }
 

@@ -156,6 +156,11 @@ void protocol_main_loop()
     // completed. In either case, auto-cycle start, if enabled, any queued moves.
     protocol_auto_cycle_start();
 
+    #ifdef DEBUG_REPORT_A_LIMIT_EDGE
+      // Poll here since hard limits/ISR-driven checks are otherwise off by default.
+      limits_get_state();
+    #endif
+
     protocol_execute_realtime();  // Runtime command check point.
     if (sys.abort) { return; } // Bail to main() program loop to reset system.
   }
