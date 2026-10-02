@@ -1,4 +1,5 @@
 """Minimal Grbl 1.1 serial link: connect, send G-code lines, wait for 'ok'."""
+import re
 import time
 
 import serial
@@ -36,6 +37,8 @@ class GrblLink:
         self.close()
 
     def _readline(self):
+        if self._serial is None:
+            raise GrblError("Serial link is not connected")
         return self._serial.readline().decode(errors="replace").strip()
 
     def send_line(self, line, wait_ok=True):
@@ -58,6 +61,33 @@ class GrblLink:
                 raise GrblError(f"Grbl alarm for '{line}': {resp}")
         return responses
 
+    def read_settings(self):
+        """Read numeric Grbl settings from the `$$` response."""
+        settings = {}
+        for response in self.send_line("$$"):
+            match = re.fullmatch(r"\$(\d+)=([-+]?\d+(?:\.\d+)?)", response)
+            if match:
+                settings[int(match.group(1))] = float(match.group(2))
+        return settings
+
+    def get_status(self):
+        if self._serial is None or not self._serial.is_open:
+            raise GrblError("Serial link is not connected")
+        self._serial.reset_input_buffer()
+        self._serial.write(b"?")
+        deadline = time.time() + self.timeout
+        while time.time() < deadline:
+            response = self._readline()
+            if response.startswith("<") and response.endswith(">"):
+                fields = response[1:-1].split("|")
+                status = {"state": fields[0]}
+                for field in fields[1:]:
+                    if ":" in field:
+                        key, value = field.split(":", 1)
+                        status[key] = value
+                return status
+        raise TimeoutError("Timed out waiting for Grbl status report")
+
     def home(self):
         return self.send_line("$H")
 
@@ -67,14 +97,8 @@ class GrblLink:
     def wait_idle(self, poll_interval=0.2, timeout=60.0):
         deadline = time.time() + timeout
         while time.time() < deadline:
-            self._serial.reset_input_buffer()
-            self._serial.write(b"?")
+            status = self.get_status()
+            if status["state"] == "Idle":
+                return status
             time.sleep(poll_interval)
-            raw = self._serial.read_all().decode(errors="replace")
-            for line in raw.splitlines():
-                line = line.strip()
-                if line.startswith("<") and line.endswith(">"):
-                    state = line[1:-1].split("|")[0]
-                    if state == "Idle":
-                        return
         raise TimeoutError("Timed out waiting for Grbl to report Idle")

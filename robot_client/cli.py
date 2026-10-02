@@ -6,7 +6,7 @@ Examples:
     python -m robot_client.cli --port COM3 move 1 --x 200
     python -m robot_client.cli --port COM3 move 1 --x 200 --y 100 --z 20
     python -m robot_client.cli --port COM3 transport --from-side 1 --to-side 2 \\
-        --pick-x 200 --pick-y 100 --place-x 150 --place-y 300
+        --pick-x 200 --pick-y 100 --pick-z 10 --place-x 150 --place-y 300 --place-z 10
 """
 import sys
 
@@ -43,11 +43,10 @@ def build_parser():
                             choices=sorted(config.ORIENTATION_ANGLES))
     transport.add_argument("--pick-x", type=float, required=True)
     transport.add_argument("--pick-y", type=float, required=True)
+    transport.add_argument("--pick-z", type=float, default=10.0)
     transport.add_argument("--place-x", type=float, required=True)
     transport.add_argument("--place-y", type=float, required=True)
-    transport.add_argument("--z-travel", type=float, default=100.0)
-    transport.add_argument("--z-pick", type=float, default=10.0)
-    transport.add_argument("--z-place", type=float, default=10.0)
+    transport.add_argument("--place-z", type=float, default=10.0)
 
     return parser
 
@@ -57,7 +56,7 @@ def main(argv=None):
 
     with RobotController(port=args.port, baud=args.baud) as robot:
         if args.command == "home":
-            robot.home()
+            return
         elif args.command == "orient":
             robot.set_orientation(args.side)
         elif args.command == "move":
@@ -67,11 +66,8 @@ def main(argv=None):
             robot.transport(
                 from_orientation=args.from_side,
                 to_orientation=args.to_side,
-                pick_xy=(args.pick_x, args.pick_y),
-                place_xy=(args.place_x, args.place_y),
-                z_travel=args.z_travel,
-                z_pick=args.z_pick,
-                z_place=args.z_place,
+                pick_xyz=(args.pick_x, args.pick_y, args.pick_z),
+                place_xyz=(args.place_x, args.place_y, args.place_z),
             )
 
 

@@ -389,12 +389,9 @@ void limits_go_home(uint8_t cycle_mask)
     if (cycle_mask & bit(idx)) {
       set_axis_position_mm = 0.0;
       if (bit_istrue(settings.homing_origin_max_mask,bit(idx))) {
-        set_axis_position_mm = -settings.max_travel[idx];
-      }
-      if (bit_istrue(settings.homing_dir_mask,bit(idx))) {
-        set_axis_position_mm += settings.homing_pulloff[idx];
+        set_axis_position_mm = -settings.max_travel[idx]-settings.homing_pulloff[idx];
       } else {
-        set_axis_position_mm -= settings.homing_pulloff[idx];
+        set_axis_position_mm = settings.homing_pulloff[idx];
       }
       set_axis_position = lround(set_axis_position_mm*settings.steps_per_mm[idx]);
 
