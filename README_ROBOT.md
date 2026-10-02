@@ -117,6 +117,18 @@ $23=7   ; invert X, Y, and Z homing directions
 $23=15  ; invert X, Y, Z, and A homing directions
 ```
 
+In this firmware, a set `$23` bit homes that axis toward its negative direction.
+`$28` selects which homed switch is the maximum-coordinate end, using the same
+axis bits (X=1, Y=2, Z=4, A=8). For negative-end X/Y switches and positive-end
+Z/A switches, use `$28=12`. With `$130=$131=470`, `$132=200`, `$133=360`, and
+2-unit pull-offs, the post-home coordinates are approximately X=2, Y=2, Z=198,
+A=358. If A homes in the negative direction instead, clear its bit in `$28`
+(use `$28=4`) so its pulled-off coordinate remains inside 0-360 degrees.
+
+Pull-off distance is configurable per axis. X/Y/Z values are in mm; A is in
+degrees. `$27` remains a compatibility setting that changes X/Y/Z together;
+use `$140` through `$143` for individual X/Y/Z/A values.
+
 Normal movement direction is controlled separately by `$3`:
 
 ```text
@@ -172,7 +184,13 @@ $23   homing direction mask
 $24   homing feed rate
 $25   homing seek rate
 $26   debounce delay
-$27   homing pull-off distance
+$27   legacy X/Y/Z homing pull-off distance
+$28   homing maximum-end mask
+
+$140  X homing pull-off, mm
+$141  Y homing pull-off, mm
+$142  Z homing pull-off, mm
+$143  A homing pull-off, degrees
 ```
 
 After changing compile-time defaults or uploading a firmware revision with changed settings, restore EEPROM defaults:
@@ -223,7 +241,7 @@ Grbl 1.1h ['$' for help]
 $$
 ```
 
-Confirm `$103`, `$113`, `$123`, `$133`, `$21`, `$22`, `$23`, and `$27`.
+Confirm `$103`, `$113`, `$123`, `$133`, `$21`, `$22`, `$23`, `$27`, `$28`, and `$140`-`$143`.
 
 ### 3. Test limit logic
 

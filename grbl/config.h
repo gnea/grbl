@@ -39,7 +39,7 @@
 #define DISABLE_PROBE
 // A's limit switch is wired opposite polarity (NO) vs. X/Y/Z (NC), so its raw pin
 // reading needs an extra XOR on top of the global $5 (BITFLAG_INVERT_LIMIT_PINS) setting.
-// #define INVERT_LIMIT_PIN_MASK (1<<A_LIMIT_BIT)
+#define INVERT_LIMIT_PIN_MASK (1<<A_LIMIT_BIT)
 #define A_LIMIT_DISABLE_PULL_UP // A's endstop module already drives its own line; matches bare-sketch test.
 #define DEBUG_REPORT_A_LIMIT_EDGE // TEMP: prints when the A limit pin state changes. Remove after debugging.
 // Serial baud rate
@@ -128,10 +128,12 @@
 // If you have a two-axis machine, DON'T USE THIS. Instead, just alter the homing cycle for two-axes.
 // #define HOMING_SINGLE_AXIS_COMMANDS // Default disabled. Uncomment to enable.
 
-// After homing, Grbl will set by default the entire machine space into negative space, as is typical
-// for professional CNC machines, regardless of where the limit switches are located. Uncomment this
-// define to force Grbl to always set the machine origin at the homed location despite switch orientation.
-// #define HOMING_FORCE_SET_ORIGIN // Uncomment to enable.
+// Homing-coordinate settings: X/Y home at the minimum end; Z homes at the maximum end.
+#define DEFAULT_HOMING_ORIGIN_MAX_MASK ((1<<Z_AXIS)|(1<<A_AXIS))
+#define DEFAULT_X_HOMING_PULLOFF 2.0
+#define DEFAULT_Y_HOMING_PULLOFF 2.0
+#define DEFAULT_Z_HOMING_PULLOFF 2.0
+#define DEFAULT_A_HOMING_PULLOFF 2.0
 
 // Number of blocks Grbl executes upon startup. These blocks are stored in EEPROM, where the size
 // and addresses are defined in settings.h. With the current settings, up to 2 startup blocks may
@@ -563,9 +565,8 @@
 // Restoring to the resume position follows these set motions in reverse: fast restore to
 // pull-out position, power-up with a time-out, and plunge back to the original position at the
 // slower pull-out rate.
-// NOTE: Still a work-in-progress. Machine coordinates must be in all negative space and
-// does not work with HOMING_FORCE_SET_ORIGIN enabled. Parking motion also moves only in
-// positive direction.
+// NOTE: Still a work-in-progress. Parking assumes the traditional all-negative machine space
+// and is incompatible with the mixed-end coordinate convention used by this robot.
 // #define PARKING_ENABLE  // Default disabled. Uncomment to enable
 
 // Configure options for the parking motion, if enabled.

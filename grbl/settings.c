@@ -23,6 +23,28 @@
 
 settings_t settings;
 
+typedef struct {
+  float steps_per_mm[N_AXIS];
+  float max_rate[N_AXIS];
+  float acceleration[N_AXIS];
+  float max_travel[N_AXIS];
+  uint8_t pulse_microseconds;
+  uint8_t step_invert_mask;
+  uint8_t dir_invert_mask;
+  uint8_t stepper_idle_lock_time;
+  uint8_t status_report_mask;
+  float junction_deviation;
+  float arc_tolerance;
+  float rpm_max;
+  float rpm_min;
+  uint8_t flags;
+  uint8_t homing_dir_mask;
+  float homing_feed_rate;
+  float homing_seek_rate;
+  uint16_t homing_debounce_delay;
+  float homing_pulloff;
+} settings_v10_t;
+
 const __flash settings_t defaults = {\
     .pulse_microseconds = DEFAULT_STEP_PULSE_MICROSECONDS,
     .stepper_idle_lock_time = DEFAULT_STEPPER_IDLE_LOCK_TIME,
@@ -37,7 +59,11 @@ const __flash settings_t defaults = {\
     .homing_feed_rate = DEFAULT_HOMING_FEED_RATE,
     .homing_seek_rate = DEFAULT_HOMING_SEEK_RATE,
     .homing_debounce_delay = DEFAULT_HOMING_DEBOUNCE_DELAY,
-    .homing_pulloff = DEFAULT_HOMING_PULLOFF,
+    .homing_origin_max_mask = DEFAULT_HOMING_ORIGIN_MAX_MASK,
+    .homing_pulloff[X_AXIS] = DEFAULT_X_HOMING_PULLOFF,
+    .homing_pulloff[Y_AXIS] = DEFAULT_Y_HOMING_PULLOFF,
+    .homing_pulloff[Z_AXIS] = DEFAULT_Z_HOMING_PULLOFF,
+    .homing_pulloff[A_AXIS] = DEFAULT_A_HOMING_PULLOFF,
     .flags = (DEFAULT_REPORT_INCHES << BIT_REPORT_INCHES) | \
              (DEFAULT_LASER_MODE << BIT_LASER_MODE) | \
              (DEFAULT_INVERT_ST_ENABLE << BIT_INVERT_ST_ENABLE) | \
@@ -136,6 +162,40 @@ void settings_restore(uint8_t restore_flag) {
 }
 
 
+static uint8_t settings_migrate_v10(void)
+{
+  settings_v10_t old_settings;
+  if (!memcpy_from_eeprom_with_checksum((char*)&old_settings, EEPROM_ADDR_GLOBAL, sizeof(old_settings))) {
+    return(false);
+  }
+
+  settings = defaults;
+  memcpy(settings.steps_per_mm, old_settings.steps_per_mm, sizeof(old_settings.steps_per_mm));
+  memcpy(settings.max_rate, old_settings.max_rate, sizeof(old_settings.max_rate));
+  memcpy(settings.acceleration, old_settings.acceleration, sizeof(old_settings.acceleration));
+  memcpy(settings.max_travel, old_settings.max_travel, sizeof(old_settings.max_travel));
+  settings.pulse_microseconds = old_settings.pulse_microseconds;
+  settings.step_invert_mask = old_settings.step_invert_mask;
+  settings.dir_invert_mask = old_settings.dir_invert_mask;
+  settings.stepper_idle_lock_time = old_settings.stepper_idle_lock_time;
+  settings.status_report_mask = old_settings.status_report_mask;
+  settings.junction_deviation = old_settings.junction_deviation;
+  settings.arc_tolerance = old_settings.arc_tolerance;
+  settings.rpm_max = old_settings.rpm_max;
+  settings.rpm_min = old_settings.rpm_min;
+  settings.flags = old_settings.flags;
+  settings.homing_dir_mask = old_settings.homing_dir_mask;
+  settings.homing_feed_rate = old_settings.homing_feed_rate;
+  settings.homing_seek_rate = old_settings.homing_seek_rate;
+  settings.homing_debounce_delay = old_settings.homing_debounce_delay;
+  settings.homing_pulloff[X_AXIS] = old_settings.homing_pulloff;
+  settings.homing_pulloff[Y_AXIS] = old_settings.homing_pulloff;
+  settings.homing_pulloff[Z_AXIS] = old_settings.homing_pulloff;
+  write_global_settings();
+  return(true);
+}
+
+
 // Reads startup line from EEPROM. Updated pointed line string data.
 uint8_t settings_read_startup_line(uint8_t n, char *line)
 {
@@ -219,6 +279,7 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
             break;
           case 2: settings.acceleration[parameter] = value*60*60; break; // Convert to mm/min^2 for grbl internal use.
           case 3: settings.max_travel[parameter] = -value; break;  // Store as negative for grbl internal use.
+          case 4: settings.homing_pulloff[parameter] = value; break;
         }
         break; // Exit while-loop after setting has been configured and proceed to the EEPROM write call.
       } else {
@@ -287,7 +348,13 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
       case 24: settings.homing_feed_rate = value; break;
       case 25: settings.homing_seek_rate = value; break;
       case 26: settings.homing_debounce_delay = int_value; break;
-      case 27: settings.homing_pulloff = value; break;
+      case 27:
+        for (uint8_t idx = X_AXIS; idx <= Z_AXIS; idx++) { settings.homing_pulloff[idx] = value; }
+        break;
+      case 28:
+        if (int_value >= (1<<N_AXIS)) { return(STATUS_INVALID_STATEMENT); }
+        settings.homing_origin_max_mask = int_value;
+        break;
       case 30: settings.rpm_max = value; spindle_init(); break; // Re-initialize spindle rpm calibration
       case 31: settings.rpm_min = value; spindle_init(); break; // Re-initialize spindle rpm calibration
       case 32:
@@ -310,9 +377,13 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
 // Initialize the config subsystem
 void settings_init() {
   if(!read_global_settings()) {
-    report_status_message(STATUS_SETTING_READ_FAIL);
-    settings_restore(SETTINGS_RESTORE_ALL); // Force restore all EEPROM data.
-    report_grbl_settings();
+    if ((eeprom_get_char(0) == SETTINGS_VERSION_PREVIOUS) && settings_migrate_v10()) {
+      report_grbl_settings();
+    } else {
+      report_status_message(STATUS_SETTING_READ_FAIL);
+      settings_restore(SETTINGS_RESTORE_ALL);
+      report_grbl_settings();
+    }
   }
 }
 

@@ -199,7 +199,7 @@ void limits_go_home(uint8_t cycle_mask)
     // int32_t dual_fail_distance = trunc((DUAL_AXIS_HOMING_TRIGGER_FAIL_DISTANCE)*settings.steps_per_mm[DUAL_AXIS_SELECT]);
   #endif
   float target[N_AXIS];
-  float max_travel = 0.0;
+  float max_travel[N_AXIS] = {0.0};
   uint8_t idx;
   for (idx=0; idx<N_AXIS; idx++) {
     // Initialize step pin masks
@@ -211,7 +211,7 @@ void limits_go_home(uint8_t cycle_mask)
     if (bit_istrue(cycle_mask,bit(idx))) {
       // Set target based on max_travel setting. Ensure homing switches engaged with search scalar.
       // NOTE: settings.max_travel[] is stored as a negative value.
-      max_travel = max(max_travel,(-HOMING_AXIS_SEARCH_SCALAR)*settings.max_travel[idx]);
+      max_travel[idx] = (-HOMING_AXIS_SEARCH_SCALAR)*settings.max_travel[idx];
     }
   }
   #ifdef ENABLE_DUAL_AXIS
@@ -256,11 +256,11 @@ void limits_go_home(uint8_t cycle_mask)
         // Set target direction based on cycle mask and homing cycle approach state.
         // NOTE: This happens to compile smaller than any other implementation tried.
         if (bit_istrue(settings.homing_dir_mask,bit(idx))) {
-          if (approach) { target[idx] = -max_travel; }
-          else { target[idx] = max_travel; }
+          if (approach) { target[idx] = -max_travel[idx]; }
+          else { target[idx] = max_travel[idx]; }
         } else {
-          if (approach) { target[idx] = max_travel; }
-          else { target[idx] = -max_travel; }
+          if (approach) { target[idx] = max_travel[idx]; }
+          else { target[idx] = -max_travel[idx]; }
         }
         // Apply axislock to the step port pins active in this cycle.
         axislock |= step_pin[idx];
@@ -367,35 +367,36 @@ void limits_go_home(uint8_t cycle_mask)
 
     // After first cycle, homing enters locating phase. Shorten search to pull-off distance.
     if (approach) {
-      max_travel = settings.homing_pulloff*HOMING_AXIS_LOCATE_SCALAR;
       homing_rate = settings.homing_feed_rate;
     } else {
-      max_travel = settings.homing_pulloff;
       homing_rate = settings.homing_seek_rate;
+    }
+    for (idx=0; idx<N_AXIS; idx++) {
+      if (bit_istrue(cycle_mask,bit(idx))) {
+        max_travel[idx] = settings.homing_pulloff[idx];
+        if (approach) { max_travel[idx] *= HOMING_AXIS_LOCATE_SCALAR; }
+      }
     }
 
   } while (n_cycle-- > 0);
 
-  // The active cycle axes should now be homed and machine limits have been located. By
-  // default, Grbl defines machine space as all negative, as do most CNCs. Since limit switches
-  // can be on either side of an axes, check and set axes machine zero appropriately. Also,
-  // set up pull-off maneuver from axes limit switches that have been homed. This provides
-  // some initial clearance off the switches and should also help prevent them from falsely
-  // triggering when hard limits are enabled or when more than one axes shares a limit pin.
+  // Assign coordinates after pull-off using each axis's configured maximum-end homing bit.
   int32_t set_axis_position;
+  float set_axis_position_mm;
   // Set machine positions for homed limit switches. Don't update non-homed axes.
   for (idx=0; idx<N_AXIS; idx++) {
     // NOTE: settings.max_travel[] is stored as a negative value.
     if (cycle_mask & bit(idx)) {
-      #ifdef HOMING_FORCE_SET_ORIGIN
-        set_axis_position = 0;
-      #else
-        if ( bit_istrue(settings.homing_dir_mask,bit(idx)) ) {
-          set_axis_position = lround((settings.max_travel[idx]+settings.homing_pulloff)*settings.steps_per_mm[idx]);
-        } else {
-          set_axis_position = lround(-settings.homing_pulloff*settings.steps_per_mm[idx]);
-        }
-      #endif
+      set_axis_position_mm = 0.0;
+      if (bit_istrue(settings.homing_origin_max_mask,bit(idx))) {
+        set_axis_position_mm = -settings.max_travel[idx];
+      }
+      if (bit_istrue(settings.homing_dir_mask,bit(idx))) {
+        set_axis_position_mm += settings.homing_pulloff[idx];
+      } else {
+        set_axis_position_mm -= settings.homing_pulloff[idx];
+      }
+      set_axis_position = lround(set_axis_position_mm*settings.steps_per_mm[idx]);
 
       #ifdef COREXY
         if (idx==X_AXIS) {

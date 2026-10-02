@@ -200,7 +200,8 @@ void report_grbl_settings() {
   report_util_float_setting(24,settings.homing_feed_rate,N_DECIMAL_SETTINGVALUE);
   report_util_float_setting(25,settings.homing_seek_rate,N_DECIMAL_SETTINGVALUE);
   report_util_uint8_setting(26,settings.homing_debounce_delay);
-  report_util_float_setting(27,settings.homing_pulloff,N_DECIMAL_SETTINGVALUE);
+  report_util_float_setting(27,settings.homing_pulloff[X_AXIS],N_DECIMAL_SETTINGVALUE);
+  report_util_uint8_setting(28,settings.homing_origin_max_mask);
   report_util_float_setting(30,settings.rpm_max,N_DECIMAL_RPMVALUE);
   report_util_float_setting(31,settings.rpm_min,N_DECIMAL_RPMVALUE);
   #ifdef VARIABLE_SPINDLE
@@ -218,6 +219,7 @@ void report_grbl_settings() {
         case 1: report_util_float_setting(val+idx,settings.max_rate[idx],N_DECIMAL_SETTINGVALUE); break;
         case 2: report_util_float_setting(val+idx,settings.acceleration[idx]/(60*60),N_DECIMAL_SETTINGVALUE); break;
         case 3: report_util_float_setting(val+idx,-settings.max_travel[idx],N_DECIMAL_SETTINGVALUE); break;
+        case 4: report_util_float_setting(val+idx,settings.homing_pulloff[idx],N_DECIMAL_SETTINGVALUE); break;
       }
     }
     val += AXIS_SETTINGS_INCREMENT;
@@ -388,9 +390,7 @@ void report_build_info(char *line)
   #ifdef PARKING_ENABLE
     serial_write('P');
   #endif
-  #ifdef HOMING_FORCE_SET_ORIGIN
-    serial_write('Z');
-  #endif
+  serial_write('Z');
   #ifdef HOMING_SINGLE_AXIS_COMMANDS
     serial_write('H');
   #endif
