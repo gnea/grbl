@@ -1,6 +1,6 @@
-# GRBL-CRPT v1.1 Jogging
+# GRBL-CRPT 1.0.0 Jogging
 
-This document outlines how to use GRBL-CRPT v1.1's new jogging commands. These command differ because they can be cancelled and all queued motions are automatically purged with a simple jog-cancel or feed hold real-time command. Jogging command do not alter the g-code parser state in any way, so you no longer have to worry if you remembered to set the distance mode back to `G90` prior to starting a job. Also, jogging works well with an analog joysticks and rotary dials! See the implementation notes below.
+This document outlines how to use GRBL-CRPT 1.0.0's jogging commands. These command differ because they can be cancelled and all queued motions are automatically purged with a simple jog-cancel or feed hold real-time command. Jogging command do not alter the g-code parser state in any way, so you no longer have to worry if you remembered to set the distance mode back to `G90` prior to starting a job. Also, jogging works well with an analog joysticks and rotary dials! See the implementation notes below.
 
 ## How to Use
 Executing a jog requires a specific command structure, as described below:
@@ -42,7 +42,7 @@ The main differences are:
 
 ## Joystick Implementation
 
-Jogging in GRBL-CRPT v1.1 is generally intended to address some prior issues with old bootstrapped jogging methods. Unfortunately, the new GRBL-CRPT jogging is not a complete solution. Flash and memory restrictions prevent the original envisioned implementation, but most of these can be mimicked by the following suggested methodology. 
+Jogging in GRBL-CRPT 1.0.0 is generally intended to address some prior issues with old bootstrapped jogging methods. Unfortunately, the new GRBL-CRPT jogging is not a complete solution. Flash and memory restrictions prevent the original envisioned implementation, but most of these can be mimicked by the following suggested methodology.
 
 With a combination of the new jog cancel and moving in `G91` incremental mode, the following implementation can create low latency feel for an analog joystick or similar control device.
 

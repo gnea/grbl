@@ -8,7 +8,7 @@ Once connected
  you should get the GRBL-CRPT prompt, which looks like this:
 
 ```
-GRBL-CRPT 1.1d ['$' for help]
+GRBL-CRPT 1.0.0 ['$' for help]
 ```
 
 Type $ and press enter to have GRBL-CRPT print a help message. You should not see any local echo of the $ and enter. GRBL-CRPT should respond with:
@@ -26,7 +26,7 @@ The ‘$’-commands are GRBL-CRPT system commands used to tweak the settings, v
 #### $$ - View GRBL-CRPT settings
 To view the settings, type `$$` and press enter after connecting to GRBL-CRPT. GRBL-CRPT should respond with a list of the current system settings, as shown in the example below. All of these settings are persistent and kept in EEPROM, so if you power down, these will be loaded back up the next time you power up your Arduino.
 
-The `x` of `$x=val` indicates a particular setting, while `val` is the setting value. In prior versions of GRBL-CRPT, each setting had a description next to it in `()` parentheses, but GRBL-CRPT v1.1+ no longer includes them unfortunately. This was done to free up precious flash memory to add the new features available in v1.1. However, most good GUIs will help out by attaching descriptions for you, so you know what you are looking at.
+The `x` of `$x=val` indicates a particular setting, while `val` is the setting value. The GRBL-CRPT 1.0.0 firmware does not include a description next to each setting in `()` parentheses. These descriptions were removed to free up flash memory. Most good GUIs will attach descriptions for you, so you know what you are looking at.
 
 ```
 $0=10
@@ -76,7 +76,7 @@ If everything went well, GRBL-CRPT will respond with an 'ok' and this setting is
 
 ## GRBL-CRPT's `$x=val` settings and what they mean
 
-**NOTE:** This robot-specific fork removes the upstream toolhead-related settings. The remaining motion and homing settings continue to follow the GRBL-CRPT v1.1 layout.
+**NOTE:** This robot-specific fork removes the upstream toolhead-related settings. The remaining motion and homing settings follow the upstream Grbl v1.1 layout.
 
 #### $0 – Step pulse, microseconds
 
@@ -126,9 +126,9 @@ NOTE: If you invert your limit pins, you will need an external pull-down resisto
 
 This setting determines what GRBL-CRPT real-time data it reports back to the user when a '?' status report is sent. This data includes current run state, real-time position, real-time feed rate, pin states, current override values, buffer states, and the g-code line number currently executing (if enabled through compile-time options).
 
-By default, the new report implementation in GRBL-CRPT v1.1+ will include just about everything in the standard status report. A lot of the data is hidden and will appear only if it changes. This increases efficiency dramatically over of the old report style and allows you to get faster updates and still get more data about your machine. The interface documentation outlines how it works and most of it applies only to GUI developers or the curious.
+By default, the report implementation in GRBL-CRPT 1.0.0 includes just about everything in the standard status report. A lot of the data is hidden and will appear only if it changes. This increases efficiency dramatically over of the old report style and allows you to get faster updates and still get more data about your machine. The interface documentation outlines how it works and most of it applies only to GUI developers or the curious.
 
-To keep things simple and consistent, GRBL-CRPT v1.1 has only two reporting options. These are primarily here just for users and developers to help set things up. 
+To keep things simple and consistent, GRBL-CRPT 1.0.0 has only two reporting options. These are primarily here just for users and developers to help set things up.
 
 - Position type may be specified to show either machine position (`MPos:`)  or work position (`WPos:`), but no longer both at the same time. Enabling work position is useful in certain scenarios when GRBL-CRPT is being directly interacted with through a serial terminal, but _machine position reporting should be used by default._ 
 - Usage data of GRBL-CRPT's planner and serial RX buffers may be enabled. This shows the number of blocks or bytes available in the respective buffers. This is generally used to helps determine how GRBL-CRPT is performing when testing out a streaming interface. _This should be disabled by default._

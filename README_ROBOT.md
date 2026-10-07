@@ -238,7 +238,7 @@ Keep motor power low or disconnected during the first signal tests.
 Open a serial terminal at 115200 baud. Expected startup text includes:
 
 ```text
-GRBL-CRPT 1.1h ['$' for help]
+GRBL-CRPT 1.0.0 ['$' for help]
 ```
 
 ### 2. Inspect settings

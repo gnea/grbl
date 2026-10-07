@@ -19,7 +19,7 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "grbl_crpt.h"
+#include "grbl-crpt.h"
 
 
 #define MAX_INT_DIGITS 8 // Maximum number of digits in int32 (and float)

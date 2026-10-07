@@ -10,7 +10,7 @@
   (at your option) any later version.
 */
 
-#include "grbl_crpt.h"
+#include "grbl-crpt.h"
 
 void gripper_init()
 {

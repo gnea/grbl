@@ -1,4 +1,4 @@
-# GRBL-CRPT v1.1 Commands
+# GRBL-CRPT 1.0.0 Commands
 
 In general, GRBL-CRPT assumes all characters and streaming data sent to it is g-code and will parse and try to execute it as soon as it can. However, GRBL-CRPT also has two separate system command types that are outside of the normal g-code streaming. One system command type is streamed to GRBL-CRPT like g-code, but starts with a `$` character to tell GRBL-CRPT it's not g-code. The other is composed of a special set of characters that will immediately command GRBL-CRPT to do a task in real-time. It's not part of the g-code stream. GRBL-CRPT's system commands do things like control machine state, report saved parameters or what GRBL-CRPT is doing, save or print machine settings, run a homing cycle, or make the machine move faster or slower than programmed. This document describes these "internal" system GRBL-CRPT commands, what they do, how they work, and how to use them.
 
@@ -12,7 +12,7 @@ Once connected
  you should get the GRBL-CRPT prompt, which looks like this:
 
 ```
-GRBL-CRPT 1.1e ['$' for help]
+GRBL-CRPT 1.0.0 ['$' for help]
 ```
 
 Type $ and press enter to have GRBL-CRPT print a help message. You should not see any local echo of the $ and enter. GRBL-CRPT should respond with:
@@ -113,7 +113,7 @@ For example, say that you want to use your first startup block `$N0` to set your
 Once you have a startup block stored in GRBL-CRPT's EEPROM, everytime you startup or reset you will see your startup block printed back to you, starting with an open-chevron `>`, and a `:ok` response from GRBL-CRPT to indicate if it ran okay. So for the previous example, you'll see:
 
 ```
-GRBL-CRPT 1.1d ['$' for help]
+GRBL-CRPT 1.0.0 ['$' for help]
 >G20G54G17:ok
 
 ```
@@ -140,7 +140,7 @@ TIP: After running a homing cycle, rather than jogging manually each time, set a
 
 #### `$Jx=line` - Run jogging motion
 
-New to GRBL-CRPT v1.1, this command will execute a special jogging motion. There are three main differences between a jogging motion and a motion commanded by a g-code line. 
+New to GRBL-CRPT 1.0.0, this command will execute a special jogging motion. There are three main differences between a jogging motion and a motion commanded by a g-code line.
 
 - Like normal g-code commands, several jog motions may be queued into the planner buffer, but the jogging can be easily canceled by a jog-cancel or feed-hold real-time command. GRBL-CRPT will immediately hold the current jog and then automatically purge the buffers of any remaining commands. 
 - Jog commands are completely independent of the g-code parser state. It will not change any modes like `G91` incremental distance mode. So, you no longer have to make sure that you change it back to `G90` absolute distance mode afterwards. This helps reduce the chance of starting with the wrong g-code modes enabled.
@@ -191,9 +191,9 @@ This feature can automatically disable the stepper drivers at the end of a progr
 
 ***
 
-## GRBL-CRPT v1.1 Realtime commands
+## GRBL-CRPT 1.0.0 Realtime commands
 
-Realtime commands are single control characters that may be sent to GRBL-CRPT to command and perform an action in real-time. This means that they can be sent at anytime, anywhere, and GRBL-CRPT will immediately respond, regardless of what it is doing at the time. These commands include a reset, feed hold, resume, status report query, and overrides (in v1.1).
+Realtime commands are single control characters that may be sent to GRBL-CRPT to command and perform an action in real-time. This means that they can be sent at anytime, anywhere, and GRBL-CRPT will immediately respond, regardless of what it is doing at the time. These commands include a reset, feed hold, resume, status report query, and overrides (as introduced in upstream Grbl v1.1).
 
 A realtime command:
 
@@ -252,7 +252,7 @@ Four realtime commands are type-able by users on a keyboard and shown in the `$`
 
 #### Extended-ASCII Realtime Command Descriptions
 
-GRBL-CRPT v1.1 installed extended-ASCII realtime commands to control feed and rapid overrides. To help prevent users from inadvertently altering overrides with a keystroke and allow for more commands later on, the newer control characters have been moved to the extended ASCII character set. These are not easily type-able on a keyboard, but, depending on the OS, they may be entered using specific keystroke and code. GUI developers will need to be able to send extended ASCII characters, values `128 (0x80)` to `255 (0xFF)`, to GRBL-CRPT to take advantage of these features.
+GRBL-CRPT 1.0.0 includes extended-ASCII realtime commands to control feed and rapid overrides. To help prevent users from inadvertently altering overrides with a keystroke and allow for more commands later on, the newer control characters have been moved to the extended ASCII character set. These are not easily type-able on a keyboard, but, depending on the OS, they may be entered using specific keystroke and code. GUI developers will need to be able to send extended ASCII characters, values `128 (0x80)` to `255 (0xFF)`, to GRBL-CRPT to take advantage of these features.
 
 - `0x84` : Safety Door
 

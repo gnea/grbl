@@ -1,6 +1,6 @@
 # GRBL-CRPT Interface Basics
 
-The interface for GRBL-CRPT is fairly simple and straightforward. With GRBL-CRPT v1.1, steps have been taken to try to make it even easier for new users to get started, and for GUI developers to write their own custom interfaces to GRBL-CRPT.
+The interface for GRBL-CRPT is fairly simple and straightforward. With GRBL-CRPT 1.0.0, steps have been taken to try to make it even easier for new users to get started, and for GUI developers to write their own custom interfaces to GRBL-CRPT.
 
 GRBL-CRPT communicates through the serial interface on the Arduino. You just need to connect your Arduino to your computer with a USB cable. Use any standard serial terminal program to connect to GRBL-CRPT, such as: the Arduino IDE serial monitor, Coolterm, puTTY, etc. Or use one of the many great GRBL-CRPT GUIs out there in the Internet wild.
 
@@ -80,7 +80,7 @@ As a service to GUIs, GRBL-CRPT has a "check G-code" mode, enabled by the `$C` s
 
 #### Jogging
 
-As of GRBL-CRPT v1.1, a new jogging feature is available that accepts incremental, absolute, or absolute override motions, along with a jog cancel real-time command that will automatically feed hold and purge the planner buffer. The most important aspect of the new jogging motion is that it is completely independent from the g-code parser, so GUIs no longer have to ensure the g-code modal states are set back correctly after jogging is complete. See the jogging document for more details on how it works and how you can use it with an analog joystick or rotary dial.
+As of GRBL-CRPT 1.0.0, a jogging feature is available that accepts incremental, absolute, or absolute override motions, along with a jog cancel real-time command that will automatically feed hold and purge the planner buffer. The most important aspect of the new jogging motion is that it is completely independent from the g-code parser, so GUIs no longer have to ensure the g-code modal states are set back correctly after jogging is complete. See the jogging document for more details on how it works and how you can use it with an analog joystick or rotary dial.
 
 #### Synchronization
 
@@ -89,7 +89,7 @@ For situations when a GUI needs to run a special set of commands for tool change
 -----
 # Message Summary
 
-In v1.1, GRBL-CRPT's interface protocol has been tweaked in the attempt to make GUI development cleaner, clearer, and hopefully easier. All messages are designed to be deterministic without needing to know the context of the message. Each can be inferred to a much greater degree than before just by the message type, which are all listed below.
+Based on upstream Grbl v1.1, GRBL-CRPT's interface protocol has been tweaked in the attempt to make GUI development cleaner, clearer, and hopefully easier. All messages are designed to be deterministic without needing to know the context of the message. Each can be inferred to a much greater degree than before just by the message type, which are all listed below.
 
 - **Response Messages:** Normal send command and execution response acknowledgement. Used for streaming.
 
@@ -117,7 +117,7 @@ Other minor changes and bug fixes that may effect GUI parsing include:
 - Floating point values printed with zero precision do not show a decimal, or look like an integer. This includes feed rate in mm mode.
 - `$G` reports fixed a long time bug with program modal state. It always showed `M0` program pause when running. Now during a normal program run, no program modal state is given until an `M0`, `M2`, or `M30` is active and then the appropriate state will be shown.
 
-On a final note, this interface tweak came about out of necessity, as more data is being sent back from GRBL-CRPT and it is capable of doing many more things. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before GRBL-CRPT v1.1 goes to master, please do immediately so we can all vet the new alteration before its installed.
+On a final note, this interface tweak came about out of necessity, as more data is being sent back from GRBL-CRPT and it is capable of doing many more things. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before GRBL-CRPT 1.0.0 goes to master, please do immediately so we can all vet the new alteration before its installed.
 
 
 
@@ -232,7 +232,7 @@ When a push message starts with a `$`, this indicates GRBL-CRPT is sending a set
 
 - `$x=val` will only appear when the user queries to print all of GRBL-CRPT's settings via the `$$` print settings command. It does so sequentially and completes with an `ok`.
 
-  - In prior versions of GRBL-CRPT, the `$` settings included a short description of the setting immediately after the value. However, due to flash restrictions, most human-readable strings were removed to free up flash for the new override features in GRBL-CRPT v1.1. In short, it was these strings or overrides, and overrides won. Keep in mind that once these values are set, they usually don't change, and GUIs will likely provide the assistance of translating these codes for users.
+  - In prior versions of GRBL-CRPT, the `$` settings included a short description of the setting immediately after the value. However, due to flash restrictions, most human-readable strings were removed to free up flash for the override features in GRBL-CRPT 1.0.0. In short, it was these strings or overrides, and overrides won. Keep in mind that once these values are set, they usually don't change, and GUIs will likely provide the assistance of translating these codes for users.
 
   - _**NOTE for GUI developers:**_ _As with the error and alarm codes, settings codes are available in an easy to parse CSV file in the `/doc/csv` folder. These are continually updated._
 
@@ -372,7 +372,7 @@ Feedback messages provide non-critical information on what GRBL-CRPT is doing, w
     [HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $C $X $H ~ ! ? ctrl-x]
     ok
     ```
-		- _**NOTE:** GRBL-CRPT v1.1's new override real-time commands are not included in the help message. They use the extended-ASCII character set, which are not easily type-able, and require a GUI that supports them. This is for two reasons: Establish enough characters for all of the overrides with extra for later growth, and prevent accidental keystrokes or characters in a g-code file from enacting an override inadvertently._
+		- _**NOTE:** GRBL-CRPT 1.0.0's override real-time commands are not included in the help message. They use the extended-ASCII character set, which are not easily type-able, and require a GUI that supports them. This is for two reasons: Establish enough characters for all of the overrides with extra for later growth, and prevent accidental keystrokes or characters in a g-code file from enacting an override inadvertently._
 
 
   - The `$#` print parameter data query produces a large set of data which shown below and completed by an `ok` response message.
@@ -515,7 +515,7 @@ Feedback messages provide non-critical information on what GRBL-CRPT is doing, w
           - `MPos:0.000,-10.000,5.000` machine position or
           - `WPos:-2.500,0.000,11.000` work position
 
-        - **NOTE: GRBL-CRPT v1.1 sends only one position vector because a GUI can easily compute the other position vector with the work coordinate offset `WCO:` data. See WCO description for details.**
+        - **NOTE: GRBL-CRPT 1.0.0 sends only one position vector because a GUI can easily compute the other position vector with the work coordinate offset `WCO:` data. See WCO description for details.**
 
         - Three position values are given in the order of X, Y, and Z. A fourth position value may exist in later versions for the A-axis.
 

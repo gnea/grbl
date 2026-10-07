@@ -18,7 +18,7 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "grbl_crpt.h"
+#include "grbl-crpt.h"
 
 
 // Sets up valid jog motion received from g-code parser, checks for soft-limits, and executes the jog.

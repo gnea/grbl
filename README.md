@@ -7,11 +7,13 @@ X/Y/Z/A Cartesian motion system.
 The A axis is integrated into the GRBL-CRPT planner and stepper interrupt. The repository
 also includes a Python robot client and a simulator.
 
+Current GRBL-CRPT release: **1.0.0**.
+
 ## Project Documentation
 
 - [Robot firmware, wiring, homing, and settings](README_ROBOT.md)
 - [Python robot client](robot_client/README.md)
-- [Firmware source](grbl_crpt/)
+- [Firmware source](GRBL-CRPT/)
 
 The robot setup documentation is the authoritative guide for the current hardware and
 firmware configuration. The `doc/markdown/` and `doc/script/` directories retain inherited
@@ -39,5 +41,5 @@ Original GRBL:
 
 The firmware is free software under the GNU General Public License v3 or later; see
 [COPYING](COPYING) and the copyright notices in the source files. The Arduino example
-sketches in `grbl_crpt/examples/` are under the MIT license; see the `license.txt` in each
+sketches in `GRBL-CRPT/examples/` are under the MIT license; see the `license.txt` in each
 example folder.

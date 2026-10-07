@@ -22,7 +22,7 @@
 #ifndef system_h
 #define system_h
 
-#include "grbl_crpt.h"
+#include "grbl-crpt.h"
 
 // Define system executor bit map. Used internally by realtime protocol as realtime command flags,
 // which notifies the main program to execute the specified realtime command asynchronously.

@@ -35,7 +35,7 @@ SOURCE    = main.c motion_control.c gcode.c serial.c \
              protocol.c stepper.c eeprom.c settings.c planner.c nuts_bolts.c limits.c jog.c\
 			 print.c report.c system.c gripper_control.c
 BUILDDIR = build
-SOURCEDIR = grbl_crpt
+SOURCEDIR = GRBL-CRPT
 # FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 FUSES      = -U hfuse:w:0xd2:m -U lfuse:w:0xff:m
 
@@ -53,7 +53,7 @@ COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -I. -ffunction-sect
 OBJECTS = $(addprefix $(BUILDDIR)/,$(notdir $(SOURCE:.c=.o)))
 
 # symbolic targets:
-all:	grbl_crpt.hex
+all:	grbl-crpt.hex
 
 $(BUILDDIR)/%.o: $(SOURCEDIR)/%.c
 	$(COMPILE) -MMD -MP -c $< -o $@
@@ -69,7 +69,7 @@ $(BUILDDIR)/%.o: $(SOURCEDIR)/%.c
 	$(COMPILE) -S $< -o $(BUILDDIR)/$@
 
 flash:	all
-	$(AVRDUDE) -U flash:w:grbl_crpt.hex:i
+	$(AVRDUDE) -U flash:w:grbl-crpt.hex:i
 
 fuse:
 	$(AVRDUDE) $(FUSES)
@@ -79,18 +79,18 @@ install: flash fuse
 
 # if you use a bootloader, change the command below appropriately:
 load: all
-	bootloadHID grbl_crpt.hex
+	bootloadHID grbl-crpt.hex
 
 clean:
-	rm -f grbl_crpt.hex $(BUILDDIR)/*.o $(BUILDDIR)/*.d $(BUILDDIR)/*.elf
+	rm -f grbl-crpt.hex $(BUILDDIR)/*.o $(BUILDDIR)/*.d $(BUILDDIR)/*.elf
 
 # file targets:
 $(BUILDDIR)/main.elf: $(OBJECTS)
 	$(COMPILE) -o $(BUILDDIR)/main.elf $(OBJECTS) -lm -Wl,--gc-sections
 
-grbl_crpt.hex: $(BUILDDIR)/main.elf
-	rm -f grbl_crpt.hex
-	avr-objcopy -j .text -j .data -O ihex $(BUILDDIR)/main.elf grbl_crpt.hex
+grbl-crpt.hex: $(BUILDDIR)/main.elf
+	rm -f grbl-crpt.hex
+	avr-objcopy -j .text -j .data -O ihex $(BUILDDIR)/main.elf grbl-crpt.hex
 	avr-size --format=berkeley $(BUILDDIR)/main.elf
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.

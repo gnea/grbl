@@ -23,7 +23,7 @@
 #ifndef settings_h
 #define settings_h
 
-#include "grbl_crpt.h"
+#include "grbl-crpt.h"
 
 
 // Version of the EEPROM data. Will be used to migrate existing data from older versions of GRBL-CRPT

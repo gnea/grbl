@@ -47,6 +47,8 @@ class RobotController:
     def connect(self):
         self.link.connect()
         self.home()
+        # self._load_machine_configuration()
+        # self.link.send_line("$X")
         return self
 
     def close(self):

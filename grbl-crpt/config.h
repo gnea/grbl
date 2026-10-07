@@ -28,7 +28,7 @@
 
 #ifndef config_h
 #define config_h
-#include "grbl_crpt.h" // For Arduino IDE compatibility.
+#include "grbl-crpt.h" // For Arduino IDE compatibility.
 
 
 // Define CPU pin map and default settings.
@@ -225,7 +225,7 @@
 // to their default values at program end.
 #define RESTORE_OVERRIDES_AFTER_PROGRAM_END // Default enabled. Comment to disable.
 
-// The status report change for GRBL-CRPT v1.1 and after also removed the ability to disable/enable most data
+// The upstream Grbl v1.1 status-report change also removed the ability to disable/enable most data
 // fields from the report. This caused issues for GUI developers, who've had to manage several scenarios
 // and configurations. The increased efficiency of the new reporting style allows for all data fields to 
 // be sent without potential performance issues.

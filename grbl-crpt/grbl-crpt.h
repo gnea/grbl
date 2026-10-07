@@ -1,5 +1,5 @@
 /*
-  grbl_crpt.h - main GRBL-CRPT include file
+  grbl-crpt.h - main GRBL-CRPT include file
   Part of Grbl
 
   Copyright (c) 2015-2016 Sungeun K. Jeon for Gnea Research LLC
@@ -19,11 +19,11 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef grbl_crpt_h
-#define grbl_crpt_h
+#ifndef GRBL_CRPT_H
+#define GRBL_CRPT_H
 
 // GRBL-CRPT versioning system
-#define CRPT_VERSION "1.1h"
+#define CRPT_VERSION "1.0.0"
 #define CRPT_VERSION_BUILD "20190830"
 
 // Define standard libraries used by GRBL-CRPT.
