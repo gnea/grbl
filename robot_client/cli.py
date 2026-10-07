@@ -26,7 +26,7 @@ def build_parser():
     parser.add_argument("--simulator-url", default=None, help="Attach to a running simulator URL")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("home", help="Run the Grbl homing cycle")
+    sub.add_parser("home", help="Run the GRBL-CRPT homing cycle")
 
     orient = sub.add_parser("orient", help="Raise Z and face a table side")
     orient.add_argument("side", type=int, choices=sorted(SIDES))

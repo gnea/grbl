@@ -1,11 +1,12 @@
 # Cartesian Robot Plate Transporter Firmware
 
-This is the DALSA-Lab GRBL fork for the Cartesian Robot Plate Transporter. The fork and
-fourth-axis work are maintained at
-[DALSA-Lab/grbl, `feature/fourth-axis`](https://github.com/DALSA-Lab/grbl/tree/feature/fourth-axis).
+This is the DALSA-Lab GRBL-CRPT fork of GRBL for the Cartesian Robot Plate Transporter.
+
+Copyright (c) 2026 Alan Mansour, DALSA. The fork is maintained at
+[DALSA-Lab/grbl](https://github.com/DALSA-Lab/grbl).
 Original GRBL copyright notices and the GPL license are retained; see [COPYING](COPYING).
 
-This repository is a Grbl-based firmware fork for a laboratory Cartesian robot with:
+This repository is GRBL-CRPT firmware (a GRBL fork) for a laboratory Cartesian robot with:
 
 - X, Y, and Z linear stepper axes
 - A rotary stepper axis for table-side orientation
@@ -13,7 +14,7 @@ This repository is a Grbl-based firmware fork for a laboratory Cartesian robot w
 - Four limit switches
 - Arduino Uno / ATmega328P target
 
-The A axis is integrated into the normal Grbl planner and stepper interrupt. It is not a separate blocking rotation routine.
+The A axis is integrated into the normal GRBL-CRPT planner and stepper interrupt. It is not a separate blocking rotation routine.
 
 ## Hardware Pin Map
 
@@ -55,7 +56,7 @@ The firmware enables the Arduino internal pull-ups. An external 4.7k-10k pull-up
 
 Expected electrical states:
 
-| State | Arduino input | Grbl logical state |
+| State | Arduino input | GRBL-CRPT logical state |
 |---|---|---|
 | Switch closed, normal | LOW | Not triggered |
 | Switch open, limit reached | HIGH | Triggered |
@@ -98,7 +99,7 @@ The homing order is:
 2. A
 3. X and Y together
 
-This is configured in `grbl/config.h`:
+This is configured in `grbl_crpt/config.h`:
 
 ```c
 #define HOMING_CYCLE_0 (1<<Z_AXIS)
@@ -204,22 +205,22 @@ After changing compile-time defaults or uploading a firmware revision with chang
 $RST=$
 ```
 
-This erases the current Grbl settings and reloads the firmware defaults. Reapply calibrated values afterward.
+This erases the current GRBL-CRPT settings and reloads the firmware defaults. Reapply calibrated values afterward.
 
 ## Arduino IDE Setup
 
 1. Install Arduino IDE 2.
 2. Install the Arduino AVR Boards package.
-3. Copy or synchronize this repository's `grbl` source files into:
+3. Copy or synchronize this repository's `grbl_crpt` source files into:
 
 ```text
-%USERPROFILE%\OneDrive - Danmarks Tekniske Universitet\Dokumenter\Arduino\libraries\grbl
+%USERPROFILE%\OneDrive - Danmarks Tekniske Universitet\Dokumenter\Arduino\libraries\grbl_crpt
 ```
 
-4. Open the Grbl upload example:
+4. Open the GRBL-CRPT upload example:
 
 ```text
-grbl/examples/grblUpload/grblUpload.ino
+grbl_crpt/examples/crptUpload/crptUpload.ino
 ```
 
 5. Select the correct Arduino Uno board and COM port.
@@ -237,7 +238,7 @@ Keep motor power low or disconnected during the first signal tests.
 Open a serial terminal at 115200 baud. Expected startup text includes:
 
 ```text
-Grbl 1.1h ['$' for help]
+GRBL-CRPT 1.1h ['$' for help]
 ```
 
 ### 2. Inspect settings

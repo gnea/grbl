@@ -6,7 +6,7 @@
 "4","Invert step enable pin","boolean","Inverts the stepper driver enable pin signal."
 "5","Invert limit pins","boolean","Inverts the all of the limit input pins."
 "10","Status report options","mask","Alters data included in status reports."
-"11","Junction deviation","millimeters","Sets how fast Grbl travels through consecutive motions. Lower value slows it down."
+"11","Junction deviation","millimeters","Sets how fast GRBL-CRPT travels through consecutive motions. Lower value slows it down."
 "12","Arc tolerance","millimeters","Sets the G2 and G3 arc tracing accuracy based on radial error. Beware: A very small value may effect performance."
 "13","Report in inches","boolean","Enables inch units when returning any position and rate value that is not a settings value."
 "20","Soft limits enable","boolean","Enables soft limits checks within machine travel and sets alarm when exceeded. Requires homing."

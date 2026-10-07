@@ -8,7 +8,7 @@ from .coordinates import (
     orientation_angle,
     side_to_gripper_xy,
 )
-from .grbl_link import GrblError, GrblLink, MachineLink
+from .crpt_link import CrptError, CrptLink, MachineLink
 from .machine import AxisBounds, MachineSettings, compute_axis_bounds
 
 
@@ -42,7 +42,7 @@ class RobotController:
             from .simulation.simulator import SimulatorLink
 
             return SimulatorLink(url=simulator_url, open_browser=open_simulator)
-        return GrblLink(port or config.DEFAULT_PORT, baud or config.SERIAL_BAUD)
+        return CrptLink(port or config.DEFAULT_PORT, baud or config.SERIAL_BAUD)
 
     def connect(self):
         self.link.connect()
@@ -86,7 +86,7 @@ class RobotController:
         status = status or self.link.get_status()
         values = status.get("MPos")
         if values is None:
-            raise GrblError("Grbl status does not include MPos; enable machine-position reporting")
+            raise CrptError("GRBL-CRPT status does not include MPos; enable machine-position reporting")
         self.machine_position = [float(value) for value in values.split(",")]
         return self.machine_position
 

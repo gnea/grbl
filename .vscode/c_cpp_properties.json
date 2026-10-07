@@ -8,7 +8,7 @@
                 "-DF_CPU=16000000"
             ],
             "includePath": [
-                "${workspaceFolder}/grbl",
+                "${workspaceFolder}/grbl_crpt",
                 "C:/Users/alama/AppData/Local/Arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/avr/include"
             ],
             "defines": [

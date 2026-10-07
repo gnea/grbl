@@ -13,7 +13,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .. import config
-from ..grbl_link import GrblError
+from ..crpt_link import CrptError
 
 DEFAULT_URL = "http://127.0.0.1:8765"
 _SETTINGS = {
@@ -413,21 +413,21 @@ class SimulatorLink:
                 return json.loads(response.read().decode("utf-8"))
         except HTTPError as error:
             message = error.read().decode("utf-8", errors="replace")
-            raise GrblError(f"Simulator error: {message}") from error
+            raise CrptError(f"Simulator error: {message}") from error
         except (URLError, TimeoutError) as error:
-            raise GrblError(f"Cannot reach simulator at {self.url}: {error}") from error
+            raise CrptError(f"Cannot reach simulator at {self.url}: {error}") from error
 
     def connect(self):
         try:
             self._request("/api/ping")
-        except GrblError:
+        except CrptError:
             _start_embedded(self.url)
             deadline = time.monotonic() + 5.0
             while True:
                 try:
                     self._request("/api/ping")
                     break
-                except GrblError:
+                except CrptError:
                     if time.monotonic() >= deadline:
                         raise
                     time.sleep(0.05)
@@ -441,7 +441,7 @@ class SimulatorLink:
 
     def send_line(self, line, wait_ok=True):
         if not self.connected:
-            raise GrblError("Simulator link is not connected")
+            raise CrptError("Simulator link is not connected")
         result = self._request("/api/command", {"line": line})
         return result["responses"] if wait_ok else []
 
