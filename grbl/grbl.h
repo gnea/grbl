@@ -53,50 +53,17 @@
 #include "motion_control.h"
 #include "planner.h"
 #include "print.h"
-#include "probe.h"
 #include "protocol.h"
 #include "report.h"
 #include "serial.h"
 #include "stepper.h"
 #include "jog.h"
 
-// Spindle and coolant are unused; these declarations preserve internal build compatibility.
-#define SPINDLE_STATE_DISABLE 0
-#define SPINDLE_STATE_CW bit(0)
-#define SPINDLE_STATE_CCW bit(1)
-#define COOLANT_STATE_DISABLE 0
-#define COOLANT_STATE_FLOOD PL_COND_FLAG_COOLANT_FLOOD
-#define COOLANT_STATE_MIST PL_COND_FLAG_COOLANT_MIST
-void spindle_init();
-uint8_t spindle_get_state();
-void spindle_stop();
-void _spindle_sync(uint8_t state);
-void _spindle_set_state(uint8_t state);
-#define spindle_sync(state, rpm) _spindle_sync(state)
-#define spindle_set_state(state, rpm) _spindle_set_state(state)
-void coolant_init();
-uint8_t coolant_get_state();
-void coolant_stop();
-void coolant_set_state(uint8_t mode);
-void coolant_sync(uint8_t mode);
-
 // ---------------------------------------------------------------------------------------
 // COMPILE-TIME ERROR CHECKING OF DEFINE VALUES:
 
 #ifndef HOMING_CYCLE_0
   #error "Required HOMING_CYCLE_0 not defined."
-#endif
-
-#if defined(USE_SPINDLE_DIR_AS_ENABLE_PIN) && !defined(VARIABLE_SPINDLE)
-  #error "USE_SPINDLE_DIR_AS_ENABLE_PIN may only be used with VARIABLE_SPINDLE enabled"
-#endif
-
-#if defined(USE_SPINDLE_DIR_AS_ENABLE_PIN) && !defined(CPU_MAP_ATMEGA328P)
-  #error "USE_SPINDLE_DIR_AS_ENABLE_PIN may only be used with a 328p processor"
-#endif
-
-#if !defined(USE_SPINDLE_DIR_AS_ENABLE_PIN) && defined(SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED)
-  #error "SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED may only be used with USE_SPINDLE_DIR_AS_ENABLE_PIN enabled"
 #endif
 
 #if defined(PARKING_ENABLE)
@@ -108,12 +75,6 @@ void coolant_sync(uint8_t mode);
 #if defined(ENABLE_PARKING_OVERRIDE_CONTROL)
   #if !defined(PARKING_ENABLE)
     #error "ENABLE_PARKING_OVERRIDE_CONTROL must be enabled with PARKING_ENABLE."
-  #endif
-#endif
-
-#if defined(SPINDLE_PWM_MIN_VALUE)
-  #if !(SPINDLE_PWM_MIN_VALUE > 0)
-    #error "SPINDLE_PWM_MIN_VALUE must be greater than zero."
   #endif
 #endif
 
@@ -134,9 +95,6 @@ void coolant_sync(uint8_t mode);
   #if !((DUAL_AXIS_SELECT == X_AXIS) || (DUAL_AXIS_SELECT == Y_AXIS))
     #error "Dual axis currently supports X or Y axes only."
   #endif
-  #if defined(DUAL_AXIS_CONFIG_CNC_SHIELD_CLONE) && defined(VARIABLE_SPINDLE)
-    #error "VARIABLE_SPINDLE not supported with DUAL_AXIS_CNC_SHIELD_CLONE."
-  #endif
   #if defined(DUAL_AXIS_CONFIG_CNC_SHIELD_CLONE) && defined(DUAL_AXIS_CONFIG_PROTONEER_V3_51)
     #error "More than one dual axis configuration found. Select one."
   #endif
@@ -145,12 +103,6 @@ void coolant_sync(uint8_t mode);
   #endif
   #if defined(COREXY)
     #error "CORE XY not supported with dual axis feature."
-  #endif
-  #if defined(USE_SPINDLE_DIR_AS_ENABLE_PIN)
-    #error "USE_SPINDLE_DIR_AS_ENABLE_PIN not supported with dual axis feature."
-  #endif
-  #if defined(ENABLE_M7)
-    #error "ENABLE_M7 not supported with dual axis feature."
   #endif
 #endif
 

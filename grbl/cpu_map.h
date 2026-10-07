@@ -68,11 +68,7 @@
   #define LIMIT_PORT       PORTC
   #define X_LIMIT_BIT      0  // Uno Analog Pin 0
   #define Y_LIMIT_BIT      1  // Uno Analog Pin 1
-  #ifdef VARIABLE_SPINDLE // Z Limit pin and spindle enabled swapped to access hardware PWM on Pin 11.
-    #define Z_LIMIT_BIT	   4 // Uno Digital Pin 12
-  #else
-    #define Z_LIMIT_BIT    2  // Uno Analog Pin 2
-  #endif
+  #define Z_LIMIT_BIT    2  // Uno Analog Pin 2
   #if !defined(ENABLE_DUAL_AXIS)
     #define A_LIMIT_BIT    3  // Uno Analog Pin 3
     #define LIMIT_MASK     ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<A_LIMIT_BIT)) // All limit bits
@@ -96,78 +92,15 @@
   #define CONTROL_MASK      ((1<<CONTROL_RESET_BIT)|(1<<CONTROL_FEED_HOLD_BIT)|(1<<CONTROL_CYCLE_START_BIT)|(1<<CONTROL_SAFETY_DOOR_BIT))
   #define CONTROL_INVERT_MASK   CONTROL_MASK // May be re-defined to only invert certain control pins.
 
-  // Define probe switch input pin.
-  #define PROBE_DDR       DDRC
-  #define PROBE_PIN       PINC
-  #define PROBE_PORT      PORTC
-  #define PROBE_BIT       5  // Uno Analog Pin 5
-  #define PROBE_MASK      (1<<PROBE_BIT)
-
   // DRV8871 IN1 uses Timer2 PWM on D11. IN2 is held low externally.
   #define GRIPPER_PWM_DDR   DDRB
   #define GRIPPER_PWM_PORT  PORTB
   #define GRIPPER_PWM_BIT   3  // Uno Digital Pin 11
 
-  #if !defined(ENABLE_DUAL_AXIS)
-
-    // // Define flood and mist coolant enable output pins.
-    // #define COOLANT_FLOOD_DDR   DDRC
-    // #define COOLANT_FLOOD_PORT  PORTC
-    // #define COOLANT_FLOOD_BIT   3  // Uno Analog Pin 3
-    // #define COOLANT_MIST_DDR   DDRC
-    // #define COOLANT_MIST_PORT  PORTC
-    // #define COOLANT_MIST_BIT   4  // Uno Analog Pin 4
-
-    // Define spindle enable and spindle direction output pins.
-    #define SPINDLE_ENABLE_DDR    DDRB
-    #define SPINDLE_ENABLE_PORT   PORTB
-    // Z Limit pin and spindle PWM/enable pin swapped to access hardware PWM on Pin 11.
-    #ifdef VARIABLE_SPINDLE
-      #ifdef USE_SPINDLE_DIR_AS_ENABLE_PIN
-        // If enabled, spindle direction pin now used as spindle enable, while PWM remains on D11.
-        #define SPINDLE_ENABLE_BIT    5  // Uno Digital Pin 13 (NOTE: D13 can't be pulled-high input due to LED.)
-      #else
-        #define SPINDLE_ENABLE_BIT    3  // Uno Digital Pin 11
-      #endif
-    #else
-      #define SPINDLE_ENABLE_BIT    4  // Uno Digital Pin 12
-    #endif
-    #ifndef USE_SPINDLE_DIR_AS_ENABLE_PIN
-      #define SPINDLE_DIRECTION_DDR   DDRB
-      #define SPINDLE_DIRECTION_PORT  PORTB
-      #define SPINDLE_DIRECTION_BIT   5  // Uno Digital Pin 13 (NOTE: D13 can't be pulled-high input due to LED.)
-    #endif
-
-    // Variable spindle configuration below. Do not change unless you know what you are doing.
-    // NOTE: Only used when variable spindle is enabled.
-    #define SPINDLE_PWM_MAX_VALUE     255 // Don't change. 328p fast PWM mode fixes top value as 255.
-    #ifndef SPINDLE_PWM_MIN_VALUE
-      #define SPINDLE_PWM_MIN_VALUE   1   // Must be greater than zero.
-    #endif
-    #define SPINDLE_PWM_OFF_VALUE     0
-    #define SPINDLE_PWM_RANGE         (SPINDLE_PWM_MAX_VALUE-SPINDLE_PWM_MIN_VALUE)
-    #define SPINDLE_TCCRA_REGISTER    TCCR2A
-    #define SPINDLE_TCCRB_REGISTER    TCCR2B
-    #define SPINDLE_OCR_REGISTER      OCR2A
-    #define SPINDLE_COMB_BIT          COM2A1
-
-    // Prescaled, 8-bit Fast PWM mode.
-    #define SPINDLE_TCCRA_INIT_MASK   ((1<<WGM20) | (1<<WGM21))  // Configures fast PWM mode.
-    // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS20)               // Disable prescaler -> 62.5kHz
-    // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS21)               // 1/8 prescaler -> 7.8kHz (Used in v0.9)
-    // #define SPINDLE_TCCRB_INIT_MASK   ((1<<CS21) | (1<<CS20)) // 1/32 prescaler -> 1.96kHz
-    #define SPINDLE_TCCRB_INIT_MASK      (1<<CS22)               // 1/64 prescaler -> 0.98kHz (J-tech laser)
-
-    // NOTE: On the 328p, these must be the same as the SPINDLE_ENABLE settings.
-    #define SPINDLE_PWM_DDR   DDRB
-    #define SPINDLE_PWM_PORT  PORTB
-    #define SPINDLE_PWM_BIT   3    // Uno Digital Pin 11
-  
-  #else
+  #if defined(ENABLE_DUAL_AXIS)
 
     // Dual axis feature requires an independent step pulse pin to operate. The independent direction pin is not 
-    // absolutely necessary but facilitates easy direction inverting with a Grbl $$ setting. These pins replace 
-    // the spindle direction and optional coolant mist pins.
+    // absolutely necessary but facilitates easy direction inverting with a Grbl $$ setting.
 
     #ifdef DUAL_AXIS_CONFIG_PROTONEER_V3_51
       // NOTE: Step pulse and direction pins may be on any port and output pin.
@@ -185,50 +118,7 @@
       #define DUAL_LIMIT_BIT    Z_LIMIT_BIT
       #define LIMIT_MASK        ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<DUAL_LIMIT_BIT))
 
-      // Define coolant enable output pins.
-      // NOTE: Coolant flood moved from A3 to A4. Coolant mist not supported with dual axis feature on Arduino Uno.
-      #define COOLANT_FLOOD_DDR   DDRB
-      #define COOLANT_FLOOD_PORT  PORTB
-      #define COOLANT_FLOOD_BIT   5  // Uno Digital Pin 13
-
-      // Define spindle enable output pin.
-      // NOTE: Spindle enable moved from D12 to A3 (old coolant flood enable pin). Spindle direction pin is removed.
-      #define SPINDLE_ENABLE_DDR    DDRB
-      #define SPINDLE_ENABLE_PORT   PORTB
-      #ifdef VARIABLE_SPINDLE
-        // NOTE: USE_SPINDLE_DIR_AS_ENABLE_PIN not supported with dual axis feature.
-        #define SPINDLE_ENABLE_BIT    3  // Uno Digital Pin 11
-      #else
-        #define SPINDLE_ENABLE_BIT    4  // Uno Digital Pin 12
-      #endif
-
-      // Variable spindle configuration below. Do not change unless you know what you are doing.
-      // NOTE: Only used when variable spindle is enabled.
-      #define SPINDLE_PWM_MAX_VALUE     255 // Don't change. 328p fast PWM mode fixes top value as 255.
-      #ifndef SPINDLE_PWM_MIN_VALUE
-        #define SPINDLE_PWM_MIN_VALUE   1   // Must be greater than zero.
-      #endif
-      #define SPINDLE_PWM_OFF_VALUE     0
-      #define SPINDLE_PWM_RANGE         (SPINDLE_PWM_MAX_VALUE-SPINDLE_PWM_MIN_VALUE)
-      #define SPINDLE_TCCRA_REGISTER    TCCR2A
-      #define SPINDLE_TCCRB_REGISTER    TCCR2B
-      #define SPINDLE_OCR_REGISTER      OCR2A
-      #define SPINDLE_COMB_BIT          COM2A1
-
-      // Prescaled, 8-bit Fast PWM mode.
-      #define SPINDLE_TCCRA_INIT_MASK   ((1<<WGM20) | (1<<WGM21))  // Configures fast PWM mode.
-      // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS20)               // Disable prescaler -> 62.5kHz
-      // #define SPINDLE_TCCRB_INIT_MASK   (1<<CS21)               // 1/8 prescaler -> 7.8kHz (Used in v0.9)
-      // #define SPINDLE_TCCRB_INIT_MASK   ((1<<CS21) | (1<<CS20)) // 1/32 prescaler -> 1.96kHz
-      #define SPINDLE_TCCRB_INIT_MASK      (1<<CS22)               // 1/64 prescaler -> 0.98kHz (J-tech laser)
-
-      // NOTE: On the 328p, these must be the same as the SPINDLE_ENABLE settings.
-      #define SPINDLE_PWM_DDR   DDRB
-      #define SPINDLE_PWM_PORT  PORTB
-      #define SPINDLE_PWM_BIT   3    // Uno Digital Pin 11
     #endif
-
-    // NOTE: Variable spindle not supported with this shield.
     #ifdef DUAL_AXIS_CONFIG_CNC_SHIELD_CLONE
       // NOTE: Step pulse and direction pins may be on any port and output pin.
       #define STEP_DDR_DUAL       DDRB
@@ -244,17 +134,6 @@
       #define DUAL_LIMIT_BIT    Z_LIMIT_BIT
       #define LIMIT_MASK        ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<DUAL_LIMIT_BIT))
 
-      // Define coolant enable output pins.
-      // NOTE: Coolant flood moved from A3 to A4. Coolant mist not supported with dual axis feature on Arduino Uno.
-      #define COOLANT_FLOOD_DDR   DDRC
-      #define COOLANT_FLOOD_PORT  PORTC
-      #define COOLANT_FLOOD_BIT   4  // Uno Analog Pin 4
-
-      // Define spindle enable output pin.
-      // NOTE: Spindle enable moved from D12 to A3 (old coolant flood enable pin). Spindle direction pin is removed.
-      #define SPINDLE_ENABLE_DDR    DDRC
-      #define SPINDLE_ENABLE_PORT   PORTC
-      #define SPINDLE_ENABLE_BIT    3  // Uno Analog Pin 3
     #endif
 
   #endif

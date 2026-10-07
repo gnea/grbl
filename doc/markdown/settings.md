@@ -35,7 +35,6 @@ $2=0
 $3=0
 $4=0
 $5=0
-$6=0
 $10=1
 $11=0.010
 $12=0.002
@@ -48,9 +47,6 @@ $24=25.000
 $25=500.000
 $26=250
 $27=1.000
-$30=1000.
-$31=0.
-$32=0
 $100=250.000
 $101=250.000
 $102=250.000
@@ -80,7 +76,7 @@ If everything went well, Grbl will respond with an 'ok' and this setting is stor
 
 ## Grbl's `$x=val` settings and what they mean
 
-**NOTE: From Grbl v0.9 to Grbl v1.1, only `$10` status reports changed and new `$30`/ `$31` spindle rpm max/min and `$32` laser mode settings were added. Everything else is the same.**
+**NOTE:** This robot-specific fork removes the upstream toolhead-related settings. The remaining motion and homing settings continue to follow the Grbl v1.1 layout.
 
 #### $0 – Step pulse, microseconds
 
@@ -94,7 +90,7 @@ The stepper idle lock time is the time length Grbl will keep the steppers locked
 
 #### $2 – Step port invert, mask
 
-This setting inverts the step pulse signal. By default, a step signal starts at normal-low and goes high upon a step pulse event. After a step pulse time set by `$0`, the pin resets to low, until the next step pulse event. When inverted, the step pulse behavior switches from normal-high, to low during the pulse, and back to high. Most users will not need to use this setting, but this can be useful for certain CNC-stepper drivers that have peculiar requirements. For example, an artificial delay between the direction pin and step pulse can be created by inverting the step pin.
+This setting inverts the step pulse signal. By default, a step signal starts at normal-low and goes high upon a step pulse event. After a step pulse time set by `$0`, the pin resets to low, until the next step pulse event. When inverted, the step pulse behavior switches from normal-high, to low during the pulse, and back to high. Most users will not need to use this setting, but it can be useful for stepper drivers with special timing requirements. For example, an artificial delay between the direction pin and step pulse can be created by inverting the step pin.
 
 This invert mask setting is a value which stores the axes to invert as bit flags. You really don't need to completely understand how it works. You simply need to enter the settings value for the axes you want to invert. For example, if you want to invert the X and Z axes, you'd send `$2=5` to Grbl and the setting should now read `$2=5 (step port invert mask:00000101)`.
 
@@ -125,12 +121,6 @@ By default, the limit pins are held normally-high with the Arduino's internal pu
 
 NOTE: If you invert your limit pins, you will need an external pull-down resistor wired in to all of the limit pins to prevent overloading the pins with current and frying them.
 
-#### $6 -  Probe pin invert, boolean
-
-By default, the probe pin is held normally-high with the Arduino's internal pull-up resistor. When the probe pin is low, Grbl interprets this as triggered. For the opposite behavior, just invert the probe pin by typing `$6=1`. Disable with `$6=0`. You may need a power cycle to load the change.
-
-NOTE: If you invert your probe pin, you will need an external pull-down resistor wired in to the probe pin to prevent overloading it with current and frying it.
-
 
 #### $10 - Status report, mask
 
@@ -158,23 +148,23 @@ How we calculate it is a bit complicated, but, in general, higher values gives f
 
 #### $12 – Arc tolerance, mm
 
-Grbl renders G2/G3 circles, arcs, and helices by subdividing them into teeny tiny lines, such that the arc tracing accuracy is never below this value. You will probably never need to adjust this setting, since `0.002mm` is well below the accuracy of most all CNC machines. But if you find that your circles are too crude or arc tracing is performing slowly, adjust this setting. Lower values give higher precision but may lead to performance issues by overloading Grbl with too many tiny lines. Alternately, higher values traces to a lower precision, but can speed up arc performance since Grbl has fewer lines to deal with.
+Grbl renders G2/G3 circles, arcs, and helices by subdividing them into teeny tiny lines, such that the arc tracing accuracy is never below this value. You will probably never need to adjust this setting, since `0.002mm` is a very fine resolution for most motion systems. But if you find that your circles are too crude or arc tracing is performing slowly, adjust this setting. Lower values give higher precision but may lead to performance issues by overloading Grbl with too many tiny lines. Alternately, higher values traces to a lower precision, but can speed up arc performance since Grbl has fewer lines to deal with.
 
 For the curious, arc tolerance is defined as the maximum perpendicular distance from a line segment with its end points lying on the arc, aka a chord. With some basic geometry, we solve for the length of the line segments to trace the arc that satisfies this setting. Modeling arcs in this way is great, because the arc line segments automatically adjust and scale with length to ensure optimum arc tracing performance, while never losing accuracy.
 
 #### $13 - Report inches, boolean
 
-Grbl has a real-time positioning reporting feature to provide a user feedback on where the machine is exactly at that time, as well as, parameters for coordinate offsets and probing. By default, it is set to report in mm, but by sending a `$13=1` command, you send this boolean flag to true and these reporting features will now report in inches. `$13=0` to set back to mm.
+Grbl has a real-time positioning reporting feature to provide feedback on the machine position and coordinate offsets. By default, it is set to report in mm, but by sending a `$13=1` command, these reporting features will report in inches. `$13=0` sets them back to mm.
 
 #### $20 - Soft limits, boolean
 
-Soft limits is a safety feature to help prevent your machine from traveling too far and beyond the limits of travel, crashing or breaking something expensive. It works by knowing the maximum travel limits for each axis and where Grbl is in machine coordinates. Whenever a new G-code motion is sent to Grbl, it checks whether or not you accidentally have exceeded your machine space. If you do, Grbl will issue an immediate feed hold wherever it is, shutdown the spindle and coolant, and then set the system alarm indicating the problem. Machine position will be retained afterwards, since it's not due to an immediate forced stop like hard limits.
+Soft limits help prevent the robot from traveling beyond configured axis limits. Whenever a new G-code motion is sent to Grbl, it checks whether the target exceeds configured travel. If it does, Grbl issues an immediate feed hold, de-energizes auxiliary outputs, and sets the system alarm. Machine position is retained afterwards, since this is not due to an immediate forced stop like hard limits.
 
 NOTE: Soft limits requires homing to be enabled and accurate axis maximum travel settings, because Grbl needs to know where it is. `$20=1` to enable, and `$20=0` to disable.
 
 #### $21 - Hard limits, boolean
 
-Hard limit work basically the same as soft limits, but use physical switches instead. Basically you wire up some switches (mechanical, magnetic, or optical) near the end of travel of each axes, or where ever you feel that there might be trouble if your program moves too far to where it shouldn't. When the switch triggers, it will immediately halt all motion, shutdown the coolant and spindle (if connected), and go into alarm mode, which forces you to check your machine and reset everything.
+Hard limits work basically the same as soft limits, but use physical switches instead. When a limit switch triggers, the firmware immediately halts motion and enters alarm mode, which requires the robot to be checked and reset.
 
 To use hard limits with Grbl, the limit pins are held high with an internal pull-up resistor, so all you have to do is wire in a normally-open switch with the pin and ground and enable hard limits with `$21=1`. (Disable with `$21=0`.) We strongly advise taking electric interference prevention measures. If you want a limit for both ends of travel of one axes, just wire in two switches in parallel with the pin and ground, so if either one of them trips, it triggers the hard limit.
 
@@ -182,13 +172,13 @@ Keep in mind, that a hard limit event is considered to be critical event, where 
 
 #### $22 - Homing cycle, boolean
 
-Ahh, homing. For those just initiated into CNC, the homing cycle is used to accurately and precisely locate a known and consistent position on a machine every time you start up your Grbl between sessions. In other words, you know exactly where you are at any given time, every time. Say you start machining something or are about to start the next step in a job and the power goes out, you re-start Grbl and Grbl has no idea where it is. You're left with the task of figuring out where you are. If you have homing, you always have the machine zero reference point to locate from, so all you have to do is run the homing cycle and resume where you left off.
+The homing cycle accurately and precisely locates a known, consistent position on the machine each time Grbl starts. Without homing, after a power loss or restart Grbl cannot know the machine's position. Homing re-establishes the machine-zero reference point.
 
 To set up the homing cycle for Grbl, you need to have limit switches in a fixed position that won't get bumped or moved, or else your reference point gets messed up. Usually they are setup in the farthest point in +x, +y, +z of each axes. Wire your limit switches in with the limit pins and ground, just like with the hard limits, and enable homing. If you're curious, you can use your limit switches for both hard limits AND homing. They play nice with each other.
 
 By default, Grbl's homing cycle moves the Z-axis positive first to clear the workspace and then moves both the X and Y-axes at the same time in the positive direction. To set up how your homing cycle behaves, there are more Grbl settings down the page describing what they do (and compile-time options as well.)
 
-Also, one more thing to note, when homing is enabled. Grbl will lock out all G-code commands until you perform a homing cycle. Meaning no axes motions, unless the lock is disabled ($X) but more on that later. Most, if not all CNC controllers, do something similar, as it is mostly a safety feature to prevent users from making a positioning mistake, which is very easy to do and be saddened when a mistake ruins a part. If you find this annoying or find any weird bugs, please let us know and we'll try to work on it so everyone is happy. :)
+When homing is enabled, Grbl locks out G-code commands until a homing cycle is performed. This prevents motion from an unknown position. The lock can be disabled with `$X`, but doing so removes this positioning safeguard.
 
 NOTE: Check out config.h for more homing options for advanced users. You can disable the homing lockout at startup, configure which axes move first during a homing cycle and in what order, and more.
 
@@ -212,20 +202,6 @@ Whenever a switch triggers, some of them can have electrical/mechanical noise th
 #### $27 - Homing pull-off, mm
 
 To play nice with the hard limits feature, where homing can share the same limit switches, the homing cycle will move off all of the limit switches by this pull-off travel after it completes. In other words, it helps to prevent accidental triggering of the hard limit after a homing cycle.
-
-#### $30 - Max spindle speed, RPM
-
-This sets the spindle speed for the maximum 5V PWM pin output. Higher programmed spindle RPMs are accepted by Grbl but the PWM output will not exceed the max 5V. By default, Grbl linearly relates the max-min RPMs to 5V-0.02V PWM pin output in 255 increments. When the PWM pin reads 0V, this indicates spindle disabled. Note that there are additional configuration options are available in config.h to tweak how this operates.
-
-#### $31 - Min spindle speed, RPM
-
-This sets the spindle speed for the minimum 0.02V PWM pin output (0V is disabled).  Lower RPM values are accepted by Grbl but the PWM output will not go below 0.02V, except when RPM is zero. If zero, the spindle is disabled and PWM output is 0V. 
-
-#### $32 - Laser mode, boolean
-
-When enabled, Grbl will move continuously through consecutive `G1`, `G2`, or `G3` motion commands when programmed with a `S` spindle speed (laser power). The spindle PWM pin will be updated instantaneously through each motion without stopping. Please read the Grbl laser documentation and your laser device documentation prior to using this mode. Lasers are very dangerous. They can instantly damage your vision permanantly and cause fires. Grbl does not assume any responsibility for any issues the firmware may cause, as defined by its GPL license. 
-
-When disabled, Grbl will operate as it always has, stopping motion with every `S` spindle speed command. This is the default operation of a milling machine to allow a pause to let the spindle change speeds.
 
 #### $100, $101 and $102 – [X,Y,Z] steps/mm
 

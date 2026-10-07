@@ -1,5 +1,7 @@
 ### _Grbl v1.1  - Change Summary_
 
+This is a historical upstream change log. It describes features that may not be present in the DALSA-Lab robot firmware.
+
 --------
 
 ### _Specific details are available in the other markdown documents._

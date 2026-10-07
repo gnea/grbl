@@ -86,7 +86,7 @@ The time increment `dt` may be defined to whatever value you need. Obviously, yo
 
 	- For a lower latency, `dt` can be computed for each jog motion, where `v` is the current rate and `a` is the max acceleration along the jog vector. This is very useful if traveling a very slow speeds to locate a part zero. The `v` rate would be much lower in this scenario and the total latency would decrease quadratically.
 
-In practice, most CNC machines will operate with a jogging time increment of `0.025 sec` < `dt` < `0.06 sec`, which translates to about a `0.4` to `0.9` second total latency when traveling at the max jog rate. Good enough for most people. 
+In practice, most stepper-driven machines will operate with a jogging time increment of `0.025 sec` < `dt` < `0.06 sec`, which translates to about a `0.4` to `0.9` second total latency when traveling at the max jog rate. Good enough for most people.
 
 However, if jogging at a slower speed and a GUI adjusts the `dt` with it, you can get very close to the 0.1 second response time by human-interface guidelines for "feeling instantaneous". Not too shabby!
 

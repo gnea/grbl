@@ -36,7 +36,6 @@
 // If doing so, simply comment out these two defines and see instructions below.
 #define DEFAULTS_GENERIC
 #define CPU_MAP_ATMEGA328P // Arduino Uno CPU
-#define DISABLE_PROBE
 // A's limit switch is wired opposite polarity (NO) vs. X/Y/Z (NC), so its raw pin
 // reading needs an extra XOR on top of the global $5 (BITFLAG_INVERT_LIMIT_PINS) setting.
 #define INVERT_LIMIT_PIN_MASK (1<<A_LIMIT_BIT)
@@ -78,15 +77,6 @@
 #define CMD_RAPID_OVR_MEDIUM 0x96
 #define CMD_RAPID_OVR_LOW 0x97
 // #define CMD_RAPID_OVR_EXTRA_LOW 0x98 // *NOT SUPPORTED*
-#define CMD_SPINDLE_OVR_RESET 0x99      // Restores spindle override value to 100%.
-#define CMD_SPINDLE_OVR_COARSE_PLUS 0x9A
-#define CMD_SPINDLE_OVR_COARSE_MINUS 0x9B
-#define CMD_SPINDLE_OVR_FINE_PLUS 0x9C
-#define CMD_SPINDLE_OVR_FINE_MINUS 0x9D
-#define CMD_SPINDLE_OVR_STOP 0x9E
-#define CMD_COOLANT_FLOOD_OVR_TOGGLE 0xA0
-#define CMD_COOLANT_MIST_OVR_TOGGLE 0xA1
-
 // If homing is enabled, homing init lock sets Grbl into an alarm state upon power up. This forces
 // the user to perform the homing cycle (or override the locks) before doing anything else. This is
 // mainly a safety feature to remind the user to home, since position is unknown to Grbl.
@@ -165,26 +155,11 @@
 // goes from 16 to 15 to make room for the additional line number data in the plan_block_t struct
 // #define USE_LINE_NUMBERS // Disabled by default. Uncomment to enable.
 
-// Upon a successful probe cycle, this option provides immediately feedback of the probe coordinates
-// through an automatically generated message. If disabled, users can still access the last probe
-// coordinates through Grbl '$#' print parameters.
-#define MESSAGE_PROBE_COORDINATES // Enabled by default. Comment to disable.
-
-// Enables a second coolant control pin via the mist coolant g-code command M7 on the Arduino Uno
-// analog pin 4. Only use this option if you require a second coolant control pin.
-// NOTE: The M8 flood coolant control pin on analog pin 3 will still be functional regardless.
-// #define ENABLE_M7 // Disabled by default. Uncomment to enable.
-
 // This option causes the feed hold input to act as a safety door switch. A safety door, when triggered,
 // immediately forces a feed hold and then safely de-energizes the machine. Resuming is blocked until
 // the safety door is re-engaged. When it is, Grbl will re-energize the machine and then resume on the
 // previous tool path, as if nothing happened.
 // #define ENABLE_SAFETY_DOOR_INPUT_PIN // Default disabled. Uncomment to enable.
-
-// After the safety door switch has been toggled and restored, this setting sets the power-up delay
-// between restoring the spindle and coolant and resuming the cycle.
-#define SAFETY_DOOR_SPINDLE_DELAY 4.0 // Float (seconds)
-#define SAFETY_DOOR_COOLANT_DELAY 1.0 // Float (seconds)
 
 // Enable CoreXY kinematics. Use ONLY with CoreXY machines.
 // IMPORTANT: If homing is enabled, you must reconfigure the homing cycle #defines above to
@@ -210,18 +185,6 @@
 // NOTE: PLEASE DO NOT USE THIS, unless you have a situation that needs it.
 // #define INVERT_LIMIT_PIN_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)) // Default disabled. Uncomment to enable.
 
-// Inverts the spindle enable pin from low-disabled/high-enabled to low-enabled/high-disabled. Useful
-// for some pre-built electronic boards.
-// NOTE: If VARIABLE_SPINDLE is enabled(default), this option has no effect as the PWM output and
-// spindle enable are combined to one pin. If you need both this option and spindle speed PWM,
-// uncomment the config option USE_SPINDLE_DIR_AS_ENABLE_PIN below.
-// #define INVERT_SPINDLE_ENABLE_PIN // Default disabled. Uncomment to enable.
-
-// Inverts the selected coolant pin from low-disabled/high-enabled to low-enabled/high-disabled. Useful
-// for some pre-built electronic boards.
-// #define INVERT_COOLANT_FLOOD_PIN // Default disabled. Uncomment to enable.
-// #define INVERT_COOLANT_MIST_PIN // Default disabled. Note: Enable M7 mist coolant in config.h
-
 // When Grbl powers-cycles or is hard reset with the Arduino reset button, Grbl boots up with no ALARM
 // by default. This is to make it as simple as possible for new users to start using Grbl. When homing
 // is enabled and a user has installed limit switches, Grbl will boot up in an ALARM state to indicate
@@ -242,7 +205,7 @@
 // Enables code for debugging purposes. Not for general use and always in constant flux.
 // #define DEBUG // Uncomment to enable. Default disabled.
 
-// Configure rapid, feed, and spindle override settings. These values define the max and min
+// Configure rapid and feed override settings. These values define the max and min
 // allowable override values and the coarse and fine increments per command received. Please
 // note the allowable values in the descriptions following each define.
 #define DEFAULT_FEED_OVERRIDE           100 // 100%. Don't change this value.
@@ -256,14 +219,8 @@
 #define RAPID_OVERRIDE_LOW       25 // Percent of rapid (1-99). Usually 25%.
 // #define RAPID_OVERRIDE_EXTRA_LOW 5 // *NOT SUPPORTED* Percent of rapid (1-99). Usually 5%.
 
-#define DEFAULT_SPINDLE_SPEED_OVERRIDE    100 // 100%. Don't change this value.
-#define MAX_SPINDLE_SPEED_OVERRIDE        200 // Percent of programmed spindle speed (100-255). Usually 200%.
-#define MIN_SPINDLE_SPEED_OVERRIDE         10 // Percent of programmed spindle speed (1-100). Usually 10%.
-#define SPINDLE_OVERRIDE_COARSE_INCREMENT  10 // (1-99). Usually 10%.
-#define SPINDLE_OVERRIDE_FINE_INCREMENT     1 // (1-99). Usually 1%.
-
 // When a M2 or M30 program end command is executed, most g-code states are restored to their defaults.
-// This compile-time option includes the restoring of the feed, rapid, and spindle speed override values
+// This compile-time option includes the restoring of the feed and rapid override values
 // to their default values at program end.
 #define RESTORE_OVERRIDES_AFTER_PROGRAM_END // Default enabled. Comment to disable.
 
@@ -331,48 +288,12 @@
 // NOTE: All pins associated with the feature are disabled, i.e. XYZ limit pins, not individual axes.
 // WARNING: When the pull-ups are disabled, this requires additional wiring with pull-down resistors!
 //#define DISABLE_LIMIT_PIN_PULL_UP
-//#define DISABLE_PROBE_PIN_PULL_UP
 //#define DISABLE_CONTROL_PIN_PULL_UP
 
-// Sets which axis the tool length offset is applied. Assumes the spindle is always parallel with
+// Sets which axis the tool length offset is applied.
 // the selected axis with the tool oriented toward the negative direction. In other words, a positive
 // tool length offset value is subtracted from the current location.
 #define TOOL_LENGTH_OFFSET_AXIS Z_AXIS // Default z-axis. Valid values are X_AXIS, Y_AXIS, or Z_AXIS.
-
-// Enables variable spindle output voltage for different RPM values. On the Arduino Uno, the spindle
-// enable pin will output 5V for maximum RPM with 256 intermediate levels and 0V when disabled.
-// NOTE: IMPORTANT for Arduino Unos! When enabled, the Z-limit pin D11 and spindle enable pin D12 switch!
-// The hardware PWM output on pin D11 is required for variable spindle output voltages.
-// Spindle output is not used by this robot. D11 is reserved for the gripper PWM.
-
-// Used by variable spindle output only. This forces the PWM output to a minimum duty cycle when enabled.
-// The PWM pin will still read 0V when the spindle is disabled. Most users will not need this option, but
-// it may be useful in certain scenarios. This minimum PWM settings coincides with the spindle rpm minimum
-// setting, like rpm max to max PWM. This is handy if you need a larger voltage difference between 0V disabled
-// and the voltage set by the minimum PWM for minimum rpm. This difference is 0.02V per PWM value. So, when
-// minimum PWM is at 1, only 0.02 volts separate enabled and disabled. At PWM 5, this would be 0.1V. Keep
-// in mind that you will begin to lose PWM resolution with increased minimum PWM values, since you have less
-// and less range over the total 255 PWM levels to signal different spindle speeds.
-// NOTE: Compute duty cycle at the minimum PWM by this equation: (% duty cycle)=(SPINDLE_PWM_MIN_VALUE/255)*100
-// #define SPINDLE_PWM_MIN_VALUE 5 // Default disabled. Uncomment to enable. Must be greater than zero. Integer (1-255).
-
-// By default on a 328p(Uno), Grbl combines the variable spindle PWM and the enable into one pin to help
-// preserve I/O pins. For certain setups, these may need to be separate pins. This configure option uses
-// the spindle direction pin(D13) as a separate spindle enable pin along with spindle speed PWM on pin D11.
-// NOTE: This configure option only works with VARIABLE_SPINDLE enabled and a 328p processor (Uno).
-// NOTE: Without a direction pin, M4 will not have a pin output to indicate a difference with M3. 
-// NOTE: BEWARE! The Arduino bootloader toggles the D13 pin when it powers up. If you flash Grbl with
-// a programmer (you can use a spare Arduino as "Arduino as ISP". Search the web on how to wire this.),
-// this D13 LED toggling should go away. We haven't tested this though. Please report how it goes!
-// #define USE_SPINDLE_DIR_AS_ENABLE_PIN // Default disabled. Uncomment to enable.
-
-// Alters the behavior of the spindle enable pin with the USE_SPINDLE_DIR_AS_ENABLE_PIN option . By default,
-// Grbl will not disable the enable pin if spindle speed is zero and M3/4 is active, but still sets the PWM 
-// output to zero. This allows the users to know if the spindle is active and use it as an additional control
-// input. However, in some use cases, user may want the enable pin to disable with a zero spindle speed and 
-// re-enable when spindle speed is greater than zero. This option does that.
-// NOTE: Requires USE_SPINDLE_DIR_AS_ENABLE_PIN to be enabled.
-// #define SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED // Default disabled. Uncomment to enable.
 
 // With this enabled, Grbl sends back an echo of the line it has received, which has been pre-parsed (spaces
 // removed, capitalized letters, no comments) and is to be immediately executed by Grbl. Echoes will not be
@@ -387,7 +308,7 @@
 // every buffer block junction, except for starting from rest and end of the buffer, which are always
 // zero. This value controls how fast the machine moves through junctions with no regard for acceleration
 // limits or angle between neighboring block line move directions. This is useful for machines that can't
-// tolerate the tool dwelling for a split second, i.e. 3d printers or laser cutters. If used, this value
+// tolerate the tool dwelling for a split second, such as lightweight gantries or other low-inertia motion systems. If used, this value
 // should not be much greater than zero or to the minimum value necessary for the machine to work.
 #define MINIMUM_JUNCTION_SPEED 0.0 // (mm/min)
 
@@ -478,10 +399,6 @@
 // work well and are cheap to find) and wire in a low-pass circuit into each limit pin.
 // #define ENABLE_SOFTWARE_DEBOUNCE // Default disabled. Uncomment to enable.
 
-// Configures the position after a probing cycle during Grbl's check mode. Disabled sets
-// the position to the probe target, when enabled sets the position to the start position.
-// #define SET_CHECK_MODE_PROBE_TO_START // Default disabled. Uncomment to enable.
-
 // Force Grbl to check the state of the hard limit switches when the processor detects a pin
 // change inside the hard limit ISR routine. By default, Grbl will trigger the hard limits
 // alarm upon any pin change, since bouncing switches can cause a state check like this to
@@ -548,13 +465,6 @@
 // that any of these commands are used need continuous motions through them.
 #define FORCE_BUFFER_SYNC_DURING_WCO_CHANGE // Default enabled. Comment to disable.
 
-// By default, Grbl disables feed rate overrides for all G38.x probe cycle commands. Although this
-// may be different than some pro-class machine control, it's arguable that it should be this way. 
-// Most probe sensors produce different levels of error that is dependent on rate of speed. By 
-// keeping probing cycles to their programmed feed rates, the probe sensor should be a lot more
-// repeatable. If needed, you can disable this behavior by uncommenting the define below.
-// #define ALLOW_FEED_OVERRIDE_DURING_PROBE_CYCLES // Default disabled. Uncomment to enable.
-
 // Enables and configures parking motion methods upon a safety door state. Primarily for OEMs
 // that desire this feature for their integrated machines. At the moment, Grbl assumes that
 // the parking motion only involves one axis, although the parking implementation was written
@@ -586,29 +496,6 @@
 // #define ENABLE_PARKING_OVERRIDE_CONTROL   // Default disabled. Uncomment to enable
 // #define DEACTIVATE_PARKING_UPON_INIT // Default disabled. Uncomment to enable.
 
-// This option will automatically disable the laser during a feed hold by invoking a spindle stop
-// override immediately after coming to a stop. However, this also means that the laser still may
-// be reenabled by disabling the spindle stop override, if needed. This is purely a safety feature
-// to ensure the laser doesn't inadvertently remain powered while at a stop and cause a fire.
-#define DISABLE_LASER_DURING_HOLD // Default enabled. Comment to disable.
-
-// This feature alters the spindle PWM/speed to a nonlinear output with a simple piecewise linear
-// curve. Useful for spindles that don't produce the right RPM from Grbl's standard spindle PWM 
-// linear model. Requires a solution by the 'fit_nonlinear_spindle.py' script in the /doc/script
-// folder of the repo. See file comments on how to gather spindle data and run the script to
-// generate a solution.
-// #define ENABLE_PIECEWISE_LINEAR_SPINDLE  // Default disabled. Uncomment to enable.
-
-// N_PIECES, RPM_MAX, RPM_MIN, RPM_POINTxx, and RPM_LINE_XX constants are all set and given by
-// the 'fit_nonlinear_spindle.py' script solution. Used only when ENABLE_PIECEWISE_LINEAR_SPINDLE
-// is enabled. Make sure the constant values are exactly the same as the script solution.
-// NOTE: When N_PIECES < 4, unused RPM_LINE and RPM_POINT defines are not required and omitted.
-#define N_PIECES 4  // Integer (1-4). Number of piecewise lines used in script solution.
-#define RPM_MAX  11686.4  // Max RPM of model. $30 > RPM_MAX will be limited to RPM_MAX.
-#define RPM_MIN  202.5    // Min RPM of model. $31 < RPM_MIN will be limited to RPM_MIN.
-#define RPM_POINT12  6145.4  // Used N_PIECES >=2. Junction point between lines 1 and 2.
-#define RPM_POINT23  9627.8  // Used N_PIECES >=3. Junction point between lines 2 and 3.
-#define RPM_POINT34  10813.9 // Used N_PIECES = 4. Junction point between lines 3 and 4.
 #define RPM_LINE_A1  3.197101e-03  // Used N_PIECES >=1. A and B constants of line 1.
 #define RPM_LINE_B1  -3.526076e-1
 #define RPM_LINE_A2  1.722950e-2   // Used N_PIECES >=2. A and B constants of line 2.
@@ -641,9 +528,8 @@
   dual axis feature at your own risk.
 */
 // NOTE: This feature requires approximately 400 bytes of flash. Certain configurations can
-// run out of flash to fit on an Arduino 328p/Uno. Only X and Y axes are supported. Variable
-// spindle/laser mode IS supported, but only for one config option. Core XY, spindle direction
-// pin, and M7 mist coolant are disabled/not supported.
+// run out of flash to fit on an Arduino 328p/Uno. Only X and Y axes are supported.
+// Core XY is disabled/not supported.
 // #define ENABLE_DUAL_AXIS	// Default disabled. Uncomment to enable.
 
 // Select the one axis to mirror another motor. Only X and Y axis is supported at this time.
@@ -663,19 +549,13 @@
 // Dual axis pin configuration currently supports two shields. Uncomment the shield you want,
 // and comment out the other one(s).
 // NOTE: Protoneer CNC Shield v3.51 has A.STP and A.DIR wired to pins A4 and A3 respectively.
-// The variable spindle (i.e. laser mode) build option works and may be enabled or disabled.
-// Coolant pin A3 is moved to D13, replacing spindle direction.
+// A3 is moved to D13 for this dual-axis layout.
 #define DUAL_AXIS_CONFIG_PROTONEER_V3_51    // Uncomment to select. Comment other configs.
 
 // NOTE: Arduino CNC Shield Clone (Originally Protoneer v3.0) has A.STP and A.DIR wired to 
 // D12 and D13, respectively. With the limit pins and stepper enable pin on this same port,
-// the spindle enable pin had to be moved and spindle direction pin deleted. The spindle
-// enable pin now resides on A3, replacing coolant enable. Coolant enable is bumped over to
-// pin A4. Spindle enable is used far more and this pin setup helps facilitate users to 
-// integrate this feature without arguably too much work. 
-// Variable spindle (i.e. laser mode) does NOT work with this shield as configured. While
-// variable spindle technically can work with this shield, it requires too many changes for
-// most user setups to accomodate. It would best be implemented by sharing all limit switches
+// the auxiliary enable pin had to be moved to A3 for this configuration.
+// Supporting other repurposed outputs on this shield would require sharing limit switches
 // on pins D9/D10 (as [X1,Z]/[X2,Y] or [X,Y2]/[Y1,Z]), home each axis independently, and 
 // updating lots of code to ensure everything is running correctly.
 // #define DUAL_AXIS_CONFIG_CNC_SHIELD_CLONE  // Uncomment to select. Comment other configs.

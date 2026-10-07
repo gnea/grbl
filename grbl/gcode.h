@@ -30,7 +30,7 @@
 // and are similar/identical to other g-code interpreters by manufacturers (Haas,Fanuc,Mazak,etc).
 // NOTE: Modal group define values must be sequential and starting from zero.
 #define MODAL_GROUP_G0 0 // [G4,G10,G28,G28.1,G30,G30.1,G53,G92,G92.1] Non-modal
-#define MODAL_GROUP_G1 1 // [G0,G1,G2,G3,G38.2,G38.3,G38.4,G38.5,G80] Motion
+#define MODAL_GROUP_G1 1 // [G0,G1,G2,G3,G80] Motion
 #define MODAL_GROUP_G2 2 // [G17,G18,G19] Plane selection
 #define MODAL_GROUP_G3 3 // [G90,G91] Distance mode
 #define MODAL_GROUP_G4 4 // [G91.1] Arc IJK distance mode
@@ -42,15 +42,7 @@
 #define MODAL_GROUP_G13 10 // [G61] Control mode
 
 #define MODAL_GROUP_M4 11  // [M0,M1,M2,M30] Stopping
-#define MODAL_GROUP_M7 12 // [M3,M4,M5] Spindle turning
-#define MODAL_GROUP_M8 13 // [M7,M8,M9] Coolant control
-#define MODAL_GROUP_M9 14 // [M56] Override control
-#define SPINDLE_DISABLE 0
-#define SPINDLE_ENABLE_CW PL_COND_FLAG_SPINDLE_CW
-#define SPINDLE_ENABLE_CCW PL_COND_FLAG_SPINDLE_CCW
-#define COOLANT_DISABLE 0
-#define COOLANT_FLOOD_ENABLE PL_COND_FLAG_COOLANT_FLOOD
-#define COOLANT_MIST_ENABLE PL_COND_FLAG_COOLANT_MIST
+#define MODAL_GROUP_M_OVERRIDE 12 // [M56] Override control
 
 
 // Define command actions for within execution-type modal groups (motion, stopping, non-modal). Used
@@ -77,10 +69,6 @@
 #define MOTION_MODE_LINEAR 1 // G1 (Do not alter value)
 #define MOTION_MODE_CW_ARC 2  // G2 (Do not alter value)
 #define MOTION_MODE_CCW_ARC 3  // G3 (Do not alter value)
-#define MOTION_MODE_PROBE_TOWARD 140 // G38.2 (Do not alter value)
-#define MOTION_MODE_PROBE_TOWARD_NO_ERROR 141 // G38.3 (Do not alter value)
-#define MOTION_MODE_PROBE_AWAY 142 // G38.4 (Do not alter value)
-#define MOTION_MODE_PROBE_AWAY_NO_ERROR 143 // G38.5 (Do not alter value)
 #define MOTION_MODE_NONE 80 // G80 (Do not alter value)
 #define MOTION_MODE_AXLE_ROTATE 63 // G63 (Do not alter value)
 
@@ -121,7 +109,7 @@
 #define TOOL_LENGTH_OFFSET_CANCEL 0 // G49 (Default: Must be zero)
 #define TOOL_LENGTH_OFFSET_ENABLE_DYNAMIC 1 // G43.1
 
-// Modal Group M9: Override control
+// Modal Group M override: Override control
 #ifdef DEACTIVATE_PARKING_UPON_INIT
   #define OVERRIDE_DISABLED  0 // (Default: Must be zero)
   #define OVERRIDE_PARKING_MOTION 1 // M56
@@ -142,8 +130,7 @@
 #define WORD_N  5
 #define WORD_P  6
 #define WORD_R  7
-#define WORD_S  8
-#define WORD_T  9
+#define WORD_T  8
 #define WORD_X  10
 #define WORD_Y  11
 #define WORD_Z  12
@@ -154,32 +141,16 @@
 #define GC_UPDATE_POS_SYSTEM   1
 #define GC_UPDATE_POS_NONE     2
 
-// Define probe cycle exit states and assign proper position updating.
-#define GC_PROBE_FOUND      GC_UPDATE_POS_SYSTEM
-#define GC_PROBE_ABORT      GC_UPDATE_POS_NONE
-#define GC_PROBE_FAIL_INIT  GC_UPDATE_POS_NONE
-#define GC_PROBE_FAIL_END   GC_UPDATE_POS_TARGET
-#ifdef SET_CHECK_MODE_PROBE_TO_START
-  #define GC_PROBE_CHECK_MODE   GC_UPDATE_POS_NONE  
-#else
-  #define GC_PROBE_CHECK_MODE   GC_UPDATE_POS_TARGET
-#endif
-
 // Define gcode parser flags for handling special cases.
 #define GC_PARSER_NONE                  0 // Must be zero.
 #define GC_PARSER_JOG_MOTION            bit(0)
 #define GC_PARSER_CHECK_MANTISSA        bit(1)
 #define GC_PARSER_ARC_IS_CLOCKWISE      bit(2)
-#define GC_PARSER_PROBE_IS_AWAY         bit(3)
-#define GC_PARSER_PROBE_IS_NO_ERROR     bit(4)
-#define GC_PARSER_LASER_FORCE_SYNC      bit(5)
-#define GC_PARSER_LASER_DISABLE         bit(6)
-#define GC_PARSER_LASER_ISMOTION        bit(7)
 
 
 // NOTE: When this struct is zeroed, the above defines set the defaults for the system.
 typedef struct {
-  uint8_t motion;          // {G0,G1,G2,G3,G38.2,G80}
+  uint8_t motion;          // {G0,G1,G2,G3,G80}
   uint8_t feed_rate;       // {G93,G94}
   uint8_t units;           // {G20,G21}
   uint8_t distance;        // {G90,G91}
@@ -190,8 +161,6 @@ typedef struct {
   uint8_t coord_select;    // {G54,G55,G56,G57,G58,G59}
   // uint8_t control;      // {G61} NOTE: Don't track. Only default supported.
   uint8_t program_flow;    // {M0,M1,M2,M30}
-  uint8_t coolant;
-  uint8_t spindle;
   uint8_t override;        // {M56}
 } gc_modal_t;
 
@@ -203,7 +172,6 @@ typedef struct {
   float p;         // G10 or dwell parameters
   // float q;      // G82 peck drilling
   float r;         // Arc radius
-  float s;         // Spindle speed
   uint8_t t;       // Tool selection
   float xyz[N_AXIS]; // X,Y,Z,A machine coordinates
 } gc_values_t;
@@ -212,7 +180,7 @@ typedef struct {
 typedef struct {
   gc_modal_t modal;
 
-  float spindle_speed;          // RPM
+
   float feed_rate;              // Millimeters/min
   uint8_t tool;                 // Tracks tool number. NOT USED.
   int32_t line_number;          // Last line number sent

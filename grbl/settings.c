@@ -39,6 +39,29 @@ typedef struct {
   float rpm_min;
   uint8_t flags;
   uint8_t homing_dir_mask;
+  uint8_t homing_origin_max_mask;
+  float homing_feed_rate;
+  float homing_seek_rate;
+  uint16_t homing_debounce_delay;
+  float homing_pulloff[N_AXIS];
+} settings_v11_t;
+
+typedef struct {
+  float steps_per_mm[N_AXIS];
+  float max_rate[N_AXIS];
+  float acceleration[N_AXIS];
+  float max_travel[N_AXIS];
+  uint8_t pulse_microseconds;
+  uint8_t step_invert_mask;
+  uint8_t dir_invert_mask;
+  uint8_t stepper_idle_lock_time;
+  uint8_t status_report_mask;
+  float junction_deviation;
+  float arc_tolerance;
+  float rpm_max;
+  float rpm_min;
+  uint8_t flags;
+  uint8_t homing_dir_mask;
   float homing_feed_rate;
   float homing_seek_rate;
   uint16_t homing_debounce_delay;
@@ -53,8 +76,6 @@ const __flash settings_t defaults = {\
     .status_report_mask = DEFAULT_STATUS_REPORT_MASK,
     .junction_deviation = DEFAULT_JUNCTION_DEVIATION,
     .arc_tolerance = DEFAULT_ARC_TOLERANCE,
-    .rpm_max = DEFAULT_SPINDLE_RPM_MAX,
-    .rpm_min = DEFAULT_SPINDLE_RPM_MIN,
     .homing_dir_mask = DEFAULT_HOMING_DIR_MASK,
     .homing_feed_rate = DEFAULT_HOMING_FEED_RATE,
     .homing_seek_rate = DEFAULT_HOMING_SEEK_RATE,
@@ -65,13 +86,11 @@ const __flash settings_t defaults = {\
     .homing_pulloff[Z_AXIS] = DEFAULT_Z_HOMING_PULLOFF,
     .homing_pulloff[A_AXIS] = DEFAULT_A_HOMING_PULLOFF,
     .flags = (DEFAULT_REPORT_INCHES << BIT_REPORT_INCHES) | \
-             (DEFAULT_LASER_MODE << BIT_LASER_MODE) | \
              (DEFAULT_INVERT_ST_ENABLE << BIT_INVERT_ST_ENABLE) | \
              (DEFAULT_HARD_LIMIT_ENABLE << BIT_HARD_LIMIT_ENABLE) | \
              (DEFAULT_HOMING_ENABLE << BIT_HOMING_ENABLE) | \
              (DEFAULT_SOFT_LIMIT_ENABLE << BIT_SOFT_LIMIT_ENABLE) | \
-             (DEFAULT_INVERT_LIMIT_PINS << BIT_INVERT_LIMIT_PINS) | \
-             (DEFAULT_INVERT_PROBE_PIN << BIT_INVERT_PROBE_PIN),
+             (DEFAULT_INVERT_LIMIT_PINS << BIT_INVERT_LIMIT_PINS),
     .steps_per_mm[X_AXIS] = DEFAULT_X_STEPS_PER_MM,
     .steps_per_mm[Y_AXIS] = DEFAULT_Y_STEPS_PER_MM,
     .steps_per_mm[Z_AXIS] = DEFAULT_Z_STEPS_PER_MM,
@@ -181,8 +200,6 @@ static uint8_t settings_migrate_v10(void)
   settings.status_report_mask = old_settings.status_report_mask;
   settings.junction_deviation = old_settings.junction_deviation;
   settings.arc_tolerance = old_settings.arc_tolerance;
-  settings.rpm_max = old_settings.rpm_max;
-  settings.rpm_min = old_settings.rpm_min;
   settings.flags = old_settings.flags;
   settings.homing_dir_mask = old_settings.homing_dir_mask;
   settings.homing_feed_rate = old_settings.homing_feed_rate;
@@ -191,6 +208,37 @@ static uint8_t settings_migrate_v10(void)
   settings.homing_pulloff[X_AXIS] = old_settings.homing_pulloff;
   settings.homing_pulloff[Y_AXIS] = old_settings.homing_pulloff;
   settings.homing_pulloff[Z_AXIS] = old_settings.homing_pulloff;
+  write_global_settings();
+  return(true);
+}
+
+
+static uint8_t settings_migrate_v11(void)
+{
+  settings_v11_t old_settings;
+  if (!memcpy_from_eeprom_with_checksum((char*)&old_settings, EEPROM_ADDR_GLOBAL, sizeof(old_settings))) {
+    return(false);
+  }
+
+  settings = defaults;
+  memcpy(settings.steps_per_mm, old_settings.steps_per_mm, sizeof(old_settings.steps_per_mm));
+  memcpy(settings.max_rate, old_settings.max_rate, sizeof(old_settings.max_rate));
+  memcpy(settings.acceleration, old_settings.acceleration, sizeof(old_settings.acceleration));
+  memcpy(settings.max_travel, old_settings.max_travel, sizeof(old_settings.max_travel));
+  settings.pulse_microseconds = old_settings.pulse_microseconds;
+  settings.step_invert_mask = old_settings.step_invert_mask;
+  settings.dir_invert_mask = old_settings.dir_invert_mask;
+  settings.stepper_idle_lock_time = old_settings.stepper_idle_lock_time;
+  settings.status_report_mask = old_settings.status_report_mask;
+  settings.junction_deviation = old_settings.junction_deviation;
+  settings.arc_tolerance = old_settings.arc_tolerance;
+  settings.flags = old_settings.flags & ~(1<<1);
+  settings.homing_dir_mask = old_settings.homing_dir_mask;
+  settings.homing_origin_max_mask = old_settings.homing_origin_max_mask;
+  settings.homing_feed_rate = old_settings.homing_feed_rate;
+  settings.homing_seek_rate = old_settings.homing_seek_rate;
+  settings.homing_debounce_delay = old_settings.homing_debounce_delay;
+  memcpy(settings.homing_pulloff, old_settings.homing_pulloff, sizeof(old_settings.homing_pulloff));
   write_global_settings();
   return(true);
 }
@@ -313,11 +361,6 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
         if (int_value) { settings.flags |= BITFLAG_INVERT_LIMIT_PINS; }
         else { settings.flags &= ~BITFLAG_INVERT_LIMIT_PINS; }
         break;
-      case 6: // Reset to ensure change. Immediate re-init may cause problems.
-        if (int_value) { settings.flags |= BITFLAG_INVERT_PROBE_PIN; }
-        else { settings.flags &= ~BITFLAG_INVERT_PROBE_PIN; }
-        probe_configure_invert_mask(false);
-        break;
       case 10: settings.status_report_mask = int_value; break;
       case 11: settings.junction_deviation = value; break;
       case 12: settings.arc_tolerance = value; break;
@@ -355,16 +398,6 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
         if (int_value >= (1<<N_AXIS)) { return(STATUS_INVALID_STATEMENT); }
         settings.homing_origin_max_mask = int_value;
         break;
-      case 30: settings.rpm_max = value; spindle_init(); break; // Re-initialize spindle rpm calibration
-      case 31: settings.rpm_min = value; spindle_init(); break; // Re-initialize spindle rpm calibration
-      case 32:
-        #ifdef VARIABLE_SPINDLE
-          if (int_value) { settings.flags |= BITFLAG_LASER_MODE; }
-          else { settings.flags &= ~BITFLAG_LASER_MODE; }
-        #else
-          return(STATUS_SETTING_DISABLED_LASER);
-        #endif
-        break;
       default:
         return(STATUS_INVALID_STATEMENT);
     }
@@ -377,7 +410,10 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
 // Initialize the config subsystem
 void settings_init() {
   if(!read_global_settings()) {
-    if ((eeprom_get_char(0) == SETTINGS_VERSION_PREVIOUS) && settings_migrate_v10()) {
+    uint8_t version = eeprom_get_char(0);
+    if ((version == SETTINGS_VERSION_PREVIOUS) && settings_migrate_v11()) {
+      report_grbl_settings();
+    } else if ((version == SETTINGS_VERSION_PREVIOUS_2) && settings_migrate_v10()) {
       report_grbl_settings();
     } else {
       report_status_message(STATUS_SETTING_READ_FAIL);

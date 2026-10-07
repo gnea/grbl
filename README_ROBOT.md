@@ -1,4 +1,9 @@
-# Four-Axis Wellplate Robot Firmware
+# Cartesian Robot Plate Transporter Firmware
+
+This is the DALSA-Lab GRBL fork for the Cartesian Robot Plate Transporter. The fork and
+fourth-axis work are maintained at
+[DALSA-Lab/grbl, `feature/fourth-axis`](https://github.com/DALSA-Lab/grbl/tree/feature/fourth-axis).
+Original GRBL copyright notices and the GPL license are retained; see [COPYING](COPYING).
 
 This repository is a Grbl-based firmware fork for a laboratory Cartesian robot with:
 
@@ -312,13 +317,11 @@ Keep a hand near the Arduino reset button and use a separate emergency-stop circ
 
 ## Current Scope and Limitations
 
-- The spindle and coolant hardware are unused.
+- Spindle and coolant support have been removed from this robot-specific fork.
 - The gripper is only a placeholder.
-- The probe subsystem is disabled; A5 is reserved for the future encoder.
 - A is a planner-integrated fourth axis measured conceptually in degrees.
 - There is no encoder feedback for A or the gripper yet.
 - The Arduino Uno has limited SRAM, flash, timers, and interrupt bandwidth.
-- The current firmware still contains some legacy spindle/coolant compatibility paths; they do not drive hardware.
 
 ## Development Rules
 

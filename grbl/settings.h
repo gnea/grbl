@@ -27,27 +27,24 @@
 
 // Version of the EEPROM data. Will be used to migrate existing data from older versions of Grbl
 // when firmware is upgraded. Always stored in byte 0 of eeprom
-#define SETTINGS_VERSION 11  // NOTE: Check settings_reset() when moving to next version.
-#define SETTINGS_VERSION_PREVIOUS 10
+#define SETTINGS_VERSION 12  // NOTE: Check settings_reset() when moving to next version.
+#define SETTINGS_VERSION_PREVIOUS 11
+#define SETTINGS_VERSION_PREVIOUS_2 10
 
 // Define bit flag masks for the boolean settings in settings.flag.
 #define BIT_REPORT_INCHES      0
-#define BIT_LASER_MODE         1
 #define BIT_INVERT_ST_ENABLE   2
 #define BIT_HARD_LIMIT_ENABLE  3
 #define BIT_HOMING_ENABLE      4
 #define BIT_SOFT_LIMIT_ENABLE  5
 #define BIT_INVERT_LIMIT_PINS  6
-#define BIT_INVERT_PROBE_PIN   7
 
 #define BITFLAG_REPORT_INCHES      bit(BIT_REPORT_INCHES)
-#define BITFLAG_LASER_MODE         bit(BIT_LASER_MODE)
 #define BITFLAG_INVERT_ST_ENABLE   bit(BIT_INVERT_ST_ENABLE)
 #define BITFLAG_HARD_LIMIT_ENABLE  bit(BIT_HARD_LIMIT_ENABLE)
 #define BITFLAG_HOMING_ENABLE      bit(BIT_HOMING_ENABLE)
 #define BITFLAG_SOFT_LIMIT_ENABLE  bit(BIT_SOFT_LIMIT_ENABLE)
 #define BITFLAG_INVERT_LIMIT_PINS  bit(BIT_INVERT_LIMIT_PINS)
-#define BITFLAG_INVERT_PROBE_PIN   bit(BIT_INVERT_PROBE_PIN)
 
 // Define status reporting boolean enable bit flags in settings.status_report_mask
 #define BITFLAG_RT_STATUS_POSITION_TYPE     bit(0)
@@ -100,9 +97,6 @@ typedef struct {
   uint8_t status_report_mask; // Mask to indicate desired report data.
   float junction_deviation;
   float arc_tolerance;
-
-  float rpm_max;
-  float rpm_min;
 
   uint8_t flags;  // Contains default boolean settings
 

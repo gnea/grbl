@@ -65,15 +65,7 @@ void mc_line(float *target, plan_line_data_t *pl_data)
   } while (1);
 
   // Plan and queue motion into planner buffer
-  if (plan_buffer_line(target, pl_data) == PLAN_EMPTY_BLOCK) {
-    if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)) {
-      // Correctly set spindle state, if there is a coincident position passed. Forces a buffer
-      // sync while in M3 laser mode only.
-      if (pl_data->condition & PL_COND_FLAG_SPINDLE_CW) {
-        spindle_sync(PL_COND_FLAG_SPINDLE_CW, pl_data->spindle_speed);
-      }
-    }
-  }
+  plan_buffer_line(target, pl_data);
 }
 
 
@@ -210,7 +202,7 @@ void mc_homing_cycle(uint8_t cycle_mask)
   // TODO: Move the pin-specific LIMIT_PIN call to limits.c as a function.
   #ifdef LIMITS_TWO_SWITCHES_ON_AXES
     if (limits_get_state()) {
-      mc_reset(); // Issue system reset and ensure spindle and coolant are shutdown.
+      mc_reset(); // Issue system reset and stop motion.
       system_set_exec_alarm(EXEC_ALARM_HARD_LIMIT);
       return;
     }
@@ -248,73 +240,6 @@ void mc_homing_cycle(uint8_t cycle_mask)
 
   // If hard limits feature enabled, re-enable hard limits pin change register after homing cycle.
   limits_init();
-}
-
-
-// Perform tool length probe cycle. Requires probe switch.
-// NOTE: Upon probe failure, the program will be stopped and placed into ALARM state.
-uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t parser_flags)
-{
-  // TODO: Need to update this cycle so it obeys a non-auto cycle start.
-  if (sys.state == STATE_CHECK_MODE) { return(GC_PROBE_CHECK_MODE); }
-
-  // Finish all queued commands and empty planner buffer before starting probe cycle.
-  protocol_buffer_synchronize();
-  if (sys.abort) { return(GC_PROBE_ABORT); } // Return if system reset has been issued.
-
-  // Initialize probing control variables
-  uint8_t is_probe_away = bit_istrue(parser_flags,GC_PARSER_PROBE_IS_AWAY);
-  uint8_t is_no_error = bit_istrue(parser_flags,GC_PARSER_PROBE_IS_NO_ERROR);
-  sys.probe_succeeded = false; // Re-initialize probe history before beginning cycle.
-  probe_configure_invert_mask(is_probe_away);
-
-  // After syncing, check if probe is already triggered. If so, halt and issue alarm.
-  // NOTE: This probe initialization error applies to all probing cycles.
-  if ( probe_get_state() ) { // Check probe pin state.
-    system_set_exec_alarm(EXEC_ALARM_PROBE_FAIL_INITIAL);
-    protocol_execute_realtime();
-    probe_configure_invert_mask(false); // Re-initialize invert mask before returning.
-    return(GC_PROBE_FAIL_INIT); // Nothing else to do but bail.
-  }
-
-  // Setup and queue probing motion. Auto cycle-start should not start the cycle.
-  mc_line(target, pl_data);
-
-  // Activate the probing state monitor in the stepper module.
-  sys_probe_state = PROBE_ACTIVE;
-
-  // Perform probing cycle. Wait here until probe is triggered or motion completes.
-  system_set_exec_state_flag(EXEC_CYCLE_START);
-  do {
-    protocol_execute_realtime();
-    if (sys.abort) { return(GC_PROBE_ABORT); } // Check for system abort
-  } while (sys.state != STATE_IDLE);
-
-  // Probing cycle complete!
-
-  // Set state variables and error out, if the probe failed and cycle with error is enabled.
-  if (sys_probe_state == PROBE_ACTIVE) {
-    if (is_no_error) { memcpy(sys_probe_position, sys_position, sizeof(sys_position)); }
-    else { system_set_exec_alarm(EXEC_ALARM_PROBE_FAIL_CONTACT); }
-  } else {
-    sys.probe_succeeded = true; // Indicate to system the probing cycle completed successfully.
-  }
-  sys_probe_state = PROBE_OFF; // Ensure probe state monitor is disabled.
-  probe_configure_invert_mask(false); // Re-initialize invert mask.
-  protocol_execute_realtime();   // Check and execute run-time commands
-
-  // Reset the stepper and planner buffers to remove the remainder of the probe motion.
-  st_reset(); // Reset step segment buffer.
-  plan_reset(); // Reset planner buffer. Zero planner positions. Ensure probing motion is cleared.
-  plan_sync_position(); // Sync planner position to current machine position.
-
-  #ifdef MESSAGE_PROBE_COORDINATES
-    // All done! Output the probe position as message.
-    report_probe_parameters();
-  #endif
-
-  if (sys.probe_succeeded) { return(GC_PROBE_FOUND); } // Successful probe cycle.
-  else { return(GC_PROBE_FAIL_END); } // Failed to trigger probe within travel. With or without error.
 }
 
 
@@ -369,9 +294,7 @@ void mc_reset()
   if (bit_isfalse(sys_rt_exec_state, EXEC_RESET)) {
     system_set_exec_state_flag(EXEC_RESET);
 
-    // Kill spindle and coolant.
-    spindle_stop();
-    coolant_stop();
+    // Stop queued motion execution.
 
     // Kill steppers only if in any motion state, i.e. cycle, actively holding, or homing.
     // NOTE: If steppers are kept enabled via the step idle delay setting, this also keeps

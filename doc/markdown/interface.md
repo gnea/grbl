@@ -10,7 +10,7 @@ To stream a g-code program to Grbl, the basic interface is to send Grbl a line o
 
 Along with **response messages**, Grbl has **push messages** to provide more feedback on what Grbl is doing and are also strings terminated by a return. These messages may be "pushed" from Grbl to the user in response to a query or to let the user know something important just happened. These can come at any time, but usually from something like a settings print out when asked to. **Push messages** are easily identified because they don't start with an `ok` or `error` like **response messages** do. They are typically placed in `[]` brackets, `<>` chevrons, start with a `$`, or a specific string of text. These are all defined and described later in this document.
 
-Finally, Grbl has **real-time commands** that are invoked by a set of special characters that may be sent at any time and are not part of the basic streaming send-response interface. These cause Grbl to immediately execute the command and typically don't generate a response. These include pausing the current motion, speed up/down everything, toggle the spindle during a job, reset Grbl, or query Grbl for a real-time status report. See the `Commands` document to see what they are and how they work.
+Finally, Grbl has **real-time commands** that are invoked by a set of special characters that may be sent at any time and are not part of the basic streaming send-response interface. These cause Grbl to immediately execute the command and typically don't generate a response. These include pausing the current motion, adjusting motion overrides, resetting Grbl, or querying Grbl for a real-time status report. See the `Commands` document to see what they are and how they work.
 
 -------
 
@@ -34,7 +34,7 @@ Although this communication lag may take only a fraction of a second, there is a
 
 #### Streaming Protocol: Character-Counting _[**Recommended with Reservation**]_
 
-To get the best of both worlds, the simplicity and reliability of the send-response method and assurance of maximum performance with software flow control, we came up with a simple character-counting protocol for streaming a G-code program to Grbl. It works like the send-response method, where the host PC sends a line of G-code for Grbl to execute and waits for a `response message`, but, rather than needing special XON/XOFF characters for flow control, this protocol simply uses Grbl's responses as a way to reliably track how much room there is in Grbl's serial receive buffer. An example of this protocol is outlined in the `stream.py` streaming script in our repo. This protocol is particular useful for very fast machines like laser cutters. 
+To get the best of both worlds, the simplicity and reliability of the send-response method and assurance of maximum performance with software flow control, we came up with a simple character-counting protocol for streaming a G-code program to Grbl. It works like the send-response method, where the host PC sends a line of G-code for Grbl to execute and waits for a `response message`, but, rather than needing special XON/XOFF characters for flow control, this protocol simply uses Grbl's responses as a way to reliably track how much room there is in Grbl's serial receive buffer. An example of this protocol is outlined in the `stream.py` streaming script in our repo. This protocol is particularly useful for fast pick-and-place and transport moves.
 
 The main difference between this protocol and the others is the host PC needs to maintain a standing count of how many characters it has sent to Grbl and then subtract the number of characters corresponding to the line executed with each Grbl response. Suppose there is a short G-code program that has 5 lines with 25, 40, 31, 58, and 20 characters (counting the line feed and carriage return characters too). We know Grbl has a 128 character serial receive buffer, and the host PC can send up to 128 characters without overflowing the buffer. If we let the host PC send as many complete lines as we can without over flowing Grbl's serial receive buffer, the first three lines of 25, 40, and 31 characters can be sent for a total of 96 characters. When Grbl sends a **response message**, we know the first line has been processed and is no longer in the serial read buffer. As it stands, the serial read buffer now has the 40 and 31 character lines in it for a total of 71 characters. The host PC needs to then determine if it's safe to send the next line without overflowing the buffer. With the next line at 58 characters and the serial buffer at 71 for a total of 129 characters, the host PC will need to wait until more room has cleared from the serial buffer. When the next Grbl **response message** comes in, the second line has been processed and only the third 31 character line remains in the serial buffer. At this point, it's safe to send the remaining last two 58 and 20 character lines of the g-code program for a total of 110.
 
@@ -50,7 +50,7 @@ _RESERVATION:_
 Along with streaming a G-code program, there a few more things to consider when writing a GUI for Grbl, such as how to use status reporting, real-time control commands, dealing with EEPROM, and general message handling.
 
 #### Status Reporting
-When a `?` character is sent to Grbl (no additional line feed or carriage return character required), it will immediately respond with something like `<Idle|MPos:0.000,0.000,0.000|FS:0.0,0>` to report its state and current position. The `?` is always picked-off and removed from the serial receive buffer whenever Grbl detects one. So, these can be sent at any time. Also, to make it a little easier for GUIs to pick up on status reports, they are always encased by `<>` chevrons.
+When a `?` character is sent to Grbl (no additional line feed or carriage return character required), it will immediately respond with something like `<Idle|MPos:0.000,0.000,0.000|F:0.0>` to report its state and current position. The `?` is always picked-off and removed from the serial receive buffer whenever Grbl detects one. So, these can be sent at any time. Also, to make it a little easier for GUIs to pick up on status reports, they are always encased by `<>` chevrons.
 
 Developers can use this data to provide an on-screen position digital-read-out (DRO) for the user and/or to show the user a 3D position in a virtual workspace. We recommend querying Grbl for a `?` real-time status report at no more than 5Hz. 10Hz may be possible, but at some point, there are diminishing returns and you are taxing Grbl's CPU more by asking it to generate and send a lot of position data.
 
@@ -74,7 +74,7 @@ For reference:
 
 Grbl's g-code parser is fully standards-compilant with complete error-checking. When a G-code parser detects an error in a G-code block/line, the parser will dump everything in the block from memory and report an `error:` back to the user or GUI. This dump is absolutely the right thing to do, because a g-code line with an error can be interpreted in multiple ways. However, this dump can be problematic, because the bad G-code block may have contained some valuable positioning commands or feed rate settings that the following g-code depends on.
 
-It's highly recommended to do what all professional CNC controllers do when they detect an error in the G-code program, _**halt**_. Don't do anything further until the user has modified the G-code and fixed the error in their program. Otherwise, bad things could happen.
+It's highly recommended for a motion controller to halt when it detects an error in the G-code program. Don't do anything further until the user has modified the G-code and fixed the error in their program. Otherwise, bad things could happen.
 
 As a service to GUIs, Grbl has a "check G-code" mode, enabled by the `$C` system command. GUIs can stream a G-code program to Grbl, where it will parse it, error-check it, and report `ok`'s and `errors:`'s without powering on anything or moving. So GUIs can pre-check the programs before streaming them for real. To disable the "check G-code" mode, send another `$C` system command and Grbl will automatically soft-reset to flush and re-initialize the G-code parser and the rest of the system. This perhaps should be run in the background when a user first loads a program, before a user sets up his machine. This flushing and re-initialization clears `G92`'s by G-code standard, which some users still incorrectly use to set their part zero.
 
@@ -114,7 +114,7 @@ In addition, all `$x=val` settings, `error:`, and `ALARM:` messages no longer co
 
 Other minor changes and bug fixes that may effect GUI parsing include:
 
-- Floating point values printed with zero precision do not show a decimal, or look like an integer. This includes spindle speed RPM and feed rate in mm mode.
+- Floating point values printed with zero precision do not show a decimal, or look like an integer. This includes feed rate in mm mode.
 - `$G` reports fixed a long time bug with program modal state. It always showed `M0` program pause when running. Now during a normal program run, no program modal state is given until an `M0`, `M2`, or `M30` is active and then the appropriate state will be shown.
 
 On a final note, this interface tweak came about out of necessity, as more data is being sent back from Grbl and it is capable of doing many more things. It's not intended to be altered again in the near future, if at all. This is likely the only and last major change to this. If you have any comments or suggestions before Grbl v1.1 goes to master, please do immediately so we can all vet the new alteration before its installed.
@@ -168,7 +168,7 @@ Every G-code block sent to Grbl and Grbl `$` system command that is terminated w
 | **`30`**| The `G53` G-code command requires either a `G0` seek or `G1` feed motion mode to be active. A different motion was active.|
 | **`31`** | There are unused axis words in the block and `G80` motion mode cancel is active.|
 | **`32`** | A `G2` or `G3` arc was commanded but there are no `XYZ` axis words in the selected plane to trace the arc.|
-| **`33`** | The motion command has an invalid target. `G2`, `G3`, and `G38.2` generates this error, if the arc is impossible to generate or if the probe target is the current position.|
+| **`33`** | The motion command has an invalid target. `G2` or `G3` generates this error if the arc is impossible to generate.|
 | **`34`** | A `G2` or `G3` arc, traced with the radius definition, had a mathematical error when computing the arc geometry. Try either breaking up the arc into semi-circles or quadrants, or redefine them with the arc offset definition.|
 | **`35`** | A `G2` or `G3` arc, traced with the offset definition, is missing the `IJK` offset word in the selected plane to trace the arc.|
 | **`36`** | There are unused, leftover G-code words that aren't used by any command in the block.|
@@ -210,7 +210,7 @@ The start up message always prints upon startup and after a reset. Whenever you 
 
 #### Alarm Message
 
-Alarm is an emergency state. Something has gone terribly wrong when these occur. Typically, they are caused by limit error when the machine has moved or wants to move outside the machine travel and crash into the ends. They also report problems if Grbl is lost and can't guarantee positioning or a probe command has failed. Once in alarm-mode, Grbl will lock out all g-code functionality and accept only a small set of commands. It may even stop everything and force you to acknowledge the problem until you issue Grbl a reset. While in alarm-mode, the user can override the alarm manually with a specific command, which then re-enables g-code so you can move the machine again. This ensures the user knows about the problem and has taken steps to fix or account for it.
+Alarm is an emergency state, typically caused by a limit error or a reset during motion when Grbl cannot guarantee position. In alarm mode, Grbl locks out G-code and accepts only a small set of commands until the user investigates and resets the system.
 
 Similar to error messages, all alarm messages are sent as  **`ALARM:X`**, where `X` is an alarm code to tell you exacly what caused the alarm. The table below describes the meaning of each alarm code.
 
@@ -219,8 +219,6 @@ Similar to error messages, all alarm messages are sent as  **`ALARM:X`**, where 
 | **`1`** | Hard limit triggered. Machine position is likely lost due to sudden and immediate halt. Re-homing is highly recommended. |
 | **`2`** | G-code motion target exceeds machine travel. Machine position safely retained. Alarm may be unlocked. |
 | **`3`** | Reset while in motion. Grbl cannot guarantee position. Lost steps are likely. Re-homing is highly recommended. |
-| **`4`** | Probe fail. The probe is not in the expected initial state before starting probe cycle, where G38.2 and G38.3 is not triggered and G38.4 and G38.5 is triggered. |
-| **`5`** | Probe fail. Probe did not contact the workpiece within the programmed travel for G38.2 and G38.4. |
 | **`6`** | Homing fail. Reset during active homing cycle. |
 | **`7`** | Homing fail. Safety door was opened during active homing cycle. |
 | **`8`** | Homing fail. Cycle failed to clear limit switch when pulling off. Try increasing pull-off setting or check wiring. |
@@ -247,7 +245,6 @@ $2=0
 $3=0
 $4=0
 $5=0
-$6=0
 $10=255
 $11=0.010
 $12=0.002
@@ -260,9 +257,6 @@ $24=25.000
 $25=500.000
 $26=250
 $27=1.000
-$30=1000
-$31=0
-$32=0
 $100=250.000
 $101=250.000
 $102=250.000
@@ -286,7 +280,6 @@ ok
 | **`3`** | Step direction invert, mask |
 | **`4`** | Invert step enable pin, boolean |
 | **`5`** | Invert limit pins, boolean |
-| **`6`** | Invert probe pin, boolean |
 | **`10`** | Status report options, mask |
 | **`11`** | Junction deviation, millimeters |
 | **`12`** | Arc tolerance, millimeters |
@@ -299,9 +292,6 @@ ok
 | **`25`** | Homing search seek rate, mm/min  |
 | **`26`** | Homing switch debounce delay, milliseconds |
 | **`27`** | Homing switch pull-off distance, millimeters |
-| **`30`** | Maximum spindle speed, RPM |
-| **`31`** | Minimum spindle speed, RPM |
-| **`32`** | Laser-mode enable, boolean |
 | **`100`** | X-axis steps per millimeter |
 | **`101`** | Y-axis steps per millimeter |
 | **`102`** | Z-axis steps per millimeter |
@@ -365,7 +355,7 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 	- `[GC:]` G-code Parser State Message 
 
 		```
-		[GC:G0 G54 G17 G21 G90 G94 M5 M9 T0 F0.0 S0]
+		[GC:G0 G54 G17 G21 G90 G94 M0 T0 F0.0]
 		ok
 		```
 		
@@ -400,17 +390,14 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
       [G30:0.000,0.000,0.000]
       [G92:0.000,0.000,0.000]
       [TLO:0.000]
-      [PRB:0.000,0.000,0.000:0]
       ok
       ```
-
-    	- The `PRB:` probe parameter message includes an additional `:` and suffix value is a boolean. It denotes whether the last probe cycle was successful or not.
 
   - `[VER:]` and `[OPT:]`: Indicates build info data from a `$I` user query. These build info messages are followed by an `ok` to confirm the `$I` was executed, like so:
  
       ```
       [VER:v1.1f.20170131:Some string]
-      [OPT:VL,16,128]
+      [OPT:NR+,16,128]
       ok
       ```
       
@@ -420,19 +407,14 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 
 			| `OPT` Code | Setting Description, Units |
 |:-------------:|----|
-| **`V`** | Variable spindle enabled |
 | **`N`** | Line numbers enabled |
-| **`M`** | Mist coolant enabled |
 | **`C`** | CoreXY enabled |
 | **`P`** | Parking motion enabled |
 | **`Z`** | Homing force origin enabled |
 | **`H`** | Homing single axis enabled |
 | **`T`** | Two limit switches on axis enabled |
-| **`D`** | Spindle direction pin used as enable pin |
-| **`0`** | Spindle enable off when speed is zero enabled |
 | **`S`** | Software limit pin debouncing enabled |
 | **`R`** | Parking override control enabled |
-| **`A`** | Allow feed rate overrides in probe cycles |
 | **`+`** | Safety door input pin enabled |
 | **`*`** | Restore all EEPROM disabled |
 | **`$`** | Restore EEPROM `$` settings disabled |
@@ -599,17 +581,13 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
           - Grbl is homing, jogging, parking, or performing a system task/motion.
           - There is no motion in the g-code block like a `G4P1` dwell. (May be fixed in later versions.)
 
-    - **Current Feed and Speed:**
+    - **Current Feed:**
 
-        - There are two versions of this data field that Grbl may respond with. 
-        
-        	- `F:500` contains real-time feed rate data as the value. This appears only when VARIABLE_SPINDLE is disabled in config.h, because spindle speed is not tracked in this mode.
-        	- `FS:500,8000` contains real-time feed rate, followed by spindle speed, data as the values. Note the `FS:`, rather than `F:`, data type name indicates spindle speed data is included.
+        - `F:500` contains the current real-time feed rate as the value.
                 
         - The current feed rate value is in mm/min or inches/min, depending on the `$` report inches user setting. 
-        - The second value is the current spindle speed in RPM
         
-        - These values will often not be the programmed feed rate or spindle speed, because several situations can alter or limit them. For example, overrides directly scale the programmed values to a different running value, while machine settings, acceleration profiles, and even the direction traveled can also limit rates to maximum values allowable.
+        - This value will often not be the programmed feed rate, because several situations can alter or limit it. For example, overrides directly scale the programmed value to a different running value, while machine settings, acceleration profiles, and even the direction traveled can also limit rates to maximum values allowable.
 
         - As a operational note, reported rate is typically 30-50 msec behind actual position reported.
 
@@ -617,17 +595,15 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 
     - **Input Pin State:**
 
-        - `Pn:XYZPDHRS` indicates which input pins Grbl has detected as 'triggered'.
+        - `Pn:XYZADHRS` indicates which input pins Grbl has detected as triggered.
 
         - Pin state is evaluated every time a status report is generated. All input pin inversions are appropriately applied to determine 'triggered' states.
 
-        - Each letter of `XYZPDHRS` denotes a particular 'triggered' input pin.
+        - Each letter of `XYZADHRS` denotes a particular triggered input pin.
 
-          - `X Y Z` XYZ limit pins, respectively
-          - `P` the probe pin.
+          - `X Y Z A` X, Y, Z, and A limit pins, respectively.
           - `D H R S` the door, hold, soft-reset, and cycle-start pins, respectively.
-          - Example: `Pn:PZ` indicates the probe and z-limit pins are 'triggered'.
-          - Note: `A` may be added in later versions for an A-axis limit pin.
+          - Example: `Pn:AZ` indicates the A- and Z-axis limit pins are triggered.
 
         - Assume input pin letters are presented in no particular order.
 
@@ -640,7 +616,7 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
 
     - **Override Values:**
 
-        - `Ov:100,100,100` indicates current override values in percent of programmed values for feed, rapids, and spindle speed, respectively.
+        - `Ov:100,100` indicates current override values in percent of programmed values for feed and rapids, respectively.
 
         - Override maximum, minimum, and increment sizes are all configurable within config.h. Assume that a user or OEM will alter these based on customized use-cases. Recommend not hard-coding these values into a GUI, but rather just show the actual override values and generic increment buttons.
 
@@ -655,30 +631,3 @@ Feedback messages provide non-critical information on what Grbl is doing, what i
           - It is disabled in the config.h file. No `$` mask setting available.
           - The override refresh counter is in-between intermittent reports.
           - `WCO:` exists in current report during refresh. Automatically set to try again on next report.
-
-	- **Accessory State:**
-
-		- `A:SFM` indicates the current state of accessory machine components, such as the spindle and coolant.
-
-		- Due to the new toggle overrides, these machine components may not be running according to the g-code program. This data is provided to ensure the user knows exactly what Grbl is doing at any given time.
-		
-		- Each letter after `A:` denotes a particular state. When it appears, the state is enabled. When it does not appear, the state is disabled.
-
-			- `S` indicates spindle is enabled in the CW direction. This does not appear with `C`.
-			- `C` indicates spindle is enabled in the CCW direction. This does not appear with `S`.
-        	- `F` indicates flood coolant is enabled.
-        	- `M` indicates mist coolant is enabled.
-		
-	   - Assume accessory state letters are presented in no particular order.
-      
-      - This data field appears:
-
-			- When any accessory state is enabled.
-        	- Only with the override values field in the same message. Any accessory state change will trigger the accessory state and override values fields to be shown on the next report.
-
-      - This data field will not appear if:
-
-        	- No accessory state is active.
-        	- It is disabled in the config.h file. No `$` mask setting available.
-        	- If override refresh counter is in-between intermittent reports.
-        	- `WCO:` exists in current report during refresh. Automatically set to try again on next report.

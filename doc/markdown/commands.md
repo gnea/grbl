@@ -34,11 +34,11 @@ See [Grbl v1.1 Configuration](https://github.com/gnea/grbl/wiki/Grbl-v1.1-Config
 
 #### `$#` - View gcode parameters
 
-G-code parameters store the coordinate offset values for G54-G59 work coordinates, G28/G30 pre-defined positions, G92 coordinate offset, tool length offsets, and probing (not officially, but we added here anyway). Most of these parameters are directly written to EEPROM anytime they are changed and are persistent. Meaning that they will remain the same, regardless of power-down, until they are explicitly changed. The non-persistent parameters, which will are not retained when reset or power-cycled, are G92, G43.1 tool length offsets, and the G38.2 probing data.
+G-code parameters store the coordinate offset values for G54-G59 work coordinates, G28/G30 pre-defined positions, G92 coordinate offset, and tool length offsets. Most of these parameters are directly written to EEPROM anytime they are changed and are persistent. The non-persistent parameters, which are not retained when reset or power-cycled, are G92 and G43.1 tool length offsets.
 
 G54-G59 work coordinates can be changed via the `G10 L2 Px` or `G10 L20 Px` command defined by the NIST gcode standard and the EMC2 (linuxcnc.org) standard. G28/G30 pre-defined positions can be changed via the `G28.1` and the `G30.1` commands, respectively.
 
-When `$#` is called, Grbl will respond with the stored offsets from machine coordinates for each system as follows. `TLO` denotes tool length offset (for the default z-axis), and `PRB` denotes the coordinates of the last probing cycle, where the suffix `:1` denotes if the last probe was successful and `:0` as not successful.
+When `$#` is called, Grbl responds with the stored offsets from machine coordinates for each system as follows. `TLO` denotes the tool length offset.
 
 ```
 [G54:4.000,0.000,0.000]
@@ -51,7 +51,6 @@ When `$#` is called, Grbl will respond with the stored offsets from machine coor
 [G30:4.000,6.000,0.000]
 [G92:0.000,0.000,0.000]
 [TLO:0.000]
-[PRB:0.000,0.000,0.000:0]
 ```
 
 #### `$G` - View gcode parser state
@@ -59,16 +58,16 @@ When `$#` is called, Grbl will respond with the stored offsets from machine coor
 This command prints all of the active gcode modes in Grbl's G-code parser. When sending this command to Grbl, it will reply with a message starting with an `[GC:` indicator like: 
 
 ```
-[GC:G0 G54 G17 G21 G90 G94 M0 M5 M9 T0 S0.0 F500.0]
+[GC:G0 G54 G17 G21 G90 G94 M0 T0 F500.0]
 ```
 
-These active modes determine how the next G-code block or command will be interpreted by Grbl's G-code parser. For those new to G-code and CNC machining, modes sets the parser into a particular state so you don't have to constantly tell the parser how to parse it. These modes are organized into sets called "modal groups" that cannot be logically active at the same time. For example, the units modal group sets whether your G-code program is interpreted in inches or in millimeters.
+These active modes determine how the next G-code block or command will be interpreted by Grbl's G-code parser. Modes set the parser into a particular state so you do not have to repeatedly specify it. These modes are organized into sets called "modal groups" that cannot be logically active at the same time. For example, the units modal group sets whether G-code is interpreted in inches or in millimeters.
 
 A short list of the modal groups, supported by Grbl, is shown below, but more complete and detailed descriptions can be found at LinuxCNC's [website](http://www.linuxcnc.org/docs/2.4/html/gcode_overview.html#sec:Modal-Groups). The G-code commands in **bold** indicate the default modes upon powering-up Grbl or resetting it. The commands in _italics_ indicate a special Grbl-only command.
 
 | Modal Group Meaning	|  Member Words |
 |:----:|:----:|
-| Motion Mode | **G0**, G1, G2, G3, G38.2, G38.3, G38.4, G38.5, G80 |
+| Motion Mode | **G0**, G1, G2, G3, G80 |
 |Coordinate System Select	| **G54**, G55, G56, G57, G58, G59|
 |Plane Select	| **G17**, G18, G19|
 |Distance Mode	| **G90**, G91|
@@ -78,16 +77,14 @@ A short list of the modal groups, supported by Grbl, is shown below, but more co
 |Cutter Radius Compensation | **G40** |
 |Tool Length Offset |G43.1, **G49**|
 |Program Mode | **M0**, M1, M2, M30|
-|Spindle State |M3, M4, **M5**|
-|Coolant State	| M7, M8, **M9** |
 |Override Control | _M56_ |
 
 Grbl supports a special _M56_ override control command, where this enables and disables Grbl's parking motion when a `P1` or a `P0` is passed with `M56`, respectively. This command is only available when both parking and this particular option is enabled.
 
-In addition to the G-code parser modes, Grbl will report the active `T` tool number, `S` spindle speed, and `F` feed rate, which all default to 0 upon a reset. For those that are curious, these don't quite fit into nice modal groups, but are just as important for determining the parser state.
+In addition to the G-code parser modes, Grbl will report the active `T` tool number and `F` feed rate, which both default to 0 upon a reset. For those that are curious, these don't quite fit into nice modal groups, but are just as important for determining the parser state.
 
 #### `$I` - View build info
-This prints feedback to the user the Grbl version and source code build date. Optionally, `$I` can also store a short string to help identify which CNC machine you are communicating with, if you have more than machine using Grbl. To set this string, send Grbl `$I=xxx`, where `xxx` is your customization string that is less than 80 characters. The next time you query Grbl with a `$I` view build info, Grbl will print this string after the version and build date.
+This prints the Grbl version and source code build date. Optionally, `$I` can also store a short string to identify the robot or firmware configuration. To set this string, send Grbl `$I=xxx`, where `xxx` is your customization string that is less than 80 characters. The next time you query Grbl with `$I`, Grbl prints this string after the version and build date.
 
 NOTE: Some OEMs may block access to over-writing the build info string so they can store product information and codes there.
 
@@ -125,7 +122,7 @@ If you have multiple G-code startup blocks, they will print back to you in order
 NOTE: There are two variations on when startup blocks with run. First, it will not run if Grbl initializes up in an ALARM state or exits an ALARM state via an `$X` unlock for safety reasons. Always address and cancel the ALARM and then finish by a reset, where the startup blocks will run at initialization. Second, if you have homing enabled, the startup blocks will execute immediately after a successful homing cycle, not at startup.
 
 #### `$C` - Check gcode mode
-This toggles the Grbl's gcode parser to take all incoming blocks and process them completely, as it would in normal operation, but it does not move any of the axes, ignores dwells, and powers off the spindle and coolant. This is intended as a way to provide the user a way to check how their new G-code program fares with Grbl's parser and monitor for any errors (and checks for soft limit violations, if enabled).
+This toggles the Grbl G-code parser to process incoming blocks as it would in normal operation, but without moving the axes. It ignores dwells and auxiliary outputs. This lets users check a G-code program for parser errors and soft-limit violations.
 
 When toggled off, Grbl will perform an automatic soft-reset (^X). This is for two purposes. It simplifies the code management a bit. But, it also prevents users from starting a job when their G-code modes are not what they think they are. A system reset always gives the user a fresh, consistent start.
 
@@ -139,7 +136,7 @@ As noted earlier, startup lines do not execute after a `$X` command. Always rese
 #### `$H` - Run homing cycle
 This command is the only way to perform the homing cycle in Grbl. Some other motion controllers designate a special G-code command to run a homing cycle, but this is incorrect according to the G-code standards. Homing is a completely separate command handled by the controller.
 
-TIP: After running a homing cycle, rather jogging manually all the time to a position in the middle of your workspace volume. You can set a G28 or G30 pre-defined position to be your post-homing position, closer to where you'll be machining. To set these, you'll first need to jog your machine to where you would want it to move to after homing. Type G28.1 (or G30.1) to have Grbl store that position. So then after '$H' homing, you could just enter 'G28' (or 'G30') and it'll move there auto-magically. In general, I would just move the XY axis to the center and leave the Z-axis up. This ensures that there isn't a chance the tool in the spindle will interfere and that it doesn't catch on anything.
+TIP: After running a homing cycle, rather than jogging manually each time, set a G28 or G30 pre-defined position as the post-homing destination within your workspace. Jog the machine to the desired location and send `G28.1` or `G30.1` to store it. After `$H`, sending `G28` or `G30` returns the machine to that position. For example, move the XY axes toward the center and leave Z raised to provide clearance.
 
 #### `$Jx=line` - Run jogging motion
 
@@ -187,9 +184,9 @@ NOTE: Some OEMs may restrict some or all of these commands to prevent certain da
 
 #### `$SLP` - Enable Sleep Mode
 
-This command will place Grbl into a de-powered sleep state, shutting down the spindle, coolant, and stepper enable pins and block any commands. It may only be exited by a soft-reset or power-cycle. Once re-initialized, Grbl will automatically enter an ALARM state, because it's not sure where it is due to the steppers being disabled.
+This command places Grbl into a de-powered sleep state, disabling auxiliary outputs and stepper drivers and blocking other commands. It may only be exited by a soft-reset or power-cycle. Once re-initialized, Grbl automatically enters an ALARM state because it cannot determine its position after the steppers have been disabled.
 
-This feature is useful if you need to automatically de-power everything at the end of a job by adding this command at the end of your g-code program, BUT, it is highly recommended that you add commands to first move your machine to a safe parking location prior to this sleep command. It also should be emphasized that you should have a reliable CNC machine that will disable everything when its supposed to, like your spindle. Grbl is not responsible for any damage it may cause. It's never a good idea to leave your machine unattended. So, use this command with the utmost caution!
+This feature can automatically disable the stepper drivers at the end of a program. Before using it, move the robot to a safe position and account for loss of position after the drivers are disabled. Do not rely on firmware as an emergency stop or leave the robot unattended.
 
 
 ***
@@ -240,7 +237,7 @@ Four realtime commands are type-able by users on a keyboard and shown in the `$`
 
   - Resumes a feed hold, a safety door/parking state when the door is closed, and the M0 program pause states.
   - Command is otherwise ignored.
-  - If the parking compile-time option is enabled and the safety door state is ready to resume, Grbl will re-enable the spindle and coolant, move back into position, and then resume.
+  - If the parking compile-time option is enabled and the safety door state is ready to resume, Grbl will move back into position and then resume.
   - An input pin is available to connect a button or switch.
 
 
@@ -249,21 +246,21 @@ Four realtime commands are type-able by users on a keyboard and shown in the `$`
   - Places Grbl into a suspend or HOLD state. If in motion, the machine will decelerate to a stop and then be suspended.
   - Command executes when Grbl is in an IDLE, RUN, or JOG state. It is otherwise ignored.
   - If jogging, a feed hold will cancel the jog motion and flush all remaining jog motions in the planner buffer. The state will return from JOG to IDLE or DOOR, if was detected as ajar during the active hold.
-  - By machine control definition, a feed hold does not disable the spindle or coolant. Only motion.
+  - A feed hold stops motion but does not disable the auxiliary outputs.
   - An input pin is available to connect a button or switch.
 
 
 #### Extended-ASCII Realtime Command Descriptions
 
-Grbl v1.1 installed more than a dozen new realtime commands to control feed, rapid, and spindle overrides. To help prevent users from inadvertently altering overrides with a keystroke and allow for more commands later on, all of the new control characters have been moved to the extended ASCII character set. These are not easily type-able on a keyboard, but, depending on the OS, they may be entered using specific keystroke and code. GUI developers will need to be able to send extended ASCII characters, values `128 (0x80)` to `255 (0xFF)`, to Grbl to take advantage of these new features.
+Grbl v1.1 installed extended-ASCII realtime commands to control feed and rapid overrides. To help prevent users from inadvertently altering overrides with a keystroke and allow for more commands later on, the newer control characters have been moved to the extended ASCII character set. These are not easily type-able on a keyboard, but, depending on the OS, they may be entered using specific keystroke and code. GUI developers will need to be able to send extended ASCII characters, values `128 (0x80)` to `255 (0xFF)`, to Grbl to take advantage of these features.
 
 - `0x84` : Safety Door
 
   - Although typically connected to an input pin to detect the opening of a safety door, this command allows a GUI to enact the safety door behavior with this command.
-  - Immediately suspends into a DOOR state and disables the spindle and coolant. If in motion, the machine will decelerate to a stop and then be suspended.
+  - Immediately suspends into a DOOR state. If in motion, the robot will decelerate to a stop and then be suspended.
   - If executed during homing, Grbl will instead halt motion and throw a homing alarm.
   - If already in a suspend state or HOLD, the DOOR state supersedes it.
-  - If the parking compile-time option is enabled, Grbl will park the spindle to a specified location.
+  - If the parking compile-time option is enabled, Grbl will park the robot at the configured location.
   - Command executes when Grbl is in an IDLE, HOLD, RUN, HOMING, or JOG state. It is otherwise ignored.
   - If jogging, a safety door will cancel the jog and all queued motions in the planner buffer. When the safety door is closed and resumed, Grbl will return to an IDLE state.
   - An input pin is available to connect a button or switch, if enabled with a compile-time option.
@@ -302,44 +299,3 @@ Grbl v1.1 installed more than a dozen new realtime commands to control feed, rap
     - `0x95` : Set to 100% full rapid rate.
     - `0x96` : Set to 50% of rapid rate.
     - `0x97` : Set to 25% of rapid rate.
-
-
-- Spindle Speed Overrides
-
-  - Immediately alters the spindle speed override value. An active spindle speed is altered within tens of milliseconds.
-  - Override values may be changed at any time, regardless of if the spindle is enabled or disabled.
-  - Spindle override value can not be 10% or greater than 200%
-  - If spindle override value does not change, the command is ignored.
-  - Spindle override range and increments may be altered in config.h.
-  - The commands are:
-    - `0x99` : Set 100% of programmed spindle speed
-    - `0x9A` : Increase 10%
-    - `0x9B` : Decrease 10%
-    - `0x9C` : Increase 1%
-    - `0x9D` : Decrease 1%
-
-
-- `0x9E` : Toggle Spindle Stop
-
-  - Toggles spindle enable or disable state immediately, but only while in the HOLD state.
-  - The command is otherwise ignored, especially while in motion. This prevents accidental disabling during a job that can either destroy the part/machine or cause personal injury. Industrial machines handle the spindle stop override similarly.
-  - When motion restarts via cycle start, the last spindle state will be restored and wait 4.0 seconds (configurable) before resuming the tool path. This ensures the user doesn't forget to turn it back on.
-  - While disabled, spindle speed override values may still be altered and will be in effect once the spindle is re-enabled.
-  - If a safety door is opened, the DOOR state will supersede the spindle stop override, where it will manage the spindle re-energizing itself upon closing the door and resuming. The prior spindle stop override state is cleared and reset.
-
-
-- `0xA0` : Toggle Flood Coolant
-
-  - Toggles flood coolant state and output pin until the next toggle or g-code command alters it.
-  - May be commanded at any time while in IDLE, RUN, or HOLD states. It is otherwise ignored.
-  - This override directly changes the coolant modal state in the g-code parser. Grbl will continue to operate normally like it received and executed an `M8` or `M9` g-code command.
-  - When `$G` g-code parser state is queried, the toggle override change will be reflected by an `M8` enabled or disabled with an `M9` or not appearing when `M7` is present.
-
-
-- `0xA1` : Toggle Mist Coolant
-
-  - Enabled by `ENABLE_M7` compile-time option. Default is disabled.
-  - Toggles mist coolant state and output pin until the next toggle or g-code command alters it.
-  - May be commanded at any time while in IDLE, RUN, or HOLD states. It is otherwise ignored.
-  - This override directly changes the coolant modal state in the g-code parser. Grbl will continue to operate normally like it received and executed an `M7` or `M9` g-code command.
-  - When `$G` g-code parser state is queried, the toggle override change will be reflected by an `M7` enabled or disabled with an `M9` or not appearing when `M8` is present.

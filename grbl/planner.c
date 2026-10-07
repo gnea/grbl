@@ -318,9 +318,6 @@ uint8_t plan_buffer_line(float *target, plan_line_data_t *pl_data)
   plan_block_t *block = &block_buffer[block_buffer_head];
   memset(block,0,sizeof(plan_block_t)); // Zero all block values.
   block->condition = pl_data->condition;
-  #ifdef VARIABLE_SPINDLE
-    block->spindle_speed = pl_data->spindle_speed;
-  #endif
   #ifdef USE_LINE_NUMBERS
     block->line_number = pl_data->line_number;
   #endif
