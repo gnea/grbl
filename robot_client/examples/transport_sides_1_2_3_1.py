@@ -13,9 +13,9 @@ else:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from robot_client.robot import RobotController
 
-# Example pick/place coordinates, in table-local mm, within the 0-400 reach.
-PICK_XYZ = (200.0, 50.0, 10.0)
-PLACE_XYZ = (150.0, 60.0, 10.0)
+# Example pick/place coordinates, in table-local mm, within the 0-300 reach.
+PICK_XYZ = (200.0, 0.0, 10.0)
+PLACE_XYZ = (150.0, 0.0, 10.0)
 
 
 def main():

@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CRPT | Cartesian Robot Plate Transporter</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
+      :root {
+        color-scheme: light;
+        --ink: #172523;
+        --muted: #71807b;
+        --paper: #f3f5f0;
+        --white: #fbfcf9;
+        --line: #dce3dc;
+        --green: #b8f36c;
+        --green-dark: #345421;
+        --cyan: #4ac8bb;
+        --coral: #ff805f;
+        --grid: #e5e9e2;
+        --mono: "DM Mono", Consolas, monospace;
+        --sans: Manrope, "Segoe UI", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--sans);
+        min-height: 100vh;
+      }
+      .shell {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 24px 30px 28px;
+      }
+      .topbar {
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 18px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+      }
+      .mark {
+        width: 29px;
+        height: 29px;
+        display: grid;
+        place-items: center;
+        background: var(--ink);
+        color: var(--green);
+        font: 500 12px var(--mono);
+        border-radius: 5px;
+      }
+      .crumb {
+        color: var(--muted);
+        font: 11px var(--mono);
+        margin-left: 4px;
+      }
+      .live {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #406044;
+        font: 11px var(--mono);
+        text-transform: uppercase;
+      }
+      .pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #78c65c;
+        box-shadow: 0 0 0 4px #78c65c22;
+        animation: pulse 1.8s infinite;
+      }
+      @keyframes pulse {
+        50% {
+          box-shadow: 0 0 0 7px #78c65c08;
+        }
+      }
+      .heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        padding: 25px 0 20px;
+      }
+      .eyebrow {
+        font: 10px var(--mono);
+        color: #718078;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .heading h1 {
+        font-size: 25px;
+        line-height: 1.12;
+        margin: 7px 0 0;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+      .heading p {
+        margin: 0 0 3px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(450px, 1fr) 312px;
+        gap: 20px;
+        align-items: stretch;
+      }
+      .stage {
+        min-width: 0;
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .stage-top {
+        height: 48px;
+        padding: 0 17px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+        font: 10px var(--mono);
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .stage-top strong {
+        font-weight: 500;
+        color: var(--ink);
+      }
+      .canvas-wrap {
+        height: min(66vh, 670px);
+        min-height: 420px;
+        position: relative;
+        background-color: #fafbf8;
+        background-image: radial-gradient(#d9dfd7 0.7px, transparent 0.7px);
+        background-size: 14px 14px;
+      }
+      .canvas-wrap canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .legend {
+        height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        padding: 0 17px;
+        border-top: 1px solid var(--line);
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .legend span {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .swatch {
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        background: var(--cyan);
+      }
+      .swatch.rod {
+        background: #253834;
+      }
+      .swatch.plate {
+        background: var(--coral);
+      }
+      .swatch.zone {
+        background: var(--green);
+      }
+      .side {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .panel {
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 16px;
+      }
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .panel-title {
+        font: 10px var(--mono);
+        text-transform: uppercase;
+        color: var(--muted);
+        letter-spacing: 0.07em;
+      }
+      .tag {
+        padding: 5px 7px;
+        background: #edf1eb;
+        border-radius: 3px;
+        font: 9px var(--mono);
+        color: #66756c;
+      }
+      .safe {
+        background: #eff6e7;
+        border-color: #dce8cf;
+      }
+      .safe .panel-head {
+        margin-bottom: 10px;
+      }
+      .safe-number {
+        font-size: 27px;
+        font-weight: 700;
+        letter-spacing: 0;
+        line-height: 1.1;
+      }
+      .safe-number small {
+        font: 11px var(--mono);
+        color: var(--muted);
+      }
+      .formula {
+        margin-top: 8px;
+        color: var(--muted);
+        font: 10px var(--mono);
+      }
+      .formula b {
+        font-weight: 400;
+        color: #42613a;
+      }
+      .readouts {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        border-top: 1px solid var(--line);
+        border-left: 1px solid var(--line);
+      }
+      .readout {
+        padding: 11px 10px 9px;
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+      .readout label {
+        display: block;
+        color: var(--muted);
+        font: 9px var(--mono);
+        text-transform: uppercase;
+        margin-bottom: 7px;
+      }
+      .readout strong {
+        font: 14px var(--mono);
+        font-weight: 500;
+      }
+      .unit {
+        font-size: 9px;
+        color: var(--muted);
+      }
+      .directions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+      .dir {
+        height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: transparent;
+        color: #66746d;
+        font: 10px var(--mono);
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          border 0.15s,
+          color 0.15s;
+      }
+      .dir:hover,
+      .dir.active {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: var(--green);
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        margin-top: 13px;
+      }
+      .xy-controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .xy-controls label {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        color: var(--muted);
+        font: 9px var(--mono);
+        text-transform: uppercase;
+      }
+      .xy-controls input {
+        width: 100%;
+        height: 34px;
+        padding: 0 9px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: #fff;
+        color: var(--ink);
+        font: 12px var(--mono);
+      }
+      .xy-controls .button {
+        grid-column: 1 / -1;
+      }
+      .button {
+        height: 36px;
+        border: 0;
+        border-radius: 4px;
+        padding: 0 12px;
+        font: 600 10px var(--sans);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition:
+          transform 0.15s,
+          filter 0.15s;
+      }
+      .button:hover {
+        filter: brightness(0.96);
+        transform: translateY(-1px);
+      }
+      .button.primary {
+        flex: 1;
+        background: var(--green);
+        color: #21331a;
+      }
+      .button.secondary {
+        background: #edf0eb;
+        color: #4f5d56;
+      }
+      .button svg {
+        width: 13px;
+        height: 13px;
+      }
+      .state-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font: 10px var(--mono);
+        color: #617068;
+      }
+      .state-dot {
+        width: 7px;
+        height: 7px;
+        background: #7fcb5c;
+        border-radius: 50%;
+      }
+      .events {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .events li {
+        display: flex;
+        gap: 10px;
+        font-size: 10px;
+        color: #596760;
+        line-height: 1.35;
+      }
+      .events time {
+        font: 9px var(--mono);
+        color: #91a099;
+        white-space: nowrap;
+      }
+      .empty {
+        color: #a2aca5 !important;
+      }
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 2px 0;
+        color: #8b9790;
+        font: 9px var(--mono);
+      }
+      .footer b {
+        font-weight: 400;
+        color: #59675f;
+      }
+      @media (max-width: 1050px) {
+        .workspace {
+          grid-template-columns: minmax(0, 1fr) 280px;
+        }
+        .canvas-wrap {
+          height: 58vh;
+        }
+      }
+      @media (max-width: 760px) {
+        .shell {
+          padding: 15px 14px 22px;
+        }
+        .heading {
+          align-items: start;
+          gap: 12px;
+          flex-direction: column;
+          padding: 21px 0 15px;
+        }
+        .heading h1 {
+          font-size: 22px;
+        }
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+        .canvas-wrap {
+          height: min(88vw, 560px);
+          min-height: 330px;
+        }
+        .side {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+        .side .panel:last-child {
+          grid-column: 1/-1;
+        }
+        .stage-top {
+          height: 42px;
+        }
+        .legend {
+          gap: 12px;
+          font-size: 9px;
+        }
+        .footer {
+          gap: 10px;
+          align-items: start;
+          flex-direction: column;
+        }
+      }
+      @media (max-width: 430px) {
+        .side {
+          grid-template-columns: 1fr;
+        }
+        .side .panel:last-child {
+          grid-column: auto;
+        }
+        .live {
+          font-size: 9px;
+        }
+        .crumb {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="mark">C</span> CRPT
+          <span class="crumb">/ CARTESIAN ROBOT PLATE TRANSPORTER</span>
+        </div>
+        <div class="live"><i class="pulse"></i> LOCAL SIMULATION</div>
+      </header>
+      <section class="heading">
+        <div>
+          <div class="eyebrow">Cartesian motion · top view</div>
+          <h1>Cartesian workspace</h1>
+        </div>
+        <p>Machine coordinates · millimeters</p>
+      </section>
+      <main class="workspace">
+        <section class="stage">
+          <div class="stage-top">
+            <strong>Table plane</strong
+            ><span id="stageState">IDLE · Z AXIS HIDDEN</span>
+          </div>
+          <div class="canvas-wrap">
+            <canvas
+              id="scene"
+              aria-label="Top-down view of robot, arm, plate, workspace and table"
+            ></canvas>
+          </div>
+          <div class="legend">
+            <span><i class="swatch zone"></i> Safe travel</span
+            ><span><i class="swatch rod"></i> Arm + gripper</span
+            ><span><i class="swatch plate"></i> Plate</span>
+          </div>
+        </section>
+        <aside class="side">
+          <section class="panel safe">
+            <div class="panel-head">
+              <div class="panel-title">Operating envelope</div>
+              <span class="tag">PULL-BACK APPLIED</span>
+            </div>
+            <div class="safe-number">
+              <span id="safeXY">470 × 470</span> <small>mm</small>
+            </div>
+            <div class="formula">
+              <span id="formula">500 − 30</span> max travel − pull-back
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Live position</div>
+              <div class="state-line">
+                <i class="state-dot" id="stateDot"></i
+                ><span id="machineState">IDLE</span>
+              </div>
+            </div>
+            <div class="readouts">
+              <div class="readout">
+                <label>Base X</label><strong id="xRead">235.0</strong>
+                <span class="unit">mm</span>
+              </div>
+              <div class="readout">
+                <label>Base Y</label><strong id="yRead">235.0</strong>
+                <span class="unit">mm</span>
+              </div>
+              <div class="readout">
+                <label>Gripper A</label><strong id="aRead">355.0</strong>
+                <span class="unit">°</span>
+              </div>
+              <div class="readout">
+                <label>Arm reach</label><strong id="reachRead">400</strong>
+                <span class="unit">mm</span>
+              </div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Facing direction</div>
+              <span class="tag" id="headingTag">+X · SIDE 1</span>
+            </div>
+            <div class="directions">
+              <button class="dir active" data-side="1" title="Face plus X">
+                +X</button
+              ><button class="dir" data-side="2" title="Face plus Y">+Y</button
+              ><button class="dir" data-side="3" title="Face minus X">−X</button
+              ><button class="dir" data-side="4" title="Face minus Y">
+                −Y
+              </button>
+            </div>
+            <div class="controls">
+              <button class="button primary" id="demoButton">
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M5 3.7v8.6L12 8 5 3.7Z" fill="currentColor" /></svg
+                >Run plate transfer</button
+              ><button
+                class="button secondary"
+                id="homeButton"
+                title="Home the simulated axes"
+              >
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="m2.5 7.1 5.5-4.5 5.5 4.5v6.1H9.8V9H6.2v4.2H2.5V7.1Z"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                  />
+                </svg>
+              </button>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Base position</div>
+              <span class="tag">SAFE MACHINE XY</span>
+            </div>
+            <div class="xy-controls">
+              <label for="targetX">
+                X target · mm
+                <input
+                  id="targetX"
+                  type="number"
+                  min="0"
+                  max="470"
+                  step="1"
+                  value="235"
+                />
+              </label>
+              <label for="targetY">
+                Y target · mm
+                <input
+                  id="targetY"
+                  type="number"
+                  min="0"
+                  max="470"
+                  step="1"
+                  value="235"
+                />
+              </label>
+              <button class="button secondary" id="moveXYButton">
+                Move base to X/Y
+              </button>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Motion trace</div>
+              <span class="tag">LIVE</span>
+            </div>
+            <ul class="events" id="events">
+              <li class="empty">Waiting for controller commands</li>
+            </ul>
+          </section>
+        </aside>
+      </main>
+      <footer class="footer">
+        <span>TABLE <b id="tableSize">550 × 550 mm</b> · TOP VIEW</span
+        ><span>CRPT SIMULATION · Z AXIS NOT DRAWN</span>
+      </footer>
+    </div>
+    <script>
+      const canvas = document.getElementById("scene"),
+        ctx = canvas.getContext("2d");
+      const $ = (id) => document.getElementById(id);
+      let snapshot = null;
+      let lastEvents = "";
+      let dpr = 1;
+      const cardinal = [
+        { name: "+X", side: 1, a: 0 },
+        { name: "+Y", side: 2, a: 90 },
+        { name: "−X", side: 3, a: 180 },
+        { name: "−Y", side: 4, a: 270 },
+      ];
+      function sizeCanvas() {
+        const r = canvas.getBoundingClientRect();
+        dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(r.width * dpr);
+        canvas.height = Math.round(r.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        draw();
+      }
+      function world(x, y, layout) {
+        return [
+          layout.left + x * layout.scale,
+          layout.top + (layout.extent - y) * layout.scale,
+        ];
+      }
+      function roundRect(c, x, y, w, h, r) {
+        c.beginPath();
+        c.roundRect(x, y, w, h, r);
+      }
+      function headingRadians(a) {
+        const normalized = ((a % 360) + 360) % 360;
+        const calibrated =
+          Math.abs(normalized) < 1e-6
+            ? 0
+            : normalized - snapshot.rotation_offset;
+        return (calibrated * Math.PI) / 180;
+      }
+      function draw() {
+        if (!snapshot) return;
+        const w = canvas.clientWidth,
+          h = canvas.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+        const table = snapshot.table,
+          L = snapshot.reach,
+          extent = snapshot.scene_extent || table + L;
+        const scale = Math.min((w - 72) / extent, (h - 72) / extent),
+          size = extent * scale;
+        const left = (w - size) / 2,
+          top = (h - size) / 2,
+          offset = snapshot.table_offset;
+        const p = (x, y) => world(x, y, { left, top, scale, extent });
+        const drawSurface = (x, y, width, height, fill, label, direction) => {
+          const upperLeft = p(x, y + height),
+            lowerRight = p(x + width, y);
+          const sx = upperLeft[0],
+            sy = upperLeft[1],
+            sw = lowerRight[0] - sx,
+            sh = lowerRight[1] - sy;
+          ctx.fillStyle = fill;
+          ctx.fillRect(sx, sy, sw, sh);
+          ctx.strokeStyle = "#dce3dc";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(sx, sy, sw, sh);
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(sx, sy, sw, sh);
+          ctx.clip();
+          ctx.strokeStyle = "#e7ece5";
+          for (let n = 50; n < width; n += 50) {
+            ctx.beginPath();
+            ctx.moveTo(sx + n * scale, sy);
+            ctx.lineTo(sx + n * scale, sy + sh);
+            ctx.stroke();
+          }
+          for (let n = 50; n < height; n += 50) {
+            ctx.beginPath();
+            ctx.moveTo(sx, sy + sh - n * scale);
+            ctx.lineTo(sx + sw, sy + sh - n * scale);
+            ctx.stroke();
+          }
+          ctx.restore();
+          ctx.fillStyle = "#596960";
+          ctx.textAlign = "center";
+          ctx.font = '500 10px "DM Mono",Consolas,monospace';
+          ctx.fillText(label, sx + sw / 2, sy + 15);
+          ctx.fillStyle = "#829087";
+          ctx.font = '9px "DM Mono",Consolas,monospace';
+          ctx.fillText(
+            `${direction} · ${width} × ${height} mm`,
+            sx + sw / 2,
+            sy + 29,
+          );
+        };
+        const sideTables = snapshot.side_tables || [];
+        for (const tableSide of sideTables)
+          drawSurface(
+            tableSide.x,
+            tableSide.y,
+            tableSide.width,
+            tableSide.height,
+            "#f4f6f1",
+            tableSide.name,
+            tableSide.direction,
+          );
+        const mainTopLeft = p(0, table),
+          mainBottomRight = p(table, 0),
+          mainX = mainTopLeft[0],
+          mainY = mainTopLeft[1],
+          mainSize = table * scale;
+        ctx.save();
+        ctx.shadowColor = "#26372c18";
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetY = 4;
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(mainX, mainY, mainSize, mainSize);
+        ctx.restore();
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(mainX, mainY, mainSize, mainSize);
+        ctx.clip();
+        ctx.fillStyle = "#fbfcf9";
+        ctx.fillRect(mainX, mainY, mainSize, mainSize);
+        ctx.strokeStyle = "#e9ede7";
+        for (let n = 0; n <= table; n += 50) {
+          ctx.beginPath();
+          ctx.moveTo(mainX + n * scale, mainY);
+          ctx.lineTo(mainX + n * scale, mainY + mainSize);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(mainX, mainY + mainSize - n * scale);
+          ctx.lineTo(mainX + mainSize, mainY + mainSize - n * scale);
+          ctx.stroke();
+        }
+        ctx.restore();
+        ctx.strokeStyle = "#43524b";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(mainX, mainY, mainSize, mainSize);
+        const maxX = snapshot.bounds.x[1],
+          maxY = snapshot.bounds.y[1],
+          workX = maxX * scale,
+          workY = maxY * scale;
+        const workLeft = mainX + offset.x * scale,
+          workTop = mainY + (table - offset.y - maxY) * scale;
+        ctx.fillStyle = "#b8f36c22";
+        ctx.fillRect(workLeft, workTop, workX, workY);
+        ctx.strokeStyle = "#85b65c";
+        ctx.setLineDash([5, 4]);
+        ctx.lineWidth = 1.3;
+        ctx.strokeRect(workLeft, workTop, workX, workY);
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#42613a";
+        ctx.font = '9px "DM Mono",Consolas,monospace';
+        ctx.textAlign = "center";
+        ctx.fillText(
+          `${maxX.toFixed(0)} mm`,
+          workLeft + workX / 2,
+          workTop - 7,
+        );
+        ctx.fillStyle = "#52615a";
+        ctx.textAlign = "left";
+        ctx.fillText(`CRPT BASE · ${table} mm`, mainX + 9, mainY + 15);
+        ctx.fillStyle = "#7c9180";
+        ctx.textAlign = "right";
+        ctx.fillText("SAFE BASE TRAVEL", workLeft + workX - 7, workTop + 13);
+        const [bx, by, bz, a] = snapshot.axes,
+          base = p(bx + offset.x, by + offset.y),
+          heading = headingRadians(a);
+        const tip = p(
+          bx + Math.cos(heading) * L + offset.x,
+          by + Math.sin(heading) * L + offset.y,
+        );
+        const dx = tip[0] - base[0],
+          dy = tip[1] - base[1],
+          angle = Math.atan2(dy, dx);
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#263a3530";
+        ctx.lineWidth = 18;
+        ctx.beginPath();
+        ctx.moveTo(...base);
+        ctx.lineTo(...tip);
+        ctx.stroke();
+        ctx.strokeStyle = "#43554e";
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(...base);
+        ctx.lineTo(...tip);
+        ctx.stroke();
+        ctx.strokeStyle = "#788780";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(...base);
+        ctx.lineTo(...tip);
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.translate(...base);
+        ctx.fillStyle = "#293a35";
+        ctx.strokeStyle = "#f6faf4";
+        ctx.lineWidth = 2;
+        roundRect(ctx, -11, -11, 22, 22, 4);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#b8f36c";
+        ctx.beginPath();
+        ctx.arc(0, 0, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.save();
+        ctx.translate(...tip);
+        ctx.rotate(angle);
+        ctx.strokeStyle = "#293a35";
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-7, -7);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(7, -7);
+        ctx.moveTo(-7, 7);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(7, 7);
+        ctx.stroke();
+        ctx.fillStyle = "#4ac8bb";
+        ctx.beginPath();
+        ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        const plate = snapshot.carrying
+          ? {
+              x: bx + Math.cos(heading) * L + offset.x,
+              y: by + Math.sin(heading) * L + offset.y,
+            }
+          : snapshot.plate;
+        const platePoint = p(plate.x, plate.y),
+          plateSize = Math.max(13, 38 * scale);
+        ctx.save();
+        ctx.translate(...platePoint);
+        ctx.fillStyle = "#ff805f30";
+        ctx.strokeStyle = "#ff805f";
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, -plateSize / 2, -plateSize / 2, plateSize, plateSize, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = "#cf684e";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-plateSize * 0.31, 0);
+        ctx.lineTo(plateSize * 0.31, 0);
+        ctx.moveTo(0, -plateSize * 0.31);
+        ctx.lineTo(0, plateSize * 0.31);
+        ctx.stroke();
+        ctx.fillStyle = "#8a4839";
+        ctx.font = '9px "DM Mono",Consolas,monospace';
+        ctx.textAlign = "center";
+        ctx.fillText(
+          snapshot.carrying ? "HELD" : "PLATE",
+          0,
+          plateSize / 2 + 11,
+        );
+        ctx.restore();
+        ctx.fillStyle = "#66736c";
+        ctx.font = '9px "DM Mono",Consolas,monospace';
+        ctx.textAlign = "left";
+        ctx.fillText("X 0", mainX, mainY + mainSize + 15);
+        ctx.textAlign = "right";
+        ctx.fillText(`X ${table}`, mainX + mainSize, mainY + mainSize + 15);
+        ctx.textAlign = "right";
+        ctx.fillText("Y 0", mainX - 5, mainY + mainSize);
+        ctx.fillText(`Y ${table}`, mainX - 5, mainY + 8);
+      }
+      function updateUI(s) {
+        snapshot = s;
+        const [x, y, z, a] = s.axes;
+        $("xRead").textContent = x.toFixed(1);
+        $("yRead").textContent = y.toFixed(1);
+        $("aRead").textContent = a.toFixed(1);
+        $("reachRead").textContent = s.reach.toFixed(0);
+        $("safeXY").textContent =
+          `${s.bounds.x[1].toFixed(0)} × ${s.bounds.y[1].toFixed(0)}`;
+        $("targetX").max = s.bounds.x[1];
+        $("targetY").max = s.bounds.y[1];
+        $("formula").textContent =
+          `${s.travel.x.toFixed(0)} − ${s.pullback.x.toFixed(0)}`;
+        $("tableSize").textContent = `${s.table} × ${s.table} mm`;
+        $("machineState").textContent = s.state.toUpperCase();
+        $("stateDot").style.background =
+          s.state === "Idle" ? "#7fcb5c" : "#e5a346";
+        $("stageState").textContent =
+          `${s.state.toUpperCase()} · Z ${z.toFixed(0)} mm · TOP VIEW`;
+        const angle = ((a % 360) + 360) % 360;
+        let nearest = cardinal.reduce(
+          (best, d) =>
+            Math.abs(((d.a - angle + 540) % 360) - 180) <
+            Math.abs(((best.a - angle + 540) % 360) - 180)
+              ? d
+              : best,
+          cardinal[0],
+        );
+        $("headingTag").textContent = `${nearest.name} · SIDE ${nearest.side}`;
+        document
+          .querySelectorAll(".dir")
+          .forEach((b) =>
+            b.classList.toggle(
+              "active",
+              Number(b.dataset.side) === nearest.side,
+            ),
+          );
+        const key = s.events.map((e) => e.time + e.label).join("|");
+        if (key !== lastEvents) {
+          lastEvents = key;
+          $("events").innerHTML = s.events.length
+            ? s.events
+                .slice(-5)
+                .reverse()
+                .map(
+                  (e) =>
+                    `<li><time>${e.time}</time><span>${escapeHtml(e.label)}</span></li>`,
+                )
+                .join("")
+            : '<li class="empty">Waiting for controller commands</li>';
+        }
+        draw();
+      }
+      function escapeHtml(v) {
+        return String(v).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+      async function refresh() {
+        try {
+          const r = await fetch("/api/state", { cache: "no-store" });
+          updateUI(await r.json());
+        } catch (e) {
+          $("machineState").textContent = "OFFLINE";
+        }
+        setTimeout(refresh, 80);
+      }
+      async function post(path, payload = {}) {
+        const r = await fetch(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      }
+      $("demoButton").addEventListener("click", async () => {
+        const b = $("demoButton");
+        b.disabled = true;
+        b.textContent = "Transferring…";
+        try {
+          await post("/api/demo");
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setTimeout(() => {
+            b.disabled = false;
+            b.innerHTML =
+              '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 3.7v8.6L12 8 5 3.7Z" fill="currentColor"/></svg>Run plate transfer';
+          }, 1200);
+        }
+      });
+      $("homeButton").addEventListener("click", async () => {
+        try {
+          await post("/api/control", { action: "home" });
+        } catch (e) {
+          console.error(e);
+        }
+      });
+      $("moveXYButton").addEventListener("click", async (event) => {
+        const button = event.currentTarget;
+        const targetX = Number($("targetX").value);
+        const targetY = Number($("targetY").value);
+        if (!Number.isFinite(targetX) || !Number.isFinite(targetY)) return;
+        button.disabled = true;
+        try {
+          const state = snapshot || (await (await fetch("/api/state")).json());
+          if (
+            targetX < state.bounds.x[0] ||
+            targetX > state.bounds.x[1] ||
+            targetY < state.bounds.y[0] ||
+            targetY > state.bounds.y[1]
+          ) {
+            throw new Error(
+              `Targets must be within X 0–${state.bounds.x[1]} and Y 0–${state.bounds.y[1]} mm`,
+            );
+          }
+          await post("/api/control", {
+            action: "move_xy",
+            x: targetX,
+            y: targetY,
+          });
+        } catch (error) {
+          console.error(error);
+          window.alert(error.message);
+        } finally {
+          button.disabled = false;
+        }
+      });
+      document.querySelectorAll(".dir").forEach((button) =>
+        button.addEventListener("click", async () => {
+          const side = Number(button.dataset.side);
+          try {
+            await post("/api/control", { action: "orient", side });
+          } catch (e) {
+            console.error(e);
+          }
+        }),
+      );
+      new ResizeObserver(sizeCanvas).observe(canvas.parentElement);
+      sizeCanvas();
+      refresh();
+    </script>
+  </body>
+</html>

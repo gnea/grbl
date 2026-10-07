@@ -1,12 +1,27 @@
 """Minimal Grbl 1.1 serial link: connect, send G-code lines, wait for 'ok'."""
 import re
 import time
-
-import serial
+from typing import Any, Dict, Protocol, Tuple
 
 
 class GrblError(RuntimeError):
     """Raised when Grbl reports an error or alarm for a sent command."""
+
+
+class MachineLink(Protocol):
+    """Transport the RobotController talks to: real serial Grbl or the simulator."""
+
+    def connect(self) -> Any: ...
+    def close(self) -> Any: ...
+    def send_line(self, line: str, wait_ok: bool = True) -> Any: ...
+    def read_settings(self) -> Dict[int, float]: ...
+    def get_status(self) -> Dict[str, str]: ...
+    def home(self) -> Any: ...
+    def unlock(self) -> Any: ...
+    def wait_idle(self) -> Dict[str, str]: ...
+    def prepare_transport(self, pick_xy: Tuple[float, float], place_xy: Tuple[float, float]) -> Any: ...
+    def gripper_close(self) -> Any: ...
+    def gripper_open(self) -> Any: ...
 
 
 class GrblLink:
@@ -17,6 +32,8 @@ class GrblLink:
         self._serial = None
 
     def connect(self):
+        import serial
+
         self._serial = serial.Serial(self.port, self.baud, timeout=self.timeout)
         time.sleep(2.0)  # Arduino resets when the serial port opens
         self._serial.reset_input_buffer()
@@ -36,15 +53,16 @@ class GrblLink:
     def __exit__(self, exc_type, exc, tb):
         self.close()
 
-    def _readline(self):
-        if self._serial is None:
-            raise GrblError("Serial link is not connected")
-        return self._serial.readline().decode(errors="replace").strip()
-
-    def send_line(self, line, wait_ok=True):
+    def _ensure_open(self):
         if self._serial is None or not self._serial.is_open:
             raise GrblError("Serial link is not connected")
-        self._serial.write((line.strip() + "\n").encode())
+        return self._serial
+
+    def _readline(self):
+        return self._ensure_open().readline().decode(errors="replace").strip()
+
+    def send_line(self, line, wait_ok=True):
+        self._ensure_open().write((line.strip() + "\n").encode())
         if not wait_ok:
             return []
         responses = []
@@ -71,10 +89,9 @@ class GrblLink:
         return settings
 
     def get_status(self):
-        if self._serial is None or not self._serial.is_open:
-            raise GrblError("Serial link is not connected")
-        self._serial.reset_input_buffer()
-        self._serial.write(b"?")
+        serial_port = self._ensure_open()
+        serial_port.reset_input_buffer()
+        serial_port.write(b"?")
         deadline = time.time() + self.timeout
         while time.time() < deadline:
             response = self._readline()
@@ -93,6 +110,15 @@ class GrblLink:
 
     def unlock(self):
         return self.send_line("$X")
+
+    def prepare_transport(self, pick_xy, place_xy):
+        """Hook for simulated plate staging; real gripper hardware is not wired yet."""
+
+    def gripper_close(self):
+        """Hook for the future physical gripper close command."""
+
+    def gripper_open(self):
+        """Hook for the future physical gripper open command."""
 
     def wait_idle(self, poll_interval=0.2, timeout=60.0):
         deadline = time.time() + timeout
