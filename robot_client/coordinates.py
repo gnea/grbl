@@ -11,19 +11,19 @@ class OutOfRangeError(ValueError):
 class Side(NamedTuple):
     angle: float  # A-axis angle from the home direction
     matrix: Tuple[int, int, int, int]  # (a, b, c, d): X = a*x' + b*y' + ox, Y = c*x' + d*y' + oy
-    offset: Callable[[float, float, float], Tuple[float, float]]  # (max_x, max_y, arm) -> (ox, oy)
+    offset: Callable[[float, float, float, float], Tuple[float, float]]  # (max_x, max_y, arm, offset) -> (ox, oy)
     arm: Tuple[int, int]  # unit vector from carriage to gripper tip
 
 
-#   1: X = Y' + (max_x - L)   Y = max_y - X'
-#   2: X = X'                 Y = Y' + (max_y - L)
-#   3: X = -Y' + L            Y = X'
-#   4: X = -X' + max_x        Y = -Y' + L
+# 1: X =  Y' + (max_x - L + o1)     Y = max_y - X'
+# 2: X =  X'                        Y = Y' + (max_y - L + o2)
+# 3: X = -Y' + (L + o3)             Y = X'
+# 4: X = -X' + max_x                Y = -Y' + (L - o4)
 SIDES: Dict[int, Side] = {
-    1: Side(0.0, (0, 1, -1, 0), lambda mx, my, L: (mx - L, my), (1, 0)),
-    2: Side(90.0, (1, 0, 0, 1), lambda mx, my, L: (0.0, my - L), (0, 1)),
-    3: Side(180.0, (0, -1, 1, 0), lambda mx, my, L: (L, 0.0), (-1, 0)),
-    4: Side(270.0, (-1, 0, 0, -1), lambda mx, my, L: (mx, L), (0, -1)),
+    1: Side(0.0, (0, 1, -1, 0), lambda mx, my, L, o: (mx - L + o, my), (1, 0)),
+    2: Side(90.0, (1, 0, 0, 1), lambda mx, my, L, o: (0.0, my - L + o), (0, 1)),
+    3: Side(180.0, (0, -1, 1, 0), lambda mx, my, L, o: (L + o, 0.0), (-1, 0)),
+    4: Side(270.0, (-1, 0, 0, -1), lambda mx, my, L, o: (mx, L - o), (0, -1)),
 }
 
 
@@ -51,6 +51,7 @@ def local_to_machine_axes(
     axis_bounds=None,
     machine_travel=None,
     arm_reach=None,
+    placement_offset=None,
 ):
     """Map side-space coordinates to machine axes, applying arm reach offset.
 
@@ -66,20 +67,30 @@ def local_to_machine_axes(
             "y": axis_bounds["y"][1] if axis_bounds else config.TABLE_SIDE_MM,
         }
     arm_reach = config.ARM_REACH_MM if arm_reach is None else arm_reach
+    placement_offset = {
+        1: config.PLACEMENT_OFFSET_SIDE1_MM,
+        2: config.PLACEMENT_OFFSET_SIDE2_MM,
+        3: config.PLACEMENT_OFFSET_SIDE3_MM,
+        4: config.PLACEMENT_OFFSET_SIDE4_MM,
+    } if placement_offset is None else placement_offset
     a, b, c, d = side.matrix
-    x_offset, y_offset = side.offset(machine_travel["x"], machine_travel["y"], arm_reach)
+    x_offset, y_offset = side.offset(machine_travel["x"], machine_travel["y"], arm_reach, placement_offset[orientation])
 
     result = {}
     if x is not None:
         if a:
             result["x"] = a * x + x_offset
+            print(f"Mapping local x={x} to machine x={result['x']}")
         if c:
             result["y"] = c * x + y_offset
+            print(f"Mapping local x={x} to machine y={result['y']}")
     if y is not None:
         if b:
             result["x"] = b * y + x_offset
+            print(f"Mapping local y={y} to machine x={result['x']}")
         if d:
             result["y"] = d * y + y_offset
+            print(f"Mapping local y={y} to machine y={result['y']}")
 
     if axis_bounds is not None:
         for axis, value in result.items():

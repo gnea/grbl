@@ -46,8 +46,9 @@ class RobotController:
 
     def connect(self):
         self.link.connect()
-        self.home()
-        # self._load_machine_configuration()
+        # self.home()
+        self._load_machine_configuration()
+        self._update_machine_position()
         # self.link.send_line("$X")
         return self
 
@@ -196,6 +197,7 @@ class RobotController:
             side_to_gripper_xy(from_orientation, pick_x, pick_y, travel),
             side_to_gripper_xy(to_orientation, place_x, place_y, travel),
         )
+        self._move(z=z_up, feed=config.DEFAULT_FEED_RATE_Z)
         self.move_machine_to(x=travel['x']/2, y=travel['y']/2)
         self.set_orientation(from_orientation)
         self.move_to(x=pick_x, y=pick_y)

@@ -14,8 +14,8 @@ else:
     from robot_client.robot import RobotController
 
 # Example pick/place coordinates, in table-local mm, within the 0-300 reach.
-PICK_XYZ = (200.0, 0.0, 10.0)
-PLACE_XYZ = (150.0, 0.0, 10.0)
+PICK_XYZ = (200.0, 0.0, 30.0)
+PLACE_XYZ = (150.0, 0.0, 30.0)
 
 
 def main():
