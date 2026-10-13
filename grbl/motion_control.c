@@ -44,34 +44,47 @@ void mc_line(float *target, plan_line_data_t *pl_data)
   // ---- ALOE PATCH: block motion toward a pressed hard limit switch ----
   // If any hard limit switch is currently pressed, block motion in the direction of that
   // switch. Motion away from the switch is still allowed so the machine can be recovered.
-  // Uses the homing direction mask ($23) to determine which side each switch is on.
+  // The blocked side comes from the direction latched when that axis tripped (see the limit
+  // ISR); if it tripped without motion, the $23 homing side is used as a fallback.
+  // Target is clamped in-place in the caller's array so the g-code parser adopts the clamped
+  // position after mc_line() returns and cannot drift ahead of the machine.
   // Homing bypasses mc_line, so this does not interfere with the homing cycle.
-  float target_mod[N_AXIS];
-  float *target_ptr = target;              // Default: original target, no copy
   {
     uint8_t limit_state = limits_get_state();
+    sys.limit_trip_mask &= limit_state; // Forget latched direction for any released switch.
     if (limit_state) {
-      memcpy(target_mod, target, sizeof(target_mod));  // Copy ONLY when a switch is pressed
       float current_mpos[N_AXIS];
       system_convert_array_steps_to_mpos(current_mpos, sys_position);
       uint8_t idx;
       for (idx=0; idx<N_AXIS; idx++) {
         if (limit_state & (1<<idx)) {
-          if (bit_istrue(settings.homing_dir_mask,bit(idx))) {
-            // Homing moves negative -> switch is on the minus side. Block negative motion.
-            if (target_mod[idx] < current_mpos[idx]) { target_mod[idx] = current_mpos[idx]; }
+          // ALOE PATCH: Determine the blocked side dynamically. When this axis tripped while
+          // the machine was moving (direction latched in the limit ISR for this very axis),
+          // block the direction of that motion -- i.e. toward the switch that actually
+          // tripped. Required for machines with switches on BOTH ends of an axis sharing one
+          // limit pin, where the $23 homing side only describes the homing switch. Otherwise
+          // (switch closed at standstill) fall back to the $23 homing side.
+          uint8_t block_positive;
+          if (sys.limit_trip_mask & bit(idx)) {
+            block_positive = !bit_istrue(sys.limit_trip_dir,bit(idx)); // Latched bit set = was moving negative.
+          } else if (bit_istrue(settings.homing_dir_mask,bit(idx))) {
+            block_positive = false; // Homing moves negative -> homing switch is on the minus side.
           } else {
-            // Homing moves positive -> switch is on the plus side. Block positive motion.
-            if (target_mod[idx] > current_mpos[idx]) { target_mod[idx] = current_mpos[idx]; }
+            block_positive = true;  // Homing moves positive -> homing switch is on the plus side.
+          }
+          if (block_positive) {
+            // Switch is on the plus side. Block positive motion.
+            if (target[idx] > current_mpos[idx]) { target[idx] = current_mpos[idx]; }
+          } else {
+            // Switch is on the minus side. Block negative motion.
+            if (target[idx] < current_mpos[idx]) { target[idx] = current_mpos[idx]; }
           }
         }
       }
-      target_ptr = target_mod;             // Planner gets the safe copy
-      gc_sync_position();                  // Resync parser: prevents drift from a clamped block
     }
   }
   // ---- END PATCH ----
-  
+
   // NOTE: Backlash compensation may be installed here. It will need direction info to track when
   // to insert a backlash line motion(s) before the intended line motion and will require its own
   // plan_check_full_buffer() and check for system abort loop. Also for position reporting

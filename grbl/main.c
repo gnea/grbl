@@ -72,8 +72,15 @@ int main(void)
 
     // Reset system variables.
     uint8_t prior_state = sys.state;
+    // ALOE PATCH: Preserve the hard-limit trip direction across the reset. A hard limit
+    // alarm forces a full system reset (mc_reset() -> EXEC_RESET), which lands here and
+    // would otherwise wipe the latched direction before the user can unlock with $X.
+    uint8_t prior_limit_trip_dir = sys.limit_trip_dir;
+    uint8_t prior_limit_trip_mask = sys.limit_trip_mask;
     memset(&sys, 0, sizeof(system_t)); // Clear system struct variable.
     sys.state = prior_state;
+    sys.limit_trip_dir = prior_limit_trip_dir;
+    sys.limit_trip_mask = prior_limit_trip_mask;
     sys.f_override = DEFAULT_FEED_OVERRIDE;  // Set to 100%
     sys.r_override = DEFAULT_RAPID_OVERRIDE; // Set to 100%
     sys.spindle_speed_ovr = DEFAULT_SPINDLE_SPEED_OVERRIDE; // Set to 100%

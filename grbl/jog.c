@@ -43,25 +43,37 @@ uint8_t jog_execute(plan_line_data_t *pl_data, parser_block_t *gc_block)
   // and the reverse-direction jog appears "stuck" for several clicks.
   {
     uint8_t limit_state = limits_get_state();
+    sys.limit_trip_mask &= limit_state; // Forget latched direction for any released switch.
     if (limit_state) {
       float current_mpos[N_AXIS];
       system_convert_array_steps_to_mpos(current_mpos, sys_position);
       uint8_t idx;
       for (idx=0; idx<N_AXIS; idx++) {
         if (limit_state & (1<<idx)) {
-          if (bit_istrue(settings.homing_dir_mask,bit(idx))) {
-            // Switch on minus side: block negative jog.
-            if (gc_block->values.xyz[idx] < current_mpos[idx]) { return(STATUS_TRAVEL_EXCEEDED); }
+          // ALOE PATCH: Block the direction latched at the moment this axis tripped (see
+          // the limit ISR and mc_line()). Falls back to the $23 homing side when the switch
+          // tripped without motion (e.g. pressed by hand at standstill).
+          uint8_t block_positive;
+          if (sys.limit_trip_mask & bit(idx)) {
+            block_positive = !bit_istrue(sys.limit_trip_dir,bit(idx)); // Latched bit set = was moving negative.
+          } else if (bit_istrue(settings.homing_dir_mask,bit(idx))) {
+            block_positive = false; // Homing moves negative -> homing switch is on the minus side.
           } else {
+            block_positive = true;  // Homing moves positive -> homing switch is on the plus side.
+          }
+          if (block_positive) {
             // Switch on plus side: block positive jog.
             if (gc_block->values.xyz[idx] > current_mpos[idx]) { return(STATUS_TRAVEL_EXCEEDED); }
+          } else {
+            // Switch on minus side: block negative jog.
+            if (gc_block->values.xyz[idx] < current_mpos[idx]) { return(STATUS_TRAVEL_EXCEEDED); }
           }
         }
       }
     }
   }
   // ---- END PATCH ----
-  
+
   // Valid jog command. Plan, set state, and execute.
   mc_line(gc_block->values.xyz,pl_data);
   if (sys.state == STATE_IDLE) {

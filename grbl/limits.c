@@ -118,9 +118,29 @@ uint8_t limits_get_state()
       if (!(sys_rt_exec_alarm)) {
         #ifdef HARD_LIMIT_FORCE_STATE_CHECK
           // Check limit pin state.
-          if (limits_get_state()) {
-            mc_reset(); // Initiate system kill.
-            system_set_exec_alarm(EXEC_ALARM_HARD_LIMIT); // Indicate hard limit critical event
+          {
+            // ALOE PATCH: Latch the direction of the motion that tripped the switch, so
+            // mc_line()/jog_execute() block motion toward the switch after an alarm unlock.
+            // Valid only for the axis (axes) that actually tripped. If another axis is already
+            // pressed and latched, preserve its latched direction and only update newly tripped
+            // axes. If the switch was closed without motion (by hand, at standstill), any
+            // previous latch for that axis is dropped so the guards fall back to the $23 homing
+            // side for it.
+            uint8_t limit_state = limits_get_state();
+            sys.limit_trip_mask &= limit_state;
+            if (limit_state) {
+              uint8_t trip_direction;
+              if (st_get_exec_direction(&trip_direction)) {
+                uint8_t new_trip = limit_state & ~sys.limit_trip_mask;
+                if (!new_trip) { new_trip = limit_state; }
+                sys.limit_trip_dir = (sys.limit_trip_dir & ~new_trip) | (trip_direction & new_trip);
+                sys.limit_trip_mask = limit_state;
+              } else {
+                sys.limit_trip_mask &= ~limit_state;
+              }
+              mc_reset(); // Initiate system kill.
+              system_set_exec_alarm(EXEC_ALARM_HARD_LIMIT); // Indicate hard limit critical event
+            }
           }
         #else
           mc_reset(); // Initiate system kill.
@@ -137,10 +157,24 @@ uint8_t limits_get_state()
     WDTCSR &= ~(1<<WDIE); // Disable watchdog timer. 
     if (sys.state != STATE_ALARM) {  // Ignore if already in alarm state. 
       if (!(sys_rt_exec_alarm)) {
-        // Check limit pin state. 
-        if (limits_get_state()) {
-          mc_reset(); // Initiate system kill.
-          system_set_exec_alarm(EXEC_ALARM_HARD_LIMIT); // Indicate hard limit critical event
+        // Check limit pin state.
+        {
+          // ALOE PATCH: Latch the trip direction (see the limit pin change ISR above).
+          uint8_t limit_state = limits_get_state();
+          sys.limit_trip_mask &= limit_state;
+          if (limit_state) {
+            uint8_t trip_direction;
+            if (st_get_exec_direction(&trip_direction)) {
+              uint8_t new_trip = limit_state & ~sys.limit_trip_mask;
+              if (!new_trip) { new_trip = limit_state; }
+              sys.limit_trip_dir = (sys.limit_trip_dir & ~new_trip) | (trip_direction & new_trip);
+              sys.limit_trip_mask = limit_state;
+            } else {
+              sys.limit_trip_mask &= ~limit_state;
+            }
+            mc_reset(); // Initiate system kill.
+            system_set_exec_alarm(EXEC_ALARM_HARD_LIMIT); // Indicate hard limit critical event
+          }
         }
       }  
     }

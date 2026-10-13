@@ -135,6 +135,8 @@ typedef struct {
   #ifdef ENABLE_DUAL_AXIS
     uint8_t homing_axis_lock_dual;
   #endif
+  uint8_t limit_trip_dir;      // ALOE PATCH: Per-axis direction bits of the motion that tripped a hard limit (bit set = negative).
+  uint8_t limit_trip_mask;     // ALOE PATCH: Axis bits for which limit_trip_dir is valid (latched axes only).
   uint8_t f_override;          // Feed rate override value in percent
   uint8_t r_override;          // Rapids override value in percent
   uint8_t spindle_speed_ovr;   // Spindle speed value in percent
