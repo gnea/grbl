@@ -1093,3 +1093,26 @@ float st_get_realtime_rate()
   }
   return 0.0f;
 }
+
+
+// ALOE PATCH: Returns the per-axis direction bits of the planner block currently executing in the stepper
+// ISR (bit set = negative direction). Called by the hard limit ISR to latch the direction of the motion
+// that tripped a limit switch. The direction is reported only while the stepper driver interrupt is
+// running and a block is loaded, so a switch pressed by hand on a stopped machine (feed hold finished,
+// safety door open, idle) does not latch the stale direction of the last finished move.
+// NOTE: Only valid for non-COREXY machines, where direction pins map 1:1 to axes.
+uint8_t st_get_exec_direction(uint8_t *direction)
+{
+  if (!(TIMSK1 & (1<<OCIE1A)) || (st.exec_block == NULL)) { return(false); }
+  // st.dir_outbits is the live port-space direction byte, refreshed on every segment load from
+  // the executing planner block. Undo the $3 direction invert mask and translate the pin bits
+  // into per-axis bits, as limits_get_state() does for the limit pins.
+  uint8_t dir_bits = st.dir_outbits ^ dir_port_invert_mask;
+  uint8_t dir_axis_bits = 0;
+  uint8_t idx;
+  for (idx=0; idx<N_AXIS; idx++) {
+    if (dir_bits & get_direction_pin_mask(idx)) { dir_axis_bits |= (1 << idx); }
+  }
+  *direction = dir_axis_bits;
+  return(true);
+}

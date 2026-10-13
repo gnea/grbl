@@ -56,4 +56,10 @@ void st_update_plan_block_parameters();
 // Called by realtime status reporting if realtime rate reporting is enabled in config.h.
 float st_get_realtime_rate();
 
+// ALOE PATCH: Called by the hard limit ISR to fetch the per-axis direction bits of the motion currently
+// being executed (bit set = negative direction). Writes them to *direction and returns true only while
+// the stepper driver is actually executing a block; returns false (no latch, callers fall back to the
+// $23 homing side) when the machine is standing still.
+uint8_t st_get_exec_direction(uint8_t *direction);
+
 #endif

@@ -152,7 +152,7 @@
 // alarm out and force the user to manually disengage the limit switch. Otherwise, if you have one
 // limit switch for each axis, don't enable this option. By keeping it disabled, you can perform a
 // homing cycle while on the limit switch and not have to move the machine off of it.
-// #define LIMITS_TWO_SWITCHES_ON_AXES
+#define LIMITS_TWO_SWITCHES_ON_AXES
 
 // Allows GRBL to track and report gcode line numbers.  Enabling this means that the planning buffer
 // goes from 16 to 15 to make room for the additional line number data in the plan_block_t struct
@@ -483,7 +483,7 @@
 // that the switches don't bounce, we recommend enabling this option. This will help prevent
 // triggering a hard limit when the machine disengages from the switch.
 // NOTE: This option has no effect if SOFTWARE_DEBOUNCE is enabled.
-// #define HARD_LIMIT_FORCE_STATE_CHECK // Default disabled. Uncomment to enable.
+#define HARD_LIMIT_FORCE_STATE_CHECK // Default disabled. Uncomment to enable.
 
 // Adjusts homing cycle search and locate scalars. These are the multipliers used by Grbl's
 // homing cycle to ensure the limit switches are engaged and cleared through each phase of
