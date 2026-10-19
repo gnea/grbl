@@ -18,8 +18,8 @@ from ..crpt_link import CrptError
 DEFAULT_URL = "http://127.0.0.1:8765"
 _SETTINGS = {
     28: 7,
-    130: 550.0,
-    131: 550.0,
+    130: config.SAFE_TRAVEL_X_MM + 30.0,
+    131: config.SAFE_TRAVEL_Y_MM + 30.0,
     132: 200.0,
     133: 360.0,
     140: 30.0,
@@ -119,11 +119,9 @@ class SimulatorState:
 
     @staticmethod
     def _table_offset():
-        safe_x = _SETTINGS[130] - _SETTINGS[140]
-        safe_y = _SETTINGS[131] - _SETTINGS[141]
         return {
-            "x": (config.TABLE_SIDE_MM - safe_x) / 2.0,
-            "y": (config.TABLE_SIDE_MM - safe_y) / 2.0,
+            "x": config.PLACEMENT_OFFSET_SIDE3_MM,
+            "y": config.PLACEMENT_OFFSET_SIDE4_MM,
         }
 
     def _event_locked(self, label):
@@ -207,7 +205,7 @@ class SimulatorState:
                 self.carrying = False
                 self._event_locked("Gripper opened · plate placed")
 
-    def run_demo(self, simulator_url=DEFAULT_URL):
+    def run_demo(self, simulator_url, from_side, to_side, pick_xyz, place_xyz):
         with self.lock:
             if self.demo_running:
                 return False
@@ -219,11 +217,14 @@ class SimulatorState:
                 if controller.orientation is None:
                     controller.home()
                 controller.transport(
-                    from_orientation=2,
-                    to_orientation=1,
-                    pick_xyz=(235.0, 190.0, 10.0),
-                    place_xyz=(235.0, 190.0, 10.0),
+                    from_orientation=from_side,
+                    to_orientation=to_side,
+                    pick_xyz=pick_xyz,
+                    place_xyz=place_xyz,
                 )
+            except Exception as error:
+                with self.lock:
+                    self._event_locked(f"Transfer failed: {error}")
             finally:
                 with self.lock:
                     self.demo_running = False
@@ -332,7 +333,21 @@ class _Handler(BaseHTTPRequestHandler):
                 _STATE.set_transport(payload["pickup"], payload["dropoff"])
                 self._json({"ok": True})
             elif self.path == "/api/demo":
-                self._json({"started": _STATE.run_demo(self._simulator_url())})
+                def xyz(key):
+                    row = payload[key]
+                    return (float(row["x"]), float(row["y"]), float(row["z"]))
+
+                self._json(
+                    {
+                        "started": _STATE.run_demo(
+                            self._simulator_url(),
+                            int(payload["from_side"]),
+                            int(payload["to_side"]),
+                            xyz("pick"),
+                            xyz("place"),
+                        )
+                    }
+                )
             elif self.path == "/api/control":
                 controller = _attach_controller(self._simulator_url())
                 action = payload.get("action")
@@ -349,6 +364,9 @@ class _Handler(BaseHTTPRequestHandler):
                         x=float(payload["x"]),
                         y=float(payload["y"]),
                     )
+                elif action == "move_table":
+                    controller.set_orientation(int(payload["side"]))
+                    controller.move_to(x=float(payload["x"]), y=float(payload["y"]))
                 else:
                     raise ValueError(f"Unknown controller action {action!r}")
                 self._json({"ok": True, "status": controller.link.get_status()})

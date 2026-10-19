@@ -17,12 +17,12 @@ class Side(NamedTuple):
 
 # 1: X =  Y' + (max_x - L + o1)     Y = max_y - X'
 # 2: X =  X'                        Y = Y' + (max_y - L + o2)
-# 3: X = -Y' + (L + o3)             Y = X'
+# 3: X = -Y' + (L - o3)             Y = X'
 # 4: X = -X' + max_x                Y = -Y' + (L - o4)
 SIDES: Dict[int, Side] = {
     1: Side(0.0, (0, 1, -1, 0), lambda mx, my, L, o: (mx - L + o, my), (1, 0)),
     2: Side(90.0, (1, 0, 0, 1), lambda mx, my, L, o: (0.0, my - L + o), (0, 1)),
-    3: Side(180.0, (0, -1, 1, 0), lambda mx, my, L, o: (L + o, 0.0), (-1, 0)),
+    3: Side(180.0, (0, -1, 1, 0), lambda mx, my, L, o: (L - o, 0.0), (-1, 0)),
     4: Side(270.0, (-1, 0, 0, -1), lambda mx, my, L, o: (mx, L - o), (0, -1)),
 }
 

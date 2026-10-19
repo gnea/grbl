@@ -309,7 +309,8 @@
         font: 9px var(--mono);
         text-transform: uppercase;
       }
-      .xy-controls input {
+      .xy-controls input,
+      .xy-controls select {
         width: 100%;
         height: 34px;
         padding: 0 9px;
@@ -556,11 +557,7 @@
               </button>
             </div>
             <div class="controls">
-              <button class="button primary" id="demoButton">
-                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M5 3.7v8.6L12 8 5 3.7Z" fill="currentColor" /></svg
-                >Run plate transfer</button
-              ><button
+              <button
                 class="button secondary"
                 id="homeButton"
                 title="Home the simulated axes"
@@ -606,6 +603,89 @@
               <button class="button secondary" id="moveXYButton">
                 Move base to X/Y
               </button>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Table position</div>
+              <span class="tag">SIDE-LOCAL XY</span>
+            </div>
+            <div class="xy-controls">
+              <label for="tableSide">
+                Side
+                <select id="tableSide">
+                  <option value="1">1 · +X</option>
+                  <option value="2">2 · +Y</option>
+                  <option value="3">3 · −X</option>
+                  <option value="4">4 · −Y</option>
+                </select>
+              </label>
+              <label for="tableX">
+                X' · mm
+                <input id="tableX" type="number" step="1" value="200" />
+              </label>
+              <label for="tableY">
+                Y' · mm
+                <input id="tableY" type="number" step="1" value="0" />
+              </label>
+              <button class="button secondary" id="moveTableButton">
+                Move to table position
+              </button>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Plate transfer</div>
+              <span class="tag">PICK → PLACE</span>
+            </div>
+            <div class="xy-controls">
+              <label for="pickSide">
+                Pick side
+                <select id="pickSide">
+                  <option value="1">1 · +X</option>
+                  <option value="2" selected>2 · +Y</option>
+                  <option value="3">3 · −X</option>
+                  <option value="4">4 · −Y</option>
+                </select>
+              </label>
+              <label for="pickX">
+                Pick X' · mm
+                <input id="pickX" type="number" step="1" value="200" />
+              </label>
+              <label for="pickY">
+                Pick Y' · mm
+                <input id="pickY" type="number" step="1" value="0" />
+              </label>
+              <label for="pickZ">
+                Pick Z · mm
+                <input id="pickZ" type="number" step="1" value="10" />
+              </label>
+              <label for="placeSide">
+                Place side
+                <select id="placeSide">
+                  <option value="1" selected>1 · +X</option>
+                  <option value="2">2 · +Y</option>
+                  <option value="3">3 · −X</option>
+                  <option value="4">4 · −Y</option>
+                </select>
+              </label>
+              <label for="placeX">
+                Place X' · mm
+                <input id="placeX" type="number" step="1" value="200" />
+              </label>
+              <label for="placeY">
+                Place Y' · mm
+                <input id="placeY" type="number" step="1" value="0" />
+              </label>
+              <label for="placeZ">
+                Place Z · mm
+                <input id="placeZ" type="number" step="1" value="10" />
+              </label>
+              <button class="button primary" id="demoButton">
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M5 3.7v8.6L12 8 5 3.7Z" fill="currentColor" /></svg
+                >Run plate transfer</button
+              >
             </div>
           </section>
           <section class="panel">
@@ -980,20 +1060,60 @@
         if (!r.ok) throw new Error(await r.text());
         return r.json();
       }
+      const DEMO_LABEL =
+        '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 3.7v8.6L12 8 5 3.7Z" fill="currentColor"/></svg>Run plate transfer';
+      const numberValue = (id) => Number($(id).value);
       $("demoButton").addEventListener("click", async () => {
         const b = $("demoButton");
+        const ids = ["pickX", "pickY", "pickZ", "placeX", "placeY", "placeZ"];
+        if (!ids.every((id) => Number.isFinite(numberValue(id)))) {
+          window.alert("Enter numeric pick and place coordinates");
+          return;
+        }
         b.disabled = true;
         b.textContent = "Transferring…";
         try {
-          await post("/api/demo");
+          await post("/api/demo", {
+            from_side: numberValue("pickSide"),
+            to_side: numberValue("placeSide"),
+            pick: {
+              x: numberValue("pickX"),
+              y: numberValue("pickY"),
+              z: numberValue("pickZ"),
+            },
+            place: {
+              x: numberValue("placeX"),
+              y: numberValue("placeY"),
+              z: numberValue("placeZ"),
+            },
+          });
         } catch (e) {
           console.error(e);
         } finally {
           setTimeout(() => {
             b.disabled = false;
-            b.innerHTML =
-              '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 3.7v8.6L12 8 5 3.7Z" fill="currentColor"/></svg>Run plate transfer';
+            b.innerHTML = DEMO_LABEL;
           }, 1200);
+        }
+      });
+      $("moveTableButton").addEventListener("click", async (event) => {
+        const button = event.currentTarget;
+        const x = numberValue("tableX");
+        const y = numberValue("tableY");
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        button.disabled = true;
+        try {
+          await post("/api/control", {
+            action: "move_table",
+            side: numberValue("tableSide"),
+            x,
+            y,
+          });
+        } catch (error) {
+          console.error(error);
+          window.alert(error.message);
+        } finally {
+          button.disabled = false;
         }
       });
       $("homeButton").addEventListener("click", async () => {

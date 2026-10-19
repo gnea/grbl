@@ -11,6 +11,11 @@ PLACEMENT_OFFSET_SIDE2_MM = 160.0
 PLACEMENT_OFFSET_SIDE3_MM = 95.0
 PLACEMENT_OFFSET_SIDE4_MM = 110.0
 
+# Distances from the safe base-travel box to each table edge (side 1 = +X, 2 = +Y, 3 = -X, 4 = -Y).
+# They fix the box size and position: machine (0, 0) sits at table (SIDE3, SIDE4).
+SAFE_TRAVEL_X_MM = TABLE_SIDE_MM - PLACEMENT_OFFSET_SIDE1_MM - PLACEMENT_OFFSET_SIDE3_MM
+SAFE_TRAVEL_Y_MM = TABLE_SIDE_MM - PLACEMENT_OFFSET_SIDE2_MM - PLACEMENT_OFFSET_SIDE4_MM
+
 # Rod length from the Cartesian base to the gripper tip.
 ARM_REACH_MM = 265.0
 
